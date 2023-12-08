@@ -18,6 +18,8 @@ hamta_data_forv_sektor <- function(region = hamtakommuner("20",tamedlan = TRUE,t
   # där man byter mot den variabel man är intresserad av.
   # 
   # Generellt gäller "*" om man vill ha alla variabler
+  # Skapad av Jon Frank
+  # Uppdaterad senast 2023-12-08
   # ===========================================================================================================
   
   if (!require("pacman")) install.packages("pacman")
