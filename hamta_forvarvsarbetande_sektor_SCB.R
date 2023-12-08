@@ -6,7 +6,7 @@ hamta_data_forv_sektor <- function(region = hamtakommuner("20",tamedlan = TRUE,t
                                    filnamn = "forvarvsarbetande_sektor.xlsx", # Filnamn
                                    spara_data = TRUE, # True om man vill spara data till Excel
                                    returnera_data = TRUE, # Om man vill returnera data
-                                   tid = c("*") # Sätts till "99" om man enbart vill ha senaste år,"*" för alla alternativt intervall
+                                   tid = "*" # Sätts till "99" om man enbart vill ha senaste år,"*" för alla alternativt intervall
 ){
   
   # ===========================================================================================================
@@ -17,7 +17,7 @@ hamta_data_forv_sektor <- function(region = hamtakommuner("20",tamedlan = TRUE,t
   # pxvardelist("https://api.scb.se/OV0104/v1/doris/sv/ssd/AM/AM0207/AM0207Z/DagSektAldKN", "ArbetsSektor"), 
   # där man byter mot den variabel man är intresserad av.
   # 
-  # Generellt gäller c("*) om man vill ha alla variabler
+  # Generellt gäller "*" om man vill ha alla variabler
   # ===========================================================================================================
   
   if (!require("pacman")) install.packages("pacman")
