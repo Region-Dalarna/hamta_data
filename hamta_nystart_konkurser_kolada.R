@@ -1,4 +1,4 @@
-#test = hamta_data_nystartade_konkurser(alla_regioner = FALSE,spara_data = FALSE,tid = "99")
+#test = hamta_data_nystartade_konkurser(alla_regioner = FALSE,spara_data = FALSE)
 
 hamta_data_nystartade_konkurser = function(region = c("0020"), # Val av region. Börjr med 00 för regioner (och Sverige) i Kolada
                                            alla_regioner = FALSE, # TRUE om man vill ha alla regioner. Övertrumfar region
@@ -46,7 +46,7 @@ hamta_data_nystartade_konkurser = function(region = c("0020"), # Val av region. 
   # Nystartade företag
   if("N00999" %in% cont_cod ){
     
-    if(tid == "99") tid <- max(unique(hamta_kolada_giltiga_ar("N00999",vald_region = region)))
+    if("99" %in% tid) tid <- max(unique(hamta_kolada_giltiga_ar("N00999",vald_region = region)))
     
     cont = "N00999"
     
@@ -70,7 +70,7 @@ hamta_data_nystartade_konkurser = function(region = c("0020"), # Val av region. 
   # Konkurser
   if("N00926" %in% cont_cod ){
     
-    if(tid == "99") tid <- max(unique(hamta_kolada_giltiga_ar("N00926",vald_region = region)))
+    if("99" %in% tid) tid <- max(unique(hamta_kolada_giltiga_ar("N00926",vald_region = region)))
     
     cont = "N00926"
     
