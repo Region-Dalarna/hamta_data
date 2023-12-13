@@ -1,6 +1,6 @@
 #test = hamta_data_nystartade_konkurser(alla_regioner = FALSE,spara_data = FALSE)
 
-hamta_data_nystartade_konkurser = function(region = c("0020"), # Val av region. Börjr med 00 för regioner (och Sverige) i Kolada
+hamta_data_medel_demo = function(region = c("0020"), # Val av region. Börjr med 00 för regioner (och Sverige) i Kolada
                                            alla_regioner = FALSE, # TRUE om man vill ha alla regioner. Övertrumfar region
                                            alla_kommuner = TRUE, # TRUE om man vill ha alla kommuner för valda kommuner.
                                            ta_med_riket = TRUE, # TRUE om man vill ha med riket.
