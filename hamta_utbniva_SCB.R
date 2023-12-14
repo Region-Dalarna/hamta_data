@@ -83,4 +83,4 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
 
 
 
-}
+
