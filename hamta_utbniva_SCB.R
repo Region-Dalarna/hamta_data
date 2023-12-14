@@ -59,7 +59,7 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
   pxweb_query_list <- 
     list("Region" = region,
          "Kon" = kon_vekt,
-         "Alder" = c(as.character(25:64)),
+         "Alder" = alder,
          "UtbildningsNiva" = utbildningsniva_vekt,
          "ContentsCode"= "UF0506A1" ,
          "Tid" = tid)
