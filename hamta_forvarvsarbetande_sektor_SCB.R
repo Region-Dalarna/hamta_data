@@ -6,7 +6,7 @@ hamta_data_forv_sektor <- function(region = hamtakommuner("20",tamedlan = TRUE,t
                                    filnamn = "forvarvsarbetande_sektor.xlsx", # Filnamn
                                    spara_data = TRUE, # True om man vill spara data till Excel
                                    returnera_data = TRUE, # Om man vill returnera data
-                                   tid = "*" # Sätts till "99" om man enbart vill ha senaste år,"*" för alla alternativt intervall
+                                   tid = "*" # Sätts till "9999" om man enbart vill ha senaste år,"*" för alla alternativt intervall
 ){
   
   # ===========================================================================================================
@@ -46,10 +46,10 @@ hamta_data_forv_sektor <- function(region = hamtakommuner("20",tamedlan = TRUE,t
     
     arbetssektor_vekt = "*"
     
-  }else arbetssektor_vekt <- hamta_kod_med_klartext(url_uttag, arbetssektor_klartext, skickad_fran_variabel = "alder")
+  }else arbetssektor_vekt <- hamta_kod_med_klartext(url_uttag, arbetssektor_klartext, skickad_fran_variabel = "arbetssektor")
   
   # Om användaren bara vill ha senaste år
-  if(tid == "99") tid = max(hamta_giltiga_varden_fran_tabell(url_uttag, "tid"))
+  if("9999" %in% tid) tid = max(hamta_giltiga_varden_fran_tabell(url_uttag, "tid"))
   
   varlista <- list(Region = region,
                    ArbetsSektor = arbetssektor_vekt,
