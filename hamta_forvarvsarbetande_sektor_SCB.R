@@ -1,3 +1,4 @@
+# test = hamta_data_forv_sektor()
 hamta_data_forv_sektor <- function(region = hamtakommuner("20",tamedlan = TRUE,tamedriket = TRUE), # Använd förslagsvis hamtakommuner eller hamtaallalan
                                    alder_klartext = "*", # Andra val: 16-19 år, 20-24 år, 25-34 år, 35-44 år, 45-54 år, 55-59 år, 60-64 år, 65+ år
                                    arbetssektor_klartext = "*", # För alternativa val använd pxvardelist("https://api.scb.se/OV0104/v1/doris/sv/ssd/AM/AM0207/AM0207Z/DagSektAldKN", "ArbetsSektor")

@@ -2,7 +2,7 @@
 # Funktioner som sourcas från Region Dalarna
 source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
 
-#test_list=diag_utbniva(skapa_fil=FALSE)
+#test_list=hamta_data_utbniva(spara_data = FALSE)
 hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamedriket = TRUE), # Använd förslagsvis hamtakommuner eller hamtaallalan
                                alder = c(as.character(25:64)), # antingen "tot16-74" eller annat intervall, exempelvis c(as.character(25:64)), "*" ger alla år
                                utbildningsniva_klartext = "*", # För alternativ, se text nedan
@@ -66,7 +66,7 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
   
   # Download data 
   px_data <- 
-    pxweb_get(url=url,
+    pxweb_get(url = url_uttag,
               query = pxweb_query_list)
   
   # Convert to data.frame 
