@@ -1,9 +1,7 @@
-#test = hamta_data_nystartade_konkurser(alla_regioner = FALSE,spara_data = FALSE)
 
-hamta_data_nystartade_konkurser = function(region = c("0020"), # Val av region. Börjr med 00 för regioner (och Sverige) i Kolada
-                                           alla_regioner = FALSE, # TRUE om man vill ha alla regioner. Övertrumfar region
-                                           alla_kommuner = TRUE, # TRUE om man vill ha alla kommuner för valda kommuner.
-                                           ta_med_riket = TRUE, # TRUE om man vill ha med riket.
+source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
+
+hamta_data_nystartade_konkurser = function(region = hamtakommuner("20",tamedlan = TRUE,tamedriket = TRUE), # Val av region.
                                            outputmapp = "G:/Samhällsanalys/Statistik/Näringsliv/basfakta/",
                                            filnamn = c("nystartade.xlsx","konkurser.xlsx"), # Filnamn. Bör inte ändras.
                                            cont_cod = c("N00999","N00926"), # "N00999" om man vill ha nystartade, "N00926" om man vill ha konkurser. Ordning bör vara samma som filnamn
@@ -24,25 +22,12 @@ hamta_data_nystartade_konkurser = function(region = c("0020"), # Val av region. 
                  rKolada,
                  readxl)
   
+  # I Kolada har alla regioner fyra siffror varför region och riket behöver justeras
+  region = ifelse(nchar(region) == 2,paste0("00",region),region)
+  
   # Skapar en lista som används för att returnera dataframes.
   lista_data = lst()
-  
-  source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
- 
-  if(alla_regioner == TRUE){
-    region = hamtaAllaLan(tamedriket = FALSE) 
-    region = paste0("00",region)
-  }
-  
-  if(alla_kommuner == TRUE){
-    region_kommun = hamtakommuner(substr(region,3,4),tamedlan = FALSE,tamedriket = FALSE)
-    region = c(region,region_kommun)
-  }
-  
-  if(ta_med_riket == TRUE){
-    region = c("0000",region)
-  } 
-  
+
   # Nystartade företag
   if("N00999" %in% cont_cod ){
     
