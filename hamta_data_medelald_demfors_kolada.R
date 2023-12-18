@@ -1,16 +1,13 @@
-#test = hamta_data_nystartade_konkurser(alla_regioner = FALSE,spara_data = FALSE)
+source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
 
-hamta_data_medel_demo = function(region = c("0020"), # Val av region. Börjr med 00 för regioner (och Sverige) i Kolada
-                                           alla_regioner = FALSE, # TRUE om man vill ha alla regioner. Övertrumfar region
-                                           alla_kommuner = TRUE, # TRUE om man vill ha alla kommuner för valda kommuner.
-                                           ta_med_riket = TRUE, # TRUE om man vill ha med riket.
-                                           konsuppdelat = TRUE, # TRUE om man vill ha könsuppdelad data, FALSE annars
-                                           outputmapp = "G:/Samhällsanalys/Statistik/Näringsliv/basfakta/",
-                                           filnamn = c("medelalder.xlsx","dem_fors_kvot.xlsx"), # Filnamn. Bör inte ändras.
-                                           cont_cod = c("N00959","N00927"), #Medelålder respektive demografisk försörjningskvot. Byt helst inte ordning (då blir det fel med excelfiler) 
-                                           tid = 1900:2100, # "Om man enbart vill ha senaste år"9999" om man enbart vill ha senaste år. Välj ett högt värde som sista värde om alla år skall vara med.
-                                           spara_data = FALSE, # Om man vill spara data
-                                           returnera_data = TRUE){ # Om man vill returnera data som en lista av dataframes.
+hamta_data_medel_demo = function(region = hamtakommuner("20",tamedlan = TRUE,tamedriket = TRUE), # Val av region.
+                                 konsuppdelat = TRUE, # TRUE om man vill ha könsuppdelad data, FALSE annars
+                                 outputmapp = "G:/Samhällsanalys/Statistik/Näringsliv/basfakta/",
+                                 filnamn = c("medelalder.xlsx","dem_fors_kvot.xlsx"), # Filnamn. Bör inte ändras.
+                                 cont_cod = c("N00959","N00927"), #Medelålder respektive demografisk försörjningskvot. Byt helst inte ordning (då blir det fel med excelfiler) 
+                                 tid = 1900:2100, # "Om man enbart vill ha senaste år"9999" om man enbart vill ha senaste år. Välj ett högt värde som sista värde om alla år skall vara med.
+                                 spara_data = FALSE, # Om man vill spara data
+                                 returnera_data = TRUE){ # Om man vill returnera data som en lista av dataframes.
   
   # ===========================================================================================================
   # 
@@ -25,25 +22,14 @@ hamta_data_medel_demo = function(region = c("0020"), # Val av region. Börjr med
                  rKolada,
                  readxl)
   
+  # I Kolada har alla regioner fyra siffror varför region och riket behöver justeras
+  region = ifelse(nchar(region) == 2,paste0("00",region),region)
+  
   # Skapar en lista som används för att returnera dataframes.
   lista_data = lst()
   
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
-  
-  if(alla_regioner == TRUE){
-    region = hamtaAllaLan(tamedriket = FALSE) 
-    region = paste0("00",region)
-  }
-  
-  if(alla_kommuner == TRUE){
-    region_kommun = hamtakommuner(substr(region,3,4),tamedlan = FALSE,tamedriket = FALSE)
-    region = c(region,region_kommun)
-  }
-  
-  if(ta_med_riket == TRUE){
-    region = c("0000",region)
-  } 
-  
+
   # Medelålder
   if("N00959" %in% cont_cod ){
     
