@@ -19,8 +19,7 @@ hamta_data_medel_demo = function(region = hamtakommuner("20",tamedlan = TRUE,tam
   # Paket som används
   if (!require("pacman")) install.packages("pacman")
   pacman::p_load(tidyverse,
-                 rKolada,
-                 readxl)
+                 rKolada)
   
   # I Kolada har alla regioner fyra siffror varför region och riket behöver justeras
   region = ifelse(nchar(region) == 2,paste0("00",region),region)
