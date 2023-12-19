@@ -3,9 +3,8 @@ hamta_data_forv_sektor <- function(region = hamtakommuner("20",tamedlan = TRUE,t
                                    alder_klartext = "*", # Andra val: 16-19 år, 20-24 år, 25-34 år, 35-44 år, 45-54 år, 55-59 år, 60-64 år, 65+ år
                                    arbetssektor_klartext = "*", # För alternativa val använd pxvardelist("https://api.scb.se/OV0104/v1/doris/sv/ssd/AM/AM0207/AM0207Z/DagSektAldKN", "ArbetsSektor")
                                    kon_klartext = c("män","kvinnor"), # c("män","kvinnor") eller var och en uppdelad (totalt saknas)
-                                   output_mapp = "G:/Samhällsanalys/Statistik/Näringsliv/basfakta/", # Outputmapp
+                                   output_mapp = NA, # Outputmapp
                                    filnamn = "forvarvsarbetande_sektor.xlsx", # Filnamn
-                                   spara_data = TRUE, # True om man vill spara data till Excel
                                    returnera_data = TRUE, # Om man vill returnera data
                                    tid = "*" # Sätts till "9999" om man enbart vill ha senaste år,"*" för alla alternativt intervall
 ){
@@ -17,10 +16,8 @@ hamta_data_forv_sektor <- function(region = hamtakommuner("20",tamedlan = TRUE,t
   # För att få en djupare förklaring av vad som de olika kategorierna under varje variabel betyder, använd: 
   # pxvardelist("https://api.scb.se/OV0104/v1/doris/sv/ssd/AM/AM0207/AM0207Z/DagSektAldKN", "ArbetsSektor"), 
   # där man byter mot den variabel man är intresserad av.
-  # 
-  # Generellt gäller "*" om man vill ha alla variabler
   # Skapad av Jon Frank
-  # Uppdaterad senast 2023-12-08
+  # Uppdaterad senast 2023-12-19
   # ===========================================================================================================
   
   if (!require("pacman")) install.packages("pacman")
@@ -68,7 +65,7 @@ hamta_data_forv_sektor <- function(region = hamtakommuner("20",tamedlan = TRUE,t
     relocate(regionkod, .before = region) 
   
   
-  if (spara_data==TRUE){
+  if (!is.na(output_mapp) & !is.na(filnamn)){
     write.xlsx(antal_sektor_df,paste0(output_mapp,filnamn))
   }
   

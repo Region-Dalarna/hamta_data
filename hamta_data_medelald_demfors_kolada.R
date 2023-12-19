@@ -2,9 +2,9 @@ source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_AP
 
 hamta_data_medel_demo = function(region = hamtakommuner("20",tamedlan = TRUE,tamedriket = TRUE), # Val av region.
                                  konsuppdelat = TRUE, # TRUE om man vill ha könsuppdelad data, FALSE annars
-                                 outputmapp = "G:/Samhällsanalys/Statistik/Näringsliv/basfakta/",
-                                 filnamn = c("medelalder.xlsx","dem_fors_kvot.xlsx"), # Filnamn. Bör inte ändras.
-                                 cont_cod = c("N00959","N00927"), #Medelålder respektive demografisk försörjningskvot. Byt helst inte ordning (då blir det fel med excelfiler) 
+                                 outputmapp = NA,
+                                 filnamn = "medelalder_forskvot.xlsx", #c("medelalder.xlsx","dem_fors_kvot.xlsx"), # Filnamn. Bör inte ändras.
+                                 cont_cod = c("N00959","N00927"), # Medelålder respektive demografisk försörjningskvot. Byt helst inte ordning (då blir det fel med excelfiler) 
                                  tid = 1900:2100, # "Om man enbart vill ha senaste år"9999" om man enbart vill ha senaste år. Välj ett högt värde som sista värde om alla år skall vara med.
                                  spara_data = FALSE, # Om man vill spara data
                                  returnera_data = TRUE){ # Om man vill returnera data som en lista av dataframes.
@@ -12,7 +12,7 @@ hamta_data_medel_demo = function(region = hamtakommuner("20",tamedlan = TRUE,tam
   # ===========================================================================================================
   # 
   # Skript som hämtar data för nystartade företag och/eller konkurser från Kolada. Tabellen finns inte uppdelad på kön
-  # Returnerar en lista med dataframes och sparar två separata Excel-dokument (om man väljer att ta hem båda)
+  # Returnerar en lista med dataframes och ett Exceldokument där data hamnar i olika likar
   # Skapad av Jon Frank
   # Senast ändrad: 2023-12-08
   # ===========================================================================================================
@@ -47,9 +47,9 @@ hamta_data_medel_demo = function(region = hamtakommuner("20",tamedlan = TRUE,tam
     
     fil = paste0(outputmapp,filnamn[1])
     
-    if (spara_data == TRUE) write.xlsx(Nystartade_df, fil)
+    #if (spara_data == TRUE) write.xlsx(medelalder_df, fil)
     
-    lista_data = c(lista_data,lst(medelalder_df))
+    lista_data = c(lista_data,lst("Medelalder" = medelalder_df))
     
   }
   
@@ -72,9 +72,13 @@ hamta_data_medel_demo = function(region = hamtakommuner("20",tamedlan = TRUE,tam
     
     fil = paste0(outputmapp,filnamn[2])
     
-    if (spara_data == TRUE) write.xlsx(Konkurser_df, fil)
+    #if (spara_data == TRUE) write.xlsx(Konkurser_df, fil)
     
-    lista_data = c(lista_data,lst(demo_df))
+    lista_data = c(lista_data,lst("Demografisk_forsorjningskvot",demo_df))
+  }
+  
+  if (!is.na(output_mapp) & !is.na(filnamn)){
+    write.xlsx(antal_sektor_df,paste0(output_mapp,filnamn))
   }
   
   if(returnera_data == TRUE) return(lista_data)
