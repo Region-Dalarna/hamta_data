@@ -74,7 +74,7 @@ hamta_data_medel_demo = function(region = hamtakommuner("20",tamedlan = TRUE,tam
     
     #if (spara_data == TRUE) write.xlsx(Konkurser_df, fil)
     
-    lista_data = c(lista_data,lst("Demografisk_forsorjningskvot",demo_df))
+    lista_data = c(lista_data,lst("Demografisk_forsorjningskvot" = demo_df))
   }
   
   if (!is.na(output_mapp) & !is.na(filnamn)){
