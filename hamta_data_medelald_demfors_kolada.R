@@ -45,7 +45,7 @@ hamta_data_medel_demo = function(region = hamtakommuner("20",tamedlan = TRUE,tam
       select(year, municipality, municipality_id, gender,fraga, value) %>%
         rename(variabel = fraga) 
     
-    fil = paste0(outputmapp,filnamn[1])
+    #fil = paste0(outputmapp,filnamn[1])
     
     #if (spara_data == TRUE) write.xlsx(medelalder_df, fil)
     
@@ -70,7 +70,7 @@ hamta_data_medel_demo = function(region = hamtakommuner("20",tamedlan = TRUE,tam
       select(year, municipality, municipality_id, gender,fraga, value) %>%
         rename(variabel = fraga) 
     
-    fil = paste0(outputmapp,filnamn[2])
+   # fil = paste0(outputmapp,filnamn[2])
     
     #if (spara_data == TRUE) write.xlsx(Konkurser_df, fil)
     
