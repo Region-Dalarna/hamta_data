@@ -2,11 +2,10 @@
 source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
 
 hamta_data_nystartade_konkurser = function(region = hamtakommuner("20",tamedlan = TRUE,tamedriket = TRUE), # Val av region.
-                                           outputmapp = "G:/Samhällsanalys/Statistik/Näringsliv/basfakta/",
-                                           filnamn = c("nystartade.xlsx","konkurser.xlsx"), # Filnamn. Bör inte ändras.
-                                           cont_cod = c("N00999","N00926"), # "N00999" om man vill ha nystartade, "N00926" om man vill ha konkurser. Ordning bör vara samma som filnamn
+                                           output_mapp = NA,
+                                           filnamn = "nystartade_konkurser.xlsx", # Filnamn. 
+                                           cont_cod = c("N00999","N00926"), # "N00999" om man vill ha nystartade, "N00926" om man vill ha konkurser.
                                            tid = 1900:2100, # "Om man enbart vill ha senaste år"99" om man enbart vill ha senaste år. Välj ett högt värde som sista värde om alla år skall vara med.
-                                           spara_data = FALSE, # Om man vill spara data
                                            returnera_data = TRUE){ # Om man vill returnera data som en lista av dataframes.
   
   # ===========================================================================================================
@@ -45,10 +44,7 @@ hamta_data_nystartade_konkurser = function(region = hamtakommuner("20",tamedlan 
       select(year,value,municipality) %>%
       rename("nystartade_ftg" = value)
     
-    fil = paste0(outputmapp,filnamn[1])
-    if (spara_data == TRUE) write.xlsx(Nystartade_df, fil)
-    
-    lista_data = c(lista_data,lst(Nystartade_df))
+    lista_data = c(lista_data,lst("Nystartade" = Nystartade_df))
     
   }
   
@@ -70,11 +66,11 @@ hamta_data_nystartade_konkurser = function(region = hamtakommuner("20",tamedlan 
       select(year,value,municipality) %>%
       rename("konkurser" = value) 
     
-    fil = paste0(outputmapp,filnamn[2])
-    
-    if (spara_data == TRUE) write.xlsx(Konkurser_df, fil)
-    
-    lista_data = c(lista_data,lst(Konkurser_df))
+    lista_data = c(lista_data,lst("Konkurser" = Konkurser_df))
+  }
+  
+  if (!is.na(output_mapp) & !is.na(filnamn)){
+    write.xlsx(lista_data,paste0(output_mapp,filnamn))
   }
   
   if(returnera_data == TRUE) return(lista_data)

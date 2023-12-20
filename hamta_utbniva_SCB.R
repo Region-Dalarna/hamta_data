@@ -7,9 +7,8 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
                                alder = c(as.character(25:64)), # antingen "tot16-74" eller annat intervall, exempelvis c(as.character(25:64)), "*" ger alla år
                                utbildningsniva_klartext = "*", # För alternativ, se text nedan
                                kon_klartext = c("män","kvinnor"), # c("män","kvinnor") eller var och en uppdelad. "*" funkar inte
-                               output_mapp = "G:/Samhällsanalys/Statistik/Näringsliv/basfakta/", # Outputmapp
+                               output_mapp = NA, # Här hamnar data. Måste väljas om man vill spara data
                                filnamn = "utbildningsniva.xlsx", # Filnamn, om man vill spara data
-                               spara_data = TRUE, # True om man vill spara data till Excel
                                returnera_data = TRUE, # Om man vill returnera data
                                tid ="9999" # Sätts till "9999" om man enbart vill ha senaste år,"*" för alla alternativt intervall
 ){
@@ -30,7 +29,7 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
   #   uppgift om utbildningsnivå saknas
   # Generellt gäller "*" om man vill ha alla variabler
   # Skapad av Jon Frank
-  # Uppdaterad senast 2023-12-14
+  # Uppdaterad senast 2023-12-20
   # ===========================================================================================================
   
   
@@ -72,7 +71,7 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
   # Convert to data.frame 
   px_df <- as.data.frame(px_data, column.name.type = "text", variable.value.type = "text")
   
-  if (spara_data==TRUE){
+  if (!is.na(output_mapp) & !is.na(filnamn)){
     write.xlsx(px_df,paste0(output_mapp,filnamn))
   }
   

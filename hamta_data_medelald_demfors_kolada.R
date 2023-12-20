@@ -45,10 +45,6 @@ hamta_data_medel_demo = function(region = hamtakommuner("20",tamedlan = TRUE,tam
       select(year, municipality, municipality_id, gender,fraga, value) %>%
         rename(variabel = fraga) 
     
-    #fil = paste0(outputmapp,filnamn[1])
-    
-    #if (spara_data == TRUE) write.xlsx(medelalder_df, fil)
-    
     lista_data = c(lista_data,lst("Medelalder" = medelalder_df))
     
   }
@@ -69,16 +65,12 @@ hamta_data_medel_demo = function(region = hamtakommuner("20",tamedlan = TRUE,tam
     demo_df <- demo_df %>% 
       select(year, municipality, municipality_id, gender,fraga, value) %>%
         rename(variabel = fraga) 
-    
-   # fil = paste0(outputmapp,filnamn[2])
-    
-    #if (spara_data == TRUE) write.xlsx(Konkurser_df, fil)
-    
+
     lista_data = c(lista_data,lst("Demografisk_forsorjningskvot" = demo_df))
   }
   
   if (!is.na(output_mapp) & !is.na(filnamn)){
-    write.xlsx(antal_sektor_df,paste0(output_mapp,filnamn))
+    write.xlsx(lista_data,paste0(output_mapp,filnamn))
   }
   
   if(returnera_data == TRUE) return(lista_data)
