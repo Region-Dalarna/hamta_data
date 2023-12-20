@@ -13,7 +13,7 @@ hamta_data_nystartade_konkurser = function(region = hamtakommuner("20",tamedlan 
   # Skript som hämtar data för nystartade företag och/eller konkurser från Kolada. Tabellen finns inte uppdelad på kön
   # Returnerar en lista med dataframes och sparar två separata Excel-dokument (om man väljer att ta hem båda)
   # Skapad av Jon Frank
-  # Senast ändrad: 2023-12-08
+  # Senast ändrad: 2023-12-20
   # ===========================================================================================================
   # Paket som används
   if (!require("pacman")) install.packages("pacman")
