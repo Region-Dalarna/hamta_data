@@ -3,10 +3,9 @@ source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_AP
 hamta_data_medel_demo = function(region = hamtakommuner("20",tamedlan = TRUE,tamedriket = TRUE), # Val av region.
                                  konsuppdelat = TRUE, # TRUE om man vill ha könsuppdelad data, FALSE annars
                                  output_mapp = NA,
-                                 filnamn = "medelalder_forskvot.xlsx", #c("medelalder.xlsx","dem_fors_kvot.xlsx"), # Filnamn. Bör inte ändras.
-                                 cont_cod = c("N00959","N00927"), # Medelålder respektive demografisk försörjningskvot. Byt helst inte ordning (då blir det fel med excelfiler) 
+                                 filnamn = "medelalder_forskvot.xlsx", 
+                                 cont_cod = c("N00959","N00927"), # Medelålder respektive demografisk försörjningskvot
                                  tid = 1900:2100, # "Om man enbart vill ha senaste år"9999" om man enbart vill ha senaste år. Välj ett högt värde som sista värde om alla år skall vara med.
-                                 spara_data = FALSE, # Om man vill spara data
                                  returnera_data = TRUE){ # Om man vill returnera data som en lista av dataframes.
   
   # ===========================================================================================================
