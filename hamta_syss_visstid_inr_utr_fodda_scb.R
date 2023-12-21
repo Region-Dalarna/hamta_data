@@ -1,17 +1,3 @@
-# ====================================================================================================
-#
-# Hämtar data från SCB:s öppna databas, från registerdata för integration (ämnesövergripande statistik) 
-# i tabellerna med sysselsättning för vistelsetid etc., utbildningsnivå, kön etc.
-# De ligger i 3 olika tabeller, en för riket, en för län och en för kommuner. Detta skript hämtar data
-# för de nivåer man skickar med, så det kan hämta riket, län och kommuner
-#
-# Skapat av: Peter Möller, Region Dalarna
-# November 2023
-#
-# ====================================================================================================
-library(tidyverse)
-
-source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R", encoding = "utf-8", echo = FALSE)
 
 hamta_syss_vistelsetid_inr_utr_fodda_scb <- function(
     region_vekt = "20",  
@@ -23,6 +9,27 @@ hamta_syss_vistelsetid_inr_utr_fodda_scb <- function(
     tid_vekt = "9999",                                     # 9999 = senaste år, NA = alla år
     long_format = TRUE
 ) {
+  
+  # ====================================================================================================
+  #
+  # Hämtar data från SCB:s öppna databas, från registerdata för integration (ämnesövergripande statistik) 
+  # i tabellerna med sysselsättning för vistelsetid etc., utbildningsnivå, kön etc.
+  # De ligger i 3 olika tabeller, en för riket, en för län och en för kommuner. Detta skript hämtar data
+  # för de nivåer man skickar med, så det kan hämta riket, län och kommuner
+  #
+  # Skapat av: Peter Möller, Region Dalarna i november 2023
+  # Ändrat senast: 21 december 2023
+  # - lagt till paket som inte låg med samt lagt in pacman, flyttat allt till innanför funktionen så det
+  #   syns när man source:ar i github. 
+  #
+  # ====================================================================================================
+  
+  if (!require("pacman")) install.packages("pacman")
+  pacman::p_load(tidyverse,
+                 pxweb)
+  
+  source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
+  
   
   url_adress <- c("https://api.scb.se/OV0104/v1/doris/sv/ssd/AA/AA0003/AA0003B/IntGr1RikKonUtb",
                   "https://api.scb.se/OV0104/v1/doris/sv/ssd/AA/AA0003/AA0003B/IntGr1LanKonUtb",

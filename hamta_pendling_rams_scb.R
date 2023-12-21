@@ -1,14 +1,39 @@
 
-source("G:/skript/func/func_API.R", encoding = "utf-8", echo = FALSE)
-options(dplyr.summarise.inform = FALSE)
-
-regionnyckel <- hamtaregtab()
 
 hamta_pendling_rams_scb <- function(region_vekt = "20",
                                     kon_klartext_vekt = "män och kvinnor",      # finns: "män", "kvinnor", "män och kvinnor"
                                     tid_vekt = "*"                              # "9999" = senaste år
                                     ) {
 
+  # ===========================================================================================================
+  #
+  # Skript för att hämta pendlingsdata från RAMS, SCB. Årsvis. Skriptet hämtar data från tre olika tabeller,
+  # pendling år 1993-2003, 2004-2018 samt 2019-2021. Man får vara lite försiktig i sina analyser då det kan 
+  # skilja sig något i definitioner, metod etc. Planen är att bygga in BAS-pendlingsdata när den kommer så 
+  # vi kan fortsätta med långa tidsserier. Det kan vara en bra idé att i visualiseringen tydliggöra att data
+  # kommer från olika tabeller, med ex. olika färger. 
+  # 
+  # 
+  # Parametrar som skickas med (= variabler i SCB-tabellen) är:
+  # - Region                                                      # tabellen innehåller bara kommuner och riket men länssiffror kan beräknas genom aggregering 
+  # - Kön                                                         # det funkar dock inte för andel av befolkningen 20-64 år, då skickas bara NA-värden med
+  # - tid (dvs. år)                                               # 
+  #
+  # Innehåll skickas inte med, då det bara är ett val. 
+  #
+  # Skapat av Peter Möller i november 2023.
+  # Senast ändrad: 21 dec 2023
+  #
+  # ===========================================================================================================
+  
+  if (!require("pacman")) install.packages("pacman")
+  pacman::p_load(tidyverse,
+                 pxweb)
+  
+  source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
+  options(dplyr.summarise.inform = FALSE)
+  
+  regionnyckel <- hamtaregtab()
   
   kommun_vekt <- region_vekt[nchar(region_vekt) == 4]
   lan_vekt <- region_vekt[nchar(region_vekt) == 2]
@@ -23,8 +48,9 @@ hamta_pendling_rams_scb <- function(region_vekt = "20",
 #pxvarlist(url_rams)
 #hamta_giltiga_varden_fran_tabell(url_rams_vekt[1], "tid", klartext = T)
 
-  hamta_tid <- if(tid_vekt == "9999") hamta_giltiga_varden_fran_tabell(url_rams_vekt[1], "tid") %>% max() else tid_vekt
-  
+  senaste_ar <- map(url_rams_vekt, ~ hamta_giltiga_varden_fran_tabell(.x, "tid")) %>% unlist() %>% max()      # hämta senaste år som finns i alla medskickade tabeller
+  hamta_tid <- if(any(tid_vekt == "9999")) tid_vekt %>% str_replace("9999", senaste_ar)                       # byt ut "9999" till senaste tillgängliga året i tabellerna
+  hamta_tid <- hamta_tid %>% unique()              # ta bort eventuella dubletter
   
 # funktion för att hämta data från pendlingstabeller
 hamta_data <- function(url_rams) {
