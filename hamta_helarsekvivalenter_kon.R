@@ -1,24 +1,3 @@
-# ===========================================================================================================
-#
-# Skript för att hämta data från SCB om helårsekvivalenter, dvs hur många som är försörjda av offentlige
-# trygghetssystem, som ekonomiskt bistånd, etableringsersättning, sjupenning, sjuk- och aktivitetsersättning,
-# arbetslöshet samt arbetsmarknadsåtgärder. Månadsvis. 
-# 
-# Parametrar som skickas med (= variabler i SCB-tabellen) är:
-# - Innehåll                                                    # ersättningar enligt ovan, samt summa helårsekvivalenter och andel av befolkningen
-# - Region                                                      # tabellen innehåller bara kommuner och riket men länssiffror kan beräknas genom aggregering 
-# - Kön                                                         # det funkar dock inte för andel av befolkningen 20-64 år, då skickas bara NA-värden med
-# - tid (dvs. år och månad)
-#
-# ===========================================================================================================
-
-library(pxweb)
-library(tidyverse)
-
-source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R", encoding = "utf-8", echo = FALSE)
-source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_text.R", encoding = "utf-8", echo = FALSE)
-options(dplyr.summarise.inform = FALSE)
-
 
 hamta_helarsekvivalenter_kon <- function(
     region_vekt = "20",                       # Dalarna defaultvärde
@@ -30,6 +9,31 @@ hamta_helarsekvivalenter_kon <- function(
     tid_vekt = "*",                           # alla år-månader
     long_format = TRUE                        # TRUE om vi vill ha df i long-format, annars kommer alla innehållsvariabler i wide-format
     ) {
+  
+  # ===========================================================================================================
+  #
+  # Skript för att hämta data från SCB om helårsekvivalenter, dvs hur många som är försörjda av offentliga
+  # trygghetssystem, som ekonomiskt bistånd, etableringsersättning, sjupenning, sjuk- och aktivitetsersättning,
+  # arbetslöshet samt arbetsmarknadsåtgärder. Månadsvis. 
+  # 
+  # Parametrar som skickas med (= variabler i SCB-tabellen) är:
+  # - Innehåll                                                    # ersättningar enligt ovan, samt summa helårsekvivalenter och andel av befolkningen
+  # - Region                                                      # tabellen innehåller bara kommuner och riket men länssiffror kan beräknas genom aggregering 
+  # - Kön                                                         # det funkar dock inte för andel av befolkningen 20-64 år, då skickas bara NA-värden med
+  # - tid (dvs. år och månad)
+  #
+  # Skapat av Peter Möller
+  # Senast ändrad: nov 2023
+  #
+  # ===========================================================================================================
+  
+  if (!require("pacman")) install.packages("pacman")
+  pacman::p_load(tidyverse,
+                 pxweb)
+  
+  source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R", encoding = "utf-8", echo = FALSE)
+  source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_text.R", encoding = "utf-8", echo = FALSE)
+  options(dplyr.summarise.inform = FALSE)
   
   # url till tabellen i SCB:s statistikdatabas
   url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/HE/HE0000/HE0000T02N2"
