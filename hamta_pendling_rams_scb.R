@@ -31,6 +31,7 @@ hamta_pendling_rams_scb <- function(region_vekt = "20",
                  pxweb)
   
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
+
   options(dplyr.summarise.inform = FALSE)
   
   regionnyckel <- hamtaregtab()

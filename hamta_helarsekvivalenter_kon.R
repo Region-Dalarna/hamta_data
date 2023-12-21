@@ -33,6 +33,7 @@ hamta_helarsekvivalenter_kon <- function(
   
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_text.R")
+
   options(dplyr.summarise.inform = FALSE)
   
   # url till tabellen i SCB:s statistikdatabas
