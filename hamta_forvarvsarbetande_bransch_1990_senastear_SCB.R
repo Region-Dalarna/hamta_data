@@ -10,6 +10,7 @@ hamta_data_sysselsatta_1990 <- function(region_vekt = "20", # Val av region.
   # flera olika databaser. 1990 - 2019 baseras på RAMS, men därefter är det BAS. 16-74 år
   # Funkar bara för regioner (eller Sverige)
   # Branschgrupper baseras på den äldre klassificering som gällde innan SNI2007 (eftersom det fanns färre branschgrupper tidigare)
+  # Notera att matchning mellan branschgrupper före och efter 2007 är delvis subjektiv (se case_when satser nedan)
   #
   # Skapad av Jon Frank
   # Uppdaterad senast 2024-01-04
