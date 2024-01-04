@@ -35,7 +35,7 @@ hamta_data_sysselsatta_1990 <- function(region_vekt = "20", # Val av region.
   kon_vekt <- hamta_kod_med_klartext(url_1990_2003, kon_klartext, skickad_fran_variabel = "kon")
   
   # Variabellistor
-  url < -c(url_1990_2003,url_2004_2007,url_2008_2018,url_2019,url_2020_)
+  url <- c(url_1990_2003,url_2004_2007,url_2008_2018,url_2019,url_2020_)
   lista = list()
   
   varlista_1990_2003 <- list(
