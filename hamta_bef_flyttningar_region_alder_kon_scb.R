@@ -51,6 +51,7 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
     
     cont_koder <- if (cont_klartext == "*") cont_klartext else hamta_kod_med_klartext(url_uttag, cont_klartext, skickad_fran_variabel = "contentscode")        #        hamta_kod_med_klartext(url_uttag, cont_klartext_vekt)                            # vi använder klartext i parametrar för innehållsvariabel, koder i övriga
     kon_koder <- if (!is.na(kon_klartext)) hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon") else  "*"
+    alder_koder <- alder_koder %>% as.character()       # säkerställ att alder_koder är character och inte numeric
     
     # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
     senaste_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid") %>% max()
