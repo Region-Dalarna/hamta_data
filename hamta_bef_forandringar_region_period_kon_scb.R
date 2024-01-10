@@ -48,6 +48,7 @@ hamta_bef_forandringar_region_alder_kon_scb <- function(
     
     # url till tabellen i SCB:s statistikdatabas
     url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101G/BefforandrKvRLK"
+    cont_kod <- "000002Z9"
     
     kon_koder <- if (!is.na(kon_klartext) & !all(kon_klartext == "*")) hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon") else "*"
     period_koder <- if (!is.na(period_klartext)) hamta_kod_med_klartext(url_uttag, period_klartext, skickad_fran_variabel = "period") else  "*"
@@ -63,12 +64,14 @@ hamta_bef_forandringar_region_alder_kon_scb <- function(
       Kon = kon_koder,
       Period = period_koder,
       Forandringar = forandringar_koder,
-      ContentsCode = "000002Z9",
+      ContentsCode = cont_kod,
       Tid = tid_koder
     )
     
     if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
     # =============================================== API-uttag ===============================================
+    
+    cont_var_klartext <- hamta_klartext_med_kod(url_uttag, cont_kod, "contentscode")
     
     px_uttag <- pxweb_get(url = url_uttag, query = varlista) 
     
@@ -78,7 +81,8 @@ hamta_bef_forandringar_region_alder_kon_scb <- function(
       as.data.frame(px_uttag) %>% 
       cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
               select(Region)) %>% 
-      rename(regionkod = Region) %>% relocate(regionkod, .before = region)
+      rename(regionkod = Region) %>% relocate(regionkod, .before = region) %>% 
+        rename(personer = cont_var_klartext)
     )
     
     if (returnera_df) return(retur_df)
