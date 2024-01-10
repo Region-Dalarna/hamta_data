@@ -14,13 +14,13 @@ hamta_bef_forandringar_region_alder_kon_scb <- function(
   
   # ===========================================================================================================
   #
-  # Skript för att hämta data från SCB för befolkningsförändringar års- halvårs-, eller kvartalsvis. 
+  # Skript för att hämta data från SCB för befolkningsförändringar års- halvårs-, eller kvartalsvis från år 2000. 
   # Denna tabell: https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__BE__BE0101__BE0101G/BefforandrKvRLK/  
   #
-  # Möjlig och ganska enkel utveckling av funktionen vore att plocka med tabell för flyttningar år 1968-1996. 
   # 
   # Parametrar som skickas med (= variabler i SCB-tabellen) är:
   # - Innehåll                                                    # Finns bara "Befolkningsstatistik, antal personer" så därför är det inte valbart
+  # - Förändringar                                                # "*" är standard. Finns: finns: "folkmängd", "folkökning", "födda", "döda", "födelseöverskott", "samtliga inflyttningar", "samtliga utflyttningar", "inflyttningar från kommuner inom länet", "inflyttningar från övriga län", "invandringar", "utflyttningar till kommuner inom länet", "utflyttningar till övriga län", "utvandringar", "flyttningsöverskott totalt", "flyttningsöverskott eget län", "flyttningsöverskott övriga Sverige", "invandringsöverskott", "justeringspost"  
   # - Region                                                      # tabellen innehåller kommuner, län och riket, det är regionkoder som skickas med
   # - Kön                                                         # finns enbart kvinnor och män (inte totalt)
   # - Period                                                      # finns: "hela året", "första halvåret", "andra halvåret", "kvartal 1", "kvartal 2", "kvartal 3", "kvartal 4"
@@ -49,8 +49,6 @@ hamta_bef_forandringar_region_alder_kon_scb <- function(
     # url till tabellen i SCB:s statistikdatabas
     url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101G/BefforandrKvRLK"
     
-    
-    cont_koder <- if (cont_klartext == "*") cont_klartext else hamta_kod_med_klartext(url_uttag, cont_klartext, skickad_fran_variabel = "contentscode")        #        hamta_kod_med_klartext(url_uttag, cont_klartext_vekt)                            # vi använder klartext i parametrar för innehållsvariabel, koder i övriga
     kon_koder <- if (!is.na(kon_klartext) & !all(kon_klartext == "*")) hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon") else "*"
     period_koder <- if (!is.na(period_klartext)) hamta_kod_med_klartext(url_uttag, period_klartext, skickad_fran_variabel = "period") else  "*"
     forandringar_koder <- if (forandringar_klartext == "*") forandringar_klartext else hamta_kod_med_klartext(url_uttag, forandringar_klartext, skickad_fran_variabel = "forandringar")        
