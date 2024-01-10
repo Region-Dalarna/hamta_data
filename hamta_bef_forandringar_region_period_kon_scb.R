@@ -74,10 +74,12 @@ hamta_bef_forandringar_region_alder_kon_scb <- function(
     
     # Lägg API-uttaget i px_df, lägg på ytterligare ett uttag men med koder istället för klartext,
     # välj ut bara regionkolumnen i det andra uttaget, döp om den till regionkod och lägg den först av kolumnerna
-    retur_df <- as.data.frame(px_uttag) %>% 
+    retur_df <- suppressWarnings(                             # för att slippa felmmedelande om att det finns NA-värden
+      as.data.frame(px_uttag) %>% 
       cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
               select(Region)) %>% 
       rename(regionkod = Region) %>% relocate(regionkod, .before = region)
+    )
     
     if (returnera_df) return(retur_df)
     if (skriv_excelfil) write_xlsx(retur_df, paste0(mapp_excelfil, filnamn_excelfil))
