@@ -1,9 +1,9 @@
 
-hamta_bef_flyttningar_region_alder_kon_scb <- function(
+hamta_bef_forandringar_region_alder_kon_scb <- function(
     region_vekt = "20",                       # Dalarna defaultvärde
-    kon_klartext = NA,                        # finns "kvinnor", "män", c("män", "kvinnor"), NA = så skippar vi denna variabel
-    alder_koder = NA,                         # NA så skippar vi denna variabel, finns 1 årsgrupper, 1 - 100+ samt "tot" för alla åldrar - dock, se upp för dubbelräkning med "tot"
-    cont_klartext = "*",                      # finns: "Folkmängd", "Folkökning"
+    forandringar_klartext = "*",              # finns: "folkmängd", "folkökning", "födda", "döda", "födelseöverskott", "samtliga inflyttningar", "samtliga utflyttningar", "inflyttningar från kommuner inom länet", "inflyttningar från övriga län", "invandringar", "utflyttningar till kommuner inom länet", "utflyttningar till övriga län", "utvandringar", "flyttningsöverskott totalt", "flyttningsöverskott eget län", "flyttningsöverskott övriga Sverige", "invandringsöverskott", "justeringspost"
+    kon_klartext = NA,                        # finns "män", "kvinnor", "totalt", NA = så skippar vi denna variabel
+    period_klartext = "hela året",            # NA så skippar vi denna variabel, finns 1 årsgrupper, 1 - 100+ samt "tot" för alla åldrar - dock, se upp för dubbelräkning med "tot"
     tid_koder = "*",                          # alla år, finns från 1997, "9999" = senaste år  (koder och klartext är samma sak i denna tabell)
     returnera_df = TRUE,                      # FALSE om man inte vill returnera en df
     mapp_excelfil = NA,                       # var man vill spara sin Excelfil om man vill spara en sådan
@@ -14,16 +14,16 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
   
   # ===========================================================================================================
   #
-  # Skript för att hämta data från SCB för flyttningar årsvis. 
-  # Denna tabell: https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__BE__BE0101__BE0101J/Flyttningar97/  
+  # Skript för att hämta data från SCB för befolkningsförändringar års- halvårs-, eller kvartalsvis. 
+  # Denna tabell: https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__BE__BE0101__BE0101G/BefforandrKvRLK/  
   #
   # Möjlig och ganska enkel utveckling av funktionen vore att plocka med tabell för flyttningar år 1968-1996. 
   # 
   # Parametrar som skickas med (= variabler i SCB-tabellen) är:
-  # - Innehåll                                                    # Folkmängd (standard) och/eller Folkökning
+  # - Innehåll                                                    # Finns bara "Befolkningsstatistik, antal personer" så därför är det inte valbart
   # - Region                                                      # tabellen innehåller kommuner, län och riket, det är regionkoder som skickas med
   # - Kön                                                         # finns enbart kvinnor och män (inte totalt)
-  # - Ålder                                                       # NA = att variabeln utelämnas (standard), finns i ettårsgrupper tom 100+ år
+  # - Period                                                      # finns: "hela året", "första halvåret", "andra halvåret", "kvartal 1", "kvartal 2", "kvartal 3", "kvartal 4"
   # - tid (dvs. år)                                               # * = alla år (standard). "9999" = senaste tillgängliga år i tabellen. År från och med 1968
   #
   # Skapat av: Peter Möller, Region Dalarna
@@ -47,11 +47,13 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
   if (returnera_df | skriv_excelfil) {                       # skriptet körs bara om användaren valt att returnera en dataframe och/eller excelfil
     
     # url till tabellen i SCB:s statistikdatabas
-    url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101J/Flyttningar97"
+    url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101G/BefforandrKvRLK"
+    
     
     cont_koder <- if (cont_klartext == "*") cont_klartext else hamta_kod_med_klartext(url_uttag, cont_klartext, skickad_fran_variabel = "contentscode")        #        hamta_kod_med_klartext(url_uttag, cont_klartext_vekt)                            # vi använder klartext i parametrar för innehållsvariabel, koder i övriga
-    kon_koder <- if (!is.na(kon_klartext)) hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon") else  "*"
-    alder_koder <- alder_koder %>% as.character()       # säkerställ att alder_koder är character och inte numeric
+    kon_koder <- if (!is.na(kon_klartext) & !all(kon_klartext == "*")) hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon") else "*"
+    period_koder <- if (!is.na(period_klartext)) hamta_kod_med_klartext(url_uttag, period_klartext, skickad_fran_variabel = "period") else  "*"
+    forandringar_koder <- if (forandringar_klartext == "*") forandringar_klartext else hamta_kod_med_klartext(url_uttag, forandringar_klartext, skickad_fran_variabel = "forandringar")        
     
     # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
     giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid")
@@ -61,13 +63,13 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
     varlista <- list(
       Region = region_vekt,
       Kon = kon_koder,
-      Alder = alder_koder,
-      ContentsCode = cont_koder,
+      Period = period_koder,
+      Forandringar = forandringar_koder,
+      ContentsCode = "000002Z9",
       Tid = tid_koder
     )
     
     if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
-    if (all(is.na(alder_koder))) varlista <- varlista[names(varlista) != "Alder"]
     # =============================================== API-uttag ===============================================
     
     px_uttag <- pxweb_get(url = url_uttag, query = varlista) 
@@ -78,16 +80,6 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
       cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
               select(Region)) %>% 
       rename(regionkod = Region) %>% relocate(regionkod, .before = region)
-    
-    antal_cont <- sum(names(retur_df) %in% pxvardelist(url_uttag, "contentscode")$klartext)        # räkna antal contentsvariabler
-    
-    # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
-    # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
-    if (long_format & antal_cont > 1) {
-      retur_df <- retur_df %>% 
-        konvertera_till_long_for_contentscode_variabler(url_uttag)
-      
-    } # slut if-sats som kontrollera om vi vill ha df i long-format
     
     if (returnera_df) return(retur_df)
     if (skriv_excelfil) write_xlsx(retur_df, paste0(mapp_excelfil, filnamn_excelfil))
