@@ -4,7 +4,7 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
                                         yrke_klartext = "*", # Se nedan för alternativa val. "*" för alla
                                         bransch_klartext = "*", # Se nedan för alternativa val. "*" för alla
                                         returnera_data = TRUE, # Vill användaren returnera data som en dataframe
-                                        tid = "9999", # Sätts till "9999" om man enbart vill ha senaste år,"*" för alla alternativt intervall
+                                        tid = "9999", # Sätts till "9999" om man enbart vill ha senaste år,"*" . Se nedan för ytterligare förklaring
                                         filnamn = "yrke_bransch.xlsx"){ # Filnamn
   
   
@@ -13,8 +13,12 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
   # Funkar bara för regioner (eller Sverige)
   # För att välja specifika yrken och/eller branscher, använd namn på yrken/branscher från funktionen nedan
   # pxvardelist("https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0208/AM0208D/YREG56N", "SNI2007")
+  #
+  # tid: För ett intervall som slutar med sista tillgängliga år, skriv startår:"9999". Exempelvis 2010:"9999".
+  # Funkar även med enstaka år c(2010,2015,"9999")
+  #
   # Skapad av Jon Frank
-  # Uppdaterad senast 2024-01-09
+  # Uppdaterad senast 2024-01-12 (justering tid)
   # ===========================================================================================================
   # Paket som behövs
   if (!require("pacman")) install.packages("pacman")
@@ -29,26 +33,29 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
   url <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0208/AM0208D/YREG56N"
   
   # Gör om från klartext till kod som databasen förstår
-  if (kon_klartext == "*"){
+  if (all(kon_klartext == "*")){
     
     kon_vekt = "*"
     
   }else kon_vekt <- hamta_kod_med_klartext(url, kon_klartext, skickad_fran_variabel = "kon")
   
-  if (yrke_klartext == "*"){
+  if (all(yrke_klartext == "*")){
     
     yrke_vekt = "*"
     
   }else yrke_vekt <- hamta_kod_med_klartext(url, yrke_klartext, skickad_fran_variabel = "Yrke2012")
   
-  if ( bransch_klartext == "*"){
+  if (all(bransch_klartext == "*")){
     
     brancsh_vekt = "*"
     
   }else brancsh_vekt <- hamta_kod_med_klartext(url, bransch_klartext, skickad_fran_variabel = "SNI2007")
 
   # Om tid har satts till 9999, välj senaste år
-  if("9999" %in% tid) tid = max(hamta_giltiga_varden_fran_tabell(url, "tid"))
+  # if("9999" %in% tid) tid = max(hamta_giltiga_varden_fran_tabell(url, "tid"))
+  
+  giltiga_ar <- hamta_giltiga_varden_fran_tabell(url, "tid")
+  if (all(tid != "*")) tid <- tid %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] 
   
   varlista <- list(
     Region = region_vekt,
