@@ -1,8 +1,4 @@
-
-# Funktioner som sourcas från Region Dalarna
-source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
-
-#test_list=hamta_data_utbniva(spara_data = FALSE)
+#test_list=hamta_data_utbniva()
 hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamedriket = TRUE), # Använd förslagsvis hamtakommuner eller hamtaallalan
                                alder = c(as.character(25:64)), # antingen "tot16-74" eller annat intervall, exempelvis c(as.character(25:64)), "*" ger alla år
                                utbildningsniva_klartext = "*", # För alternativ, se text nedan
@@ -10,7 +6,7 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
                                output_mapp = NA, # Här hamnar data. Måste väljas om man vill spara data
                                filnamn = "utbildningsniva.xlsx", # Filnamn, om man vill spara data
                                returnera_data = TRUE, # Om man vill returnera data
-                               tid ="9999" # Sätts till "9999" om man enbart vill ha senaste år,"*" för alla alternativt intervall
+                               tid ="9999" # Sätts till "9999" om man enbart vill ha senaste år,"*" för alla. Se nedan för ytterligare förklaringar (intervall)
 ){
   
   # ===========================================================================================================
@@ -28,8 +24,12 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
   #   forskarutbildning
   #   uppgift om utbildningsnivå saknas
   # Generellt gäller "*" om man vill ha alla variabler
+  #
+  # tid: För ett intervall som slutar med sista tillgängliga år, skriv startår:"9999". Exempelvis 2010:"9999".
+  # Funkar även med enstaka år c(2010,2015,"9999")
+  #
   # Skapad av Jon Frank
-  # Uppdaterad senast 2023-12-20
+  # Uppdaterad senast 2023-01-12
   # ===========================================================================================================
   
   
@@ -40,6 +40,9 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
   p_load(pxweb,
          tidyverse,
          openxlsx)
+  
+  # Funktioner som sourcas från Region Dalarna
+  source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
   
   # "Adresser" till SCBs databas
   url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/UF/UF0506/UF0506B/Utbildning"
@@ -53,7 +56,8 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
     
   }else utbildningsniva_vekt <- hamta_kod_med_klartext(url_uttag, utbildningsniva_klartext, skickad_fran_variabel = "utbildningsniva")
   
-  if("9999" %in% tid) tid = max(hamta_giltiga_varden_fran_tabell(url_uttag, "tid"))
+  giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid")
+  if (all(tid != "*")) tid <- tid %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] 
   
   pxweb_query_list <- 
     list("Region" = region,
