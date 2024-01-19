@@ -28,7 +28,7 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
   #            november 2023
   # Senast uppdaterat:  december 2023
   #                     (mindre justeringar)
-  # 
+  #                     Uppdaterat kod så att det går att ta med "9999" som senaste år. Tidigare kod bortkommenterad. Jon 2024-01-19
   # ===========================================================================================================
   
   pacman::p_load(tidyverse,
@@ -51,12 +51,16 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
     kon_koder <- hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon")
 
     # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
-    senaste_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid") %>% max()
-    if (max(tid_koder) == "9999") {
-      min_ar <- min(tid_koder)
-      if (min_ar == "9999") min_ar <- senaste_ar
-    }
-    tid_koder <- tid_koder %>% as.character()
+    # senaste_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid") %>% max()
+    # if (max(tid_koder) == "9999") {
+    #   min_ar <- min(tid_koder)
+    #   if (min_ar == "9999") min_ar <- senaste_ar
+    # }
+    # tid_koder <- tid_koder %>% as.character()
+    
+    # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
+    giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid")
+    if (all(tid_koder != "*")) tid_koder <- tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] 
   
     # variabler som vi vill ha med i uttaget
     varlista <- list(
