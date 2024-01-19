@@ -57,7 +57,7 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
   }else utbildningsniva_vekt <- hamta_kod_med_klartext(url_uttag, utbildningsniva_klartext, skickad_fran_variabel = "utbildningsniva")
   
   giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid")
-  if (all(tid != "*")) tid <- tid %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] 
+  if (all(tid != "*")) tid <- tid %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
   
   pxweb_query_list <- 
     list("Region" = region,

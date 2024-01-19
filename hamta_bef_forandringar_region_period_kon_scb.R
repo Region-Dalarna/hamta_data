@@ -56,7 +56,7 @@ hamta_bef_forandringar_region_alder_kon_scb <- function(
     
     # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
     giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid")
-    if (all(tid_koder != "*")) tid_koder <- tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] 
+    if (all(tid_koder != "*")) tid_koder <- tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
     
     # variabler som vi vill ha med i uttaget
     varlista <- list(

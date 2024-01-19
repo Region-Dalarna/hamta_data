@@ -55,7 +55,7 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
   # if("9999" %in% tid) tid = max(hamta_giltiga_varden_fran_tabell(url, "tid"))
   
   giltiga_ar <- hamta_giltiga_varden_fran_tabell(url, "tid")
-  if (all(tid != "*")) tid <- tid %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] 
+  if (all(tid != "*")) tid <- tid %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
   
   varlista <- list(
     Region = region_vekt,
