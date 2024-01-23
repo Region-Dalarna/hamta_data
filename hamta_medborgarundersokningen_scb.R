@@ -50,7 +50,6 @@ hamta_data_medborgarundersokningen_scb <- function(region_vekt = "20",          
     svarsalt_koder <- hamta_kod_eller_klartext_fran_lista(px_meta, svarsalternativ_klartext, skickad_fran_variabel = "ContentsCode")
     
     # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
-    #giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_tab, "tid")
     giltiga_ar <- hamta_kod_eller_klartext_fran_lista(px_meta, tid_koder, "tid")
     tid_koder <- tid_koder %>% 
       as.character() %>% 
@@ -73,9 +72,9 @@ hamta_data_medborgarundersokningen_scb <- function(region_vekt = "20",          
 
     px_uttag <- pxweb_get(url = url_tab, query = varlista)              # hämta data från pxweb
     
-    px_df <- as.data.frame(px_uttag) %>%                        # spara i en dataframe, plocka med regionkoder 
+    px_df <- suppressWarnings(as.data.frame(px_uttag) %>%                        # spara i en dataframe, plocka med regionkoder 
       cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
-              select(Region)) %>% 
+              select(Region))) %>% 
       rename(regionkod = Region) %>% relocate(regionkod, .before = region)
     
     # hämta frågan som är variabeln MedbVariabel i klartext
@@ -83,12 +82,12 @@ hamta_data_medborgarundersokningen_scb <- function(region_vekt = "20",          
     var_list_ind <- which(str_detect(var_list_tab, "MedbVariabel"))
     medb_fraga_klartext <- map(px_meta$variables, ~ .x$text) %>% unlist() %>% .[var_list_ind]
     
-    cont_list_ind <- which(str_detect(var_list_tab, "ContentsCode"))
-    cont_var_klartext <- map(px_meta$variables, ~ .x$text) %>% unlist() %>% .[cont_list_ind]
-    
+    # för att kunna konvertera till long-format genom att använda px_meta-listan och slippa göra fler API-anrop
+    cont_var_klartext <- hamta_kod_eller_klartext_fran_lista(px_meta, svarsalt_koder, "ContentsCode", hamta_kod = FALSE)
+                                                
     retur_df <- px_df %>% 
       pivot_longer(all_of(medb_fraga_klartext), names_to = "fraga", values_to = "delfraga") %>% 
-      
+      pivot_longer(all_of(cont_var_klartext), names_to = "svarsalternativ", values_to = "varde") %>% 
       relocate(år, .before = 1) %>% 
       relocate(fraga, .after = `medborgarnas bakgrund`) %>% 
       relocate(delfraga, .after = fraga)
