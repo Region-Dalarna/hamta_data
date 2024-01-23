@@ -10,9 +10,7 @@ hamta_data_medborgarundersokningen_scb <- function(region_vekt = "20",          
                                                    tid_koder = "*"                 # "9999" = senaste år
                                                    ) {                             # "*" = alla värden, går att skicka med flera värden ovan i en vektor, alltså: c("samtliga", "kvinnor", "ålder - 50-64 år")
   
-                             
-
-  
+  # url:er till alla tabeller
   alla_urler <- c("https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0003/ME0003A/MedborgSkolaOms",
                   "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0003/ME0003B/MedborgBoende",
                   "https://api.scb.se/OV0104/v1/doris/sv/ssd/ME/ME0003/ME0003C/MedborgArbUtb",
@@ -26,14 +24,59 @@ hamta_data_medborgarundersokningen_scb <- function(region_vekt = "20",          
   # funktionen som kommer att användas i map-funktionen nedan, dvs. det är här alla data laddas ner och bearbetas tabell för tabell
   hamta_medb_data <- function(url_tab) {
   
-    bakgr_koder <- if(all(bakgrund_klartext == "*")) "*" else hamta_kod_med_klartext(url_tab, bakgrund_klartext, skickad_fran_variabel = "medbakgrund")
-    svarsalt_koder <- if(all(svarsalternativ_klartext == "*")) "*" else hamta_kod_med_klartext(url_tab, svarsalternativ_klartext, skickad_fran_variabel = "ContentsCode")
+    px_meta <- pxweb_get(url = url_tab)
+    
+    hamta_kod_med_klartext_lokal <- function(lista, klartext_varde, skickad_fran_variabel, hamta_kod = TRUE) {
+      
+      if (hamta_kod) {
+        retur_val <- "values"
+        hamta_val <- "valueTexts"
+      } else {
+        retur_val <- "valueTexts"
+        hamta_val <- "values"
+      }
+      
+      # Kontrollera om listan har två element och de heter "title" och "variables", om så extraheras bara "variables"-listan och används
+      if(length(lista) == 2 && all(c("title", "variables") %in% names(lista))) {
+        lista <- lista$variables
+      }
+      
+      # Hitta det element i listan som har den angivna koden
+      list_element <- lista %>% 
+        keep(~ tolower(.x$code) == tolower(skickad_fran_variabel)) %>% 
+        first()
+      
+      # Matcha 'valueTexts' med det angivna klartextvärdet och hämta motsvarande 'values'
+      if (!is.null(list_element)) {
+        if (all(klartext_varde == "*")) {
+          return(list_element[[retur_val]])
+        } else {
+          matchande_index <- which(tolower(list_element[[hamta_val]]) == tolower(klartext_varde))
+          return(list_element[[retur_val]][matchande_index])
+        } # slut if-sats om klartext_varde == *
+      } else {       # nedan är om ingen matchning hittas
+        warning("skickad_fran_variabel hittades inte som variabel i aktuell tabell.")
+        return(NULL) # Ingen matchning hittades
+      }
+    } # slut funktion
+    
+    
+    test <- hamta_kod_med_klartext_lokal(lista = px_meta, 
+                                         klartext_varde = c("samtliga", "kvinnor"), 
+                                         skickad_fran_variabel = "Medbakgrund")
+    
+    bakgr_koder <- hamta_kod_med_klartext_lokal(px_meta, bakgrund_klartext, skickad_fran_variabel = "medbakgrund")
+    svarsalt_koder <- hamta_kod_med_klartext_lokal(px_meta, svarsalternativ_klartext, skickad_fran_variabel = "ContentsCode")
     
     # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
-    giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_tab, "tid")
-    if (all(tid_koder != "*")) tid_koder <- tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar]
-    
-    
+    #giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_tab, "tid")
+    giltiga_ar <- hamta_kod_med_klartext_lokal(px_meta, tid_koder, "tid")
+    tid_koder <- tid_koder %>% 
+      as.character() %>% 
+      str_replace("9999", max(giltiga_ar)) %>%
+      str_replace("\\*", giltiga_ar) %>% 
+      .[. %in% giltiga_ar] %>% 
+      unique()
     
     varlista <- list(
       Region = region_vekt,
@@ -44,9 +87,9 @@ hamta_data_medborgarundersokningen_scb <- function(region_vekt = "20",          
     )
   
     # Hämta namn på medborgarvariabel i just den här tabellen och döp om den om den heter MedbBariabel med siffra på slutet
-    Medb_var <- pxvarlist(url_tab)$koder[str_detect(pxvarlist(url_tab)$koder, "MedbVariabel")]
-    names(varlista)[str_detect(names(varlista), "MedbVariabel")] <- Medb_var     
-    
+    var_list_tab <- map(px_meta$variables, ~ .x$code) %>% unlist() 
+    names(varlista)[str_detect(names(varlista), "MedbVariabel")] <- var_list_tab[str_detect(var_list_tab, "MedbVariabel")]     
+
     px_uttag <- pxweb_get(url = url_tab, query = varlista)              # hämta data från pxweb
     
     px_df <- as.data.frame(px_uttag) %>%                        # spara i en dataframe, plocka med regionkoder 
@@ -55,7 +98,9 @@ hamta_data_medborgarundersokningen_scb <- function(region_vekt = "20",          
       rename(regionkod = Region) %>% relocate(regionkod, .before = region)
     
     # hämta frågan som är variabeln MedbVariabel i klartext
-    medb_fraga_klartext <- pxvarlist(url_tab)$klartext[str_detect(pxvarlist(url_tab)$koder, "MedbVariabel")]
+    #medb_fraga_klartext <- pxvarlist(url_tab)$klartext[str_detect(pxvarlist(url_tab)$koder, "MedbVariabel")]
+    var_list_ind <- which(str_detect(var_list_tab, "MedbVariabel"))
+    medb_fraga_klartext <- map(px_meta$variables, ~ .x$text) %>% unlist() %>% .[var_list_ind]
     
     retur_df <- px_df %>% 
       pivot_longer(all_of(medb_fraga_klartext), names_to = "fraga", values_to = "delfraga") %>% 
