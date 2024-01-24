@@ -1,8 +1,7 @@
-library(tidyverse)
-library(pxweb)
 
-source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R", encoding = "utf-8", echo = FALSE)
-
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse,
+               pxweb)
 
 hamta_data_medborgarundersokningen_scb <- function(region_vekt = "20",             # går att skicka flera som en vektor, både riket, län och kommuner
                                                    bakgrund_klartext = "*",        # finns: "samtliga", "män", "kvinnor", "ålder - 18-29 år", "ålder - 30-49 år", "ålder - 50-64 år", "ålder - 65 år eller äldre", "utbildning- Ingen gymnasial utbildning eller gymnasial utbildning [högst 2 år]", "utbildning -Gymnasial utbildning ", "utbildning - Eftergymnasial utbildning", "var man bor i kommunen -  Centralorten", "var man bor i kommunen - Annan tätort", "var man bor i kommunen - Utanför tätort", "boendetid i kommun - 2 år eller kortare tid", "boendetid i kommun - 3-5 år", "boendetid i kommun - 6-10 år", "boendetid i kommun - 11 år eller längre tid", "inkomst - Låg", "inkomst - Mellan", "inkomst - Hög"
@@ -41,6 +40,9 @@ hamta_data_medborgarundersokningen_scb <- function(region_vekt = "20",          
                   "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/ME/ME0003/ME0003I/MedborgTrygghet5"
                   )
   
+  # source:a in funktioner som används i skriptet
+  source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R", encoding = "utf-8", echo = FALSE)
+  
   # funktionen som kommer att användas i map-funktionen nedan, dvs. det är här alla data laddas ner och bearbetas tabell för tabell
   hamta_medb_data <- function(url_tab) {
   
@@ -50,7 +52,7 @@ hamta_data_medborgarundersokningen_scb <- function(region_vekt = "20",          
     svarsalt_koder <- hamta_kod_eller_klartext_fran_lista(px_meta, svarsalternativ_klartext, skickad_fran_variabel = "ContentsCode")
     
     # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
-    giltiga_ar <- hamta_kod_eller_klartext_fran_lista(px_meta, tid_koder, "tid")
+    giltiga_ar <- hamta_kod_eller_klartext_fran_lista(px_meta, "*", "tid")
     tid_koder <- tid_koder %>% 
       as.character() %>% 
       str_replace("9999", max(giltiga_ar)) %>%
