@@ -1,4 +1,4 @@
-hamta_data_matchning <-function(region = hamtaAllaLan(tamedriket = TRUE), # Val av region/FA-region
+hamta_data_matchning_lan_fa <-function(region = hamtaAllaLan(tamedriket = TRUE), # Val av region/FA-region
                                 output_mapp = NA, # Här hamnar data som sparas. NA gör att data inte sparas
                                 filnamn = "matchning.xlsx" , # Filnamn.
                                 kon_klartext = c("män", "kvinnor","samtliga anställda"), 
