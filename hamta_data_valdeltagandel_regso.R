@@ -90,7 +90,7 @@ hamta_data_valdeltagande_regso <- function(region_vekt = "20",
   
   
   if (!is.na(output_mapp) & !is.na(filnamn)){
-    write.xlsx(antal_sektor_df,paste0(output_mapp,filnamn))
+    write.xlsx(valdeltagande,paste0(output_mapp,filnamn))
   }
   
   # Data returneras som en DF om användaren vill det
