@@ -5,7 +5,7 @@ hamta_data_ohalsotal_regso <- function(region_vekt = "20",
                                        output_mapp = NA, # Outputmapp. Sätts till en mapp om data skall sparas
                                        filnamn = "ohalsotal_regso.xlsx", # Filnamn. Ändra om man vill köra ut en för regso respektive deso
                                        returnera_data = TRUE, # Om man vill returnera data
-                                       tid = "*") # Sätts till "9999" om man enbart vill ha senaste år,"*" 
+                                       tid = "*") # Sätts till "9999" om man enbart vill ha senaste år, alternativt ett intervall som slutar på "9999". "*" ger samtliga år
 {
   
   # ===========================================================================================================
@@ -71,8 +71,8 @@ hamta_data_ohalsotal_regso <- function(region_vekt = "20",
     
   }else bakgrund_vekt <- hamta_kod_med_klartext(url_uttag, bakgrund_klartext, skickad_fran_variabel = "bakgrund")
   
-  # Om användaren bara vill ha senaste år
-  #if("9999" %in% tid) tid = max(hamta_giltiga_varden_fran_tabell(url_uttag, "tid"))
+  giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid")
+  if (all(tid != "*")) tid <- tid %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
   
   varlista <- list(Region = alla_region,
                    Bakgrund = bakgrund_vekt,
