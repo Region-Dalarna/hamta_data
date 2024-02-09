@@ -31,6 +31,7 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
   #                     Uppdaterat kod så att det går att ta med "9999" som senaste år. Tidigare kod bortkommenterad. Jon 2024-01-19
   # ===========================================================================================================
   
+  if (!require("pacman")) install.packages("pacman")
   pacman::p_load(tidyverse,
                  pxweb,
                  writexl)
