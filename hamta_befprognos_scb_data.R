@@ -90,6 +90,7 @@ hamta_befprognos_data <- function(
       # pxvarlist(url_prognos)
       # pxvardelist(url_prognos, "ALDER", skriv_vektlista_till_clipboard = TRUE)
       
+      if (all(cont_klartext == "*")) cont_klartext <- hamta_giltiga_varden_fran_tabell(url_scbtabell, "contentscode", klartext = TRUE)
       cont_vekt <- hamta_kod_med_klartext(url_prognos, cont_klartext, skickad_fran_variabel = "contentscode")
       kon_vekt <- hamta_kod_med_klartext(url_prognos, kon_klartext, skickad_fran_variabel = "kon")
       alder_vekt <- alder_list %>% unlist()
@@ -150,6 +151,7 @@ hamta_befprognos_data <- function(
                          "Inrikes utflyttning" = "inrikes_utflyttade", "Invandring" = "immigranter", "Utvandring" = "emigranter")
       
       contvar_vekt <- c("Folkmängd", "Födda", "Döda", "Inrikes inflyttning", "Inrikes utflyttning", "Invandring", "Utvandring")
+      if (all(cont_klartext == "*")) cont_klartext <- contvar_vekt
       
       las_in_profet_fil <- function(profetfil_sokvag) {
         
