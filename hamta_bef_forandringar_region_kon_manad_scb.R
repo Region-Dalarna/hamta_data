@@ -78,7 +78,8 @@ hamta_befolkningsforandringar_manad <- function(region_vekt = "20",
     px_df <- suppressWarnings(as.data.frame(px_uttag) %>%                        # spara i en dataframe, plocka med regionkoder 
                                 cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
                                         select(Region))) %>% 
-      rename(regionkod = Region) %>% relocate(regionkod, .before = region)  
+      rename(regionkod = Region) %>% relocate(regionkod, .before = region) %>% 
+      manader_bearbeta_scbtabeller()
   
     if (returnera_df) return(px_df)
     if (skriv_excelfil) write_xlsx(px_df, paste0(mapp_excelfil, filnamn_excelfil))
