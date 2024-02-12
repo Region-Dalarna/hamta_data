@@ -4,7 +4,7 @@ hamta_befprognos_data <- function(
     alder_list = "*",                  
     kon_klartext = c("kvinnor", "män"),     # "män", "kvinnor"
     cont_klartext = "Folkmängd",       # "Folkmängd", "Födda", "Döda", "Inrikes inflyttning", "Inrikes utflyttning", "Invandring", "Utvandring"
-    tid_vekt = "*",                    # kan vara enskilda år, om "+" eller "-" skickas med så tas prognosåret + eller - antalet år som skickas med
+    tid_vekt = "*",                    # kan vara enskilda år, om "+" eller "-" skickas med så tas prognosåret + eller - antalet år som skickas med, ex. "+0" så tas själva prognosåret med
     url_prognos_vektor = "G:/Samhällsanalys/Statistik/Befolkningsprognoser/Profet/datafiler/",           # behövs i både pxweb och profetdelen 
     prognos_ar = "9999",               # NA = alla år, eller enskilda år, "9999" = senaste år
     long_format = FALSE
@@ -57,7 +57,7 @@ hamta_befprognos_data <- function(
     
     if(str_detect(hamta_url, "https://api.scb.se")){
       
-       prognos_ar <- hamta_giltiga_varden_fran_tabell(url_scbtabell, "tid") %>% min() %>% as.numeric()
+       prognos_ar <- hamta_giltiga_varden_fran_tabell(hamta_url, "tid") %>% min() %>% as.numeric()
       
     } else {
       
@@ -76,7 +76,7 @@ hamta_befprognos_data <- function(
       prognos_ar <- map_int(filsokvagar, ~ parse_number(.))
     }
     
-    start_ar <- prognos_ar - 1
+    start_ar <- prognos_ar  #- 1
     jmfr_ar <- start_ar + jmfr_vekt
     if (length(jmfr_ar) > 0)  hamta_tid_vekt <- c(jmfr_ar, andra_ar_vekt) else hamta_tid_vekt <- andra_ar_vekt
     
@@ -91,7 +91,7 @@ hamta_befprognos_data <- function(
       # pxvarlist(url_prognos)
       # pxvardelist(url_prognos, "ALDER", skriv_vektlista_till_clipboard = TRUE)
       
-      if (all(cont_klartext == "*")) cont_klartext <- hamta_giltiga_varden_fran_tabell(url_scbtabell, "contentscode", klartext = TRUE)
+      if (all(cont_klartext == "*")) cont_klartext <- hamta_giltiga_varden_fran_tabell(url_prognos, "contentscode", klartext = TRUE)
       cont_vekt <- hamta_kod_med_klartext(url_prognos, cont_klartext, skickad_fran_variabel = "contentscode")
       kon_vekt <- hamta_kod_med_klartext(url_prognos, kon_klartext, skickad_fran_variabel = "kon")
       alder_vekt <- alder_list %>% unlist()
@@ -134,7 +134,7 @@ hamta_befprognos_data <- function(
       if (!any(hamtakommuner(lan = "20", F, F, F) %in% region_vekt)) filsokvagar <- filsokvagar[!str_detect(filsokvagar, "kommun")]      # ta bort kommunfiler ur sokvagsvektorn om ingen av Dalarnas kommuners kommunkoder är med
       
       # kontrollera vilka prognosår som finns bland profet-filerna i mappen
-      progn_ar <- map_int(filsokvagar, ~ parse_number(.))
+      progn_ar <- map_chr(filsokvagar, ~ parse_number(.) %>% as.character())
 
       # map_chr(filsokvagar, ~ read_xlsx(.x, sheet = "Info") %>% 
         #                     pull() %>% 
@@ -166,7 +166,7 @@ hamta_befprognos_data <- function(
         #   as.character()
         
         #profet_df <- read_xlsx(profetfil_sokvag, sheet = "Data")                          # gammal, när vi läste in excelfiler, nu kör vi csv (som vi zippar för att spara utrymme)
-        profet_df <- read_csv(profetfil_sokvag) 
+        profet_df <- read_csv(profetfil_sokvag, show_col_types = FALSE) 
         kolnamn <- names(profet_df)                                                        # hämta kolumnnamn för att kunna avgöra om det är kommuner eller län
         
         # kolla om det är kommunfil, i så fall lägger vi ihop in- och utflyttning inom län och från utanför län
