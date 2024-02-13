@@ -31,6 +31,7 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
   #                     Uppdaterat kod så att det går att ta med "9999" som senaste år. Tidigare kod bortkommenterad. Jon 2024-01-19
   # ===========================================================================================================
   
+  if (!require("pacman")) install.packages("pacman")
   pacman::p_load(tidyverse,
                  pxweb,
                  writexl)
@@ -46,9 +47,10 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
     # url till tabellen i SCB:s statistikdatabas
     url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101A/BefolkningNy"
     
+    if (!all(is.na(alder_koder))) alder_koder <- alder_koder %>% as.character() else alder_koder <- NA
     if (!all(is.na(civilstand_klartext))) civilstand_koder <- hamta_kod_med_klartext(url_uttag, civilstand_klartext, skickad_fran_variabel = "civilstand") else civilstand_koder <- NA
     cont_koder <- hamta_kod_med_klartext(url_uttag, cont_klartext, skickad_fran_variabel = "contentscode")        #        hamta_kod_med_klartext(url_uttag, cont_klartext_vekt)                            # vi använder klartext i parametrar för innehållsvariabel, koder i övriga
-    kon_koder <- hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon")
+    if (!all(is.na(kon_klartext))) kon_koder <- hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon") else kon_koder <- NA
 
     # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
     # senaste_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid") %>% max()
@@ -74,6 +76,7 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
     
     if (all(is.na(civilstand_koder))) varlista <- varlista[names(varlista) != "Civilstand"]
     if (all(is.na(alder_koder))) varlista <- varlista[names(varlista) != "Alder"]
+    if (all(is.na(kon_koder))) varlista <- varlista[names(varlista) != "Kon"]
     # =============================================== API-uttag ===============================================
     
     px_uttag <- pxweb_get(url = url_uttag, query = varlista) 
