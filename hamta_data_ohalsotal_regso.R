@@ -1,11 +1,22 @@
 hamta_data_ohalsotal_regso <- function(region_vekt = "20",
-                                       Cont_code = "000004X8", # För val, se nedan
-                                       bakgrund_klartext = c("samtliga"), # För alternativ, se nedan
-                                       kon_klartext = "män och kvinnor", # c("män","kvinnor") ger uppdelat. "män och kvinnor" ger totalt
-                                       output_mapp = NA, # Outputmapp. Sätts till en mapp om data skall sparas
-                                       filnamn = "ohalsotal_regso.xlsx", # Filnamn. Ändra om man vill köra ut en för regso respektive deso
-                                       returnera_data = TRUE, # Om man vill returnera data
-                                       tid = "*") # Sätts till "9999" om man enbart vill ha senaste år, alternativt ett intervall som slutar på "9999". "*" ger samtliga år
+                                       cont_klartext = "Ohälsotalet, antal dagar", # Finns: "Ohälsotalet, antal dagar", "Andel som bidrar till ohälsotalet , procent"
+                                       bakgrund_klartext = c("samtliga"), # Finns: "samtliga 20-64 år", "ålder: 20-24 år", "ålder: 25-34 år", "ålder: 35-44 år", 
+                                                                          #         "ålder: 45-54 år", "ålder: 55-64 år", "samtliga utbildningsnivåer", 
+                                                                          #         "utbildningsnivå: förgymnasial utbildning", "utbildningsnivå: gymnasial utbildning", 
+                                                                          #         "utbildningsnivå: eftergymnasial utbildning", "utbildningsnivå: uppgift saknas", 
+                                                                          #         "samtliga", "födelseregion: Sverige", "födelseregion: Norden exkl. Sverige", 
+                                                                          #         "födelseregion: EU/EFTA exkl. Norden", "födelseregion: övriga världen", 
+                                                                          #         "samtliga utrikes födda invandrare", "samtliga utrikes födda invandrare", 
+                                                                          #         "skäl till invandring: skyddsbehövande och deras anhöriga", 
+                                                                          #         "skäl till invandring: övriga utrikes födda invandrare", "samtliga utrikes födda", 
+                                                                          #         "vistelsetid 0-1 år", "vistelsetid 2-3 år", "vistelsetid 4-9 år", "vistelsetid 10- år"
+                                       kon_klartext = "män och kvinnor",  # Finns: "män och kvinnor", "män", "kvinnor"
+                                       output_mapp = NA,                  # Outputmapp. Sätts till en mapp om data skall sparas
+                                       filnamn = "ohalsotal_regso.xlsx",  # Filnamn om man vill spara en excelfil i output_mapp.
+                                       returnera_data = TRUE,             # Om man vill returnera data som en dataframe från funktionen
+                                       long_format = TRUE,                # om man tar med fler än en innehållsvariabel så görs format om från wide till long
+                                       tid = "*")                         # Sätts till "9999" om man enbart vill ha senaste år, alternativt ett intervall som slutar 
+                                                                          # på "9999". "*" ger samtliga år
 {
   
   # ===========================================================================================================
@@ -18,13 +29,9 @@ hamta_data_ohalsotal_regso <- function(region_vekt = "20",
   # För att få en förståelse för alla variabler som finns, använd
   # pxvarlist("https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003I/IntGr10RegSOKon")
   # Båda kräver  att source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R") har körts först
-  # Förklaringar av huvudvariabler
-  # Cont_code:
-  # 000004X8                    Ohälsotalet, antal dagar
-  # 000004X9 Andel som bidrar till ohälsotalet , procent
   #
   # Skapad av Jon Frank 2024-02-08
-  # 
+  #             Reviderat av Peter Möller 2024-02-13
   # ===========================================================================================================
   
   if (!require("pacman")) install.packages("pacman")
@@ -34,6 +41,7 @@ hamta_data_ohalsotal_regso <- function(region_vekt = "20",
   
   # "Adresser" till SCBs databas
   url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003I/IntGr10RegSOKon"
+  px_meta <- pxweb_get(url_uttag)          # vi hämtar metadata till tabellen här och gör inga fler uttag nedan = färre API-anrop (och elegantare lösning)
   
   region_indelning = "RegSO"
   
@@ -42,7 +50,7 @@ hamta_data_ohalsotal_regso <- function(region_vekt = "20",
   
   ########### Hanterar Regso/Deso #######################################################################################
   # vi hämtar alla regionkoder i databasen
-  alla_regionkoder <- hamta_giltiga_varden_fran_tabell(url_uttag, "region") 
+  alla_regionkoder <- hamta_giltiga_varden_fran_tabell(px_meta, "region") 
   # vi tar ut endast RegSO eller DeSO beroende på vad användaren valt
   alla_regionkoder <- if(region_indelning == "RegSO") alla_regionkoder[str_detect(alla_regionkoder, "R")] else alla_regionkoder[str_detect(alla_regionkoder, "A|B|C")]
   
@@ -63,21 +71,17 @@ hamta_data_ohalsotal_regso <- function(region_vekt = "20",
   #########################################################################################################################
   
   # Gör om från klartext
-  kon_vekt <- hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon")
+  kon_vekt <- hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon")
+  cont_vekt <- hamta_kod_med_klartext(px_meta, cont_klartext, skickad_fran_variabel = "contentscode")
+  bakgrund_vekt <- if (all(bakgrund_klartext == "*")) "*" else hamta_kod_med_klartext(px_meta, bakgrund_klartext, skickad_fran_variabel = "bakgrund")
   
-  if ( all(bakgrund_klartext == "*")){
-    
-    bakgrund_vekt = "*"
-    
-  }else bakgrund_vekt <- hamta_kod_med_klartext(url_uttag, bakgrund_klartext, skickad_fran_variabel = "bakgrund")
-  
-  giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid")
+  giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
   if (all(tid != "*")) tid <- tid %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
   
   varlista <- list(Region = alla_region,
                    Bakgrund = bakgrund_vekt,
-                   Kon= kon_vekt,
-                   ContentsCode = Cont_code,
+                   Kon = kon_vekt,
+                   ContentsCode = cont_vekt,
                    Tid = tid)
   
   px_uttag <- pxweb_get(url = url_uttag,query = varlista)
@@ -88,6 +92,12 @@ hamta_data_ohalsotal_regso <- function(region_vekt = "20",
             select(regionkod = Region)) %>%
     relocate(regionkod, .before = region) 
   
+  # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
+  # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
+  if (long_format & length(cont_klartext) > 1) {
+    ohalsotal <- ohalsotal %>% 
+      konvertera_till_long_for_contentscode_variabler(api_url = px_meta, content_var = "ohalso_variabel")
+  } # slut if-sats som kontrollera om vi vill ha df i long-format
   
   if (!is.na(output_mapp) & !is.na(filnamn)){
     write.xlsx(ohalsotal,paste0(output_mapp,filnamn))
