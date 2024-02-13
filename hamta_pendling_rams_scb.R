@@ -60,7 +60,9 @@ hamta_pendling_rams_scb <- function(region_vekt = "20",
 # funktion för att hämta data från pendlingstabeller
 hamta_data <- function(url_rams) {
   
-  alla_ar <- hamta_giltiga_varden_fran_tabell(url_rams, "tid")
+  px_meta <- pxweb_get(url_rams)
+  
+  alla_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
   akt_tid_vekt <- if (all(hamta_tid == "*")) alla_ar else hamta_tid[hamta_tid %in% alla_ar]
   
   
@@ -74,9 +76,9 @@ hamta_data <- function(url_rams) {
     px_lan_ut <- matrix(nrow = 0, ncol = 7) %>% as.data.frame()
   
     # hantering av att klartext för kön hanteras olika i BAS och RAMS
-    kon_alla_giltiga_varden <- hamta_giltiga_varden_fran_tabell(url_rams, variabel = "kon", klartext = TRUE)
+    kon_alla_giltiga_varden <- hamta_giltiga_varden_fran_tabell(px_meta, variabel = "kon", klartext = TRUE)
     kon_klartext_tab <- kon_klartext_vekt[kon_klartext_vekt %in% kon_alla_giltiga_varden]
-    kon_vekt <- hamta_kod_med_klartext(url_rams, kon_klartext_tab, "kon")
+    kon_vekt <- hamta_kod_med_klartext(px_meta, kon_klartext_tab, "kon")
       
     varlista_in <- list(
       Bostadskommun = "*",
@@ -99,9 +101,8 @@ hamta_data <- function(url_rams) {
       px_kommun_in <- px_in %>% 
         filter(regionkod_bo %in% kommun_vekt | regionkod_arb %in% kommun_vekt)
     }
-    
     # hantering för att klartext för antal pendlare heter olika i RAMS och BAS
-    pendlare_klartext <- hamta_giltiga_varden_fran_tabell(url_rams, "contentscode", klartext = TRUE)
+    pendlare_klartext <- hamta_giltiga_varden_fran_tabell(px_meta, "contentscode", klartext = TRUE)
     
     # aggregera på län och det finns län
     if (length(lan_vekt)>0) { 
@@ -165,7 +166,7 @@ hamta_data <- function(url_rams) {
 
 # hämta data från alla tabeller i url_rams_vekt
 px_df <- map_dfr(url_rams_vekt, ~hamta_data(url_rams = .x)) %>% 
-  filter({{pendlare_klartext}} > 0)
+  filter({{pendlare_klartext}} > 0) %>% 
   distinct(.keep_all = TRUE)
 
 return(px_df)
