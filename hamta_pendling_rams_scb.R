@@ -166,6 +166,7 @@ hamta_data <- function(url_rams) {
 # hämta data från alla tabeller i url_rams_vekt
 px_df <- map_dfr(url_rams_vekt, ~hamta_data(url_rams = .x)) %>% 
   filter({{pendlare_klartext}} > 0)
+  distinct(.keep_all = TRUE)
 
 return(px_df)
 
