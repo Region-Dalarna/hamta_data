@@ -6,6 +6,7 @@ hamta_helarsekvivalenter_kon <- function(
                            "Folkmängd"),          # för att kunna beräkna andel av bef 20-64 år, finns också: "sjukpenning", "Sjuk- och aktivitetsersersättning"
                                                            #        "Arbetslöshet", "Arbetsmarknadsåtgärder", "Ekonomiskt bistånd", "Etableringsersättning" samt
                                                            #        "Andel av befolkningen 20-64 år", den sista ska inte användas när vi aggregerar till län
+    aldersgrupp_klartext = "20-64 år",       # finns: "20-64 år", "20-65 år"
     tid_vekt = "*",                           # alla år-månader
     long_format = TRUE                        # TRUE om vi vill ha df i long-format, annars kommer alla innehållsvariabler i wide-format
     ) {
@@ -39,8 +40,23 @@ hamta_helarsekvivalenter_kon <- function(
   # url till tabellen i SCB:s statistikdatabas
   url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/HE/HE0000/HE0000T02N2"
   
-  cont_vekt <- hamta_kod_med_klartext(url_uttag, cont_klartext_vekt, skickad_fran_variabel = "contentscode")        #        hamta_kod_med_klartext(url_uttag, cont_klartext_vekt)                            # vi använder klartext i parametrar för innehållsvariabel, koder i övriga
-  kon_vekt <- hamta_kod_med_klartext(url_uttag, kon_klartext_vekt, skickad_fran_variabel = "kon")
+  px_meta <- pxweb_get(url = url_uttag)
+  
+  
+  #cont_koder <- hamta_kod_med_klartext(url_uttag, cont_klartext_vekt, skickad_fran_variabel = "contentscode")        #        hamta_kod_med_klartext(url_uttag, cont_klartext_vekt)                            # vi använder klartext i parametrar för innehållsvariabel, koder i övriga
+  cont_koder <- hamta_kod_eller_klartext_fran_lista(px_meta, cont_klartext_vekt, skickad_fran_variabel = "contentscode", hamta_kod = TRUE)
+  #kon_koder <- hamta_kod_med_klartext(url_uttag, kon_klartext_vekt, skickad_fran_variabel = "kon")
+  kon_koder <- hamta_kod_eller_klartext_fran_lista(px_meta, kon_klartext_vekt, skickad_fran_variabel = "kon", hamta_kod = TRUE)
+  aldersgrupp_koder <- hamta_kod_eller_klartext_fran_lista(px_meta, aldersgrupp_klartext, skickad_fran_variabel = "aldersgrupp", hamta_kod = TRUE)
+  
+  # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
+  giltiga_ar <- hamta_kod_eller_klartext_fran_lista(px_meta, "*", "tid")
+  tid_koder <- tid_vekt %>% 
+    as.character() %>% 
+    str_replace("9999", max(giltiga_ar)) %>%
+    str_replace("\\*", giltiga_ar) %>% 
+    .[. %in% giltiga_ar] %>% 
+    unique()
   
   # speciallösning för att aggregera till länssiffror - vi behöver lägga in en spärr mot att aggregera och ta ut andel av befolkningen samtidigt
   lanskoder <- region_vekt[str_length(region_vekt) == 2 & region_vekt != "00"]                      # plocka ut alla länskoder ur skickade regionkoder
@@ -53,8 +69,9 @@ hamta_helarsekvivalenter_kon <- function(
   # variabler som vi vill ha med i uttaget
   varlista <- list(
     Region = hamta_region,
-    Kon = kon_vekt,
-    ContentsCode = cont_vekt,
+    Kon = kon_koder,
+    Aldersgrupp = aldersgrupp_koder,
+    ContentsCode = cont_koder,
     Tid = tid_vekt
     )
   
@@ -73,9 +90,9 @@ hamta_helarsekvivalenter_kon <- function(
   
   if (length(lanskoder) > 0) {                                        # kör koden nedan om det finns länskoder medskickade
     
-    if ("Andel av befolkningen 20-64 år" %in% cont_klartext_vekt) {
-      warning(paste0("Andel av befolkningen 20-64 år kan inte aggregeras och tas därför bort ur aggregeringen"))
-      cont_klartext_vekt <- cont_klartext_vekt[cont_klartext_vekt != "Andel av befolkningen 20-64 år"]
+    if (any(str_detect(cont_klartext_vekt, "Andel av befolkningen"))) {
+      warning(paste0("Andel av befolkningen kan inte aggregeras och tas därför bort ur aggregeringen"))
+      cont_klartext_vekt <- cont_klartext_vekt[!str_detect(cont_klartext_vekt, "Andel av befolkningen")]
       cont_andel <- TRUE
     } else cont_andel <- FALSE
     
@@ -85,18 +102,18 @@ hamta_helarsekvivalenter_kon <- function(
     
     px_df_lan <- px_df %>%                                            
       mutate(lanskod = str_sub(regionkod, 1, 2)) %>%                  # vi skapar länskoder av kommunkoderna och kopplar på länsnamn för de som är medskickade
-      left_join(lansnamn) %>%                                         # vi kopplar på länsnamnet via länskoden som vi skapade ovan
+      left_join(lansnamn, by = c("lanskod")) %>%                                         # vi kopplar på länsnamnet via länskoden som vi skapade ovan
       filter(!is.na(lan)) %>%                                         # de som inte får någon träff (dvs. inte är medskickade) tar vi bort ur denna df (de är medskickade kommuner eller riket som inte ingår i län som är medskickat)
       mutate(regionkod = lanskod,                                     # vi ersätter regionkod och region med länskod och län
              region = lan) %>%  
       select(-c(lanskod, lan)) %>%                                    # därefter tar vi bort länskod och län som inte längre behövs (då vi har dem i regionkod och region) 
-      group_by(regionkod, region, kön, månad) %>%                     # vi aggregerar ihop länen genom att alla kommuner i ett län nu har fått län och länskod
-      summarise(across(all_of(cont_klartext_vekt), sum, na.rm = TRUE)) %>%        # vi summerar alla innehållsvariabler, funkar för alla utom för 
+      group_by(regionkod, region, åldersgrupp, kön, månad) %>%                     # vi aggregerar ihop länen genom att alla kommuner i ett län nu har fått län och länskod
+      summarise(across(all_of(cont_klartext_vekt), \(x) sum(x, na.rm = TRUE))) %>%        # vi summerar alla innehållsvariabler, funkar för alla utom för 
       ungroup()   
       
     # om vi har andel med i uttaget så lägger vi med den i länsdatasetet men som NA (så att det funkar att binda ihop den med df för kommuner och riket)
     if (cont_andel) px_df_lan <- px_df_lan %>% 
-      mutate(`Andel av befolkningen 20-64 år` = NA)
+      mutate(`Andel av befolkningen` = NA)
     
     px_df_riket_kommun <- px_df %>%                                   # skapa en df med bara kommuner och riket
       filter(regionkod %in% kommuner_riket)
@@ -131,7 +148,7 @@ hamta_helarsekvivalenter_kon <- function(
   
   # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
   # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
-  if (long_format & length(cont_vekt) > 1) {
+  if (long_format & length(cont_koder) > 1) {
     retur_df <- retur_df %>% 
       konvertera_till_long_for_contentscode_variabler(url_uttag)
     
