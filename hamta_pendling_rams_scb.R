@@ -62,6 +62,9 @@ hamta_data <- function(url_rams) {
   
   px_meta <- pxweb_get(url_rams)
   
+  # hantering för att klartext för antal pendlare heter olika i RAMS och BAS
+  pendlare_klartext <- hamta_giltiga_varden_fran_tabell(px_meta, "contentscode", klartext = TRUE)
+  
   alla_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
   akt_tid_vekt <- if (all(hamta_tid == "*")) alla_ar else hamta_tid[hamta_tid %in% alla_ar]
   
@@ -99,10 +102,9 @@ hamta_data <- function(url_rams) {
     # ta med kommuner som är med i kommun_vekt
     if (length(kommun_vekt)>0) {
       px_kommun_in <- px_in %>% 
-        filter(regionkod_bo %in% kommun_vekt | regionkod_arb %in% kommun_vekt)
+        filter(regionkod_bo %in% kommun_vekt | regionkod_arb %in% kommun_vekt) %>% 
+        rename(pendlare = {{pendlare_klartext}})
     }
-    # hantering för att klartext för antal pendlare heter olika i RAMS och BAS
-    pendlare_klartext <- hamta_giltiga_varden_fran_tabell(px_meta, "contentscode", klartext = TRUE)
     
     # aggregera på län och det finns län
     if (length(lan_vekt)>0) { 
@@ -137,7 +139,8 @@ hamta_data <- function(url_rams) {
     # ta med kommuner som är med i kommun_vekt
     if (length(kommun_vekt)>0) {
       px_kommun_ut <- px_ut %>% 
-        filter(regionkod_bo %in% kommun_vekt | regionkod_arb %in% kommun_vekt)
+        filter(regionkod_bo %in% kommun_vekt | regionkod_arb %in% kommun_vekt) %>% 
+        rename(pendlare = {{pendlare_klartext}})
     }
       
     if (length(lan_vekt)>0) { 
@@ -167,7 +170,9 @@ hamta_data <- function(url_rams) {
 # hämta data från alla tabeller i url_rams_vekt
 px_df <- map_dfr(url_rams_vekt, ~hamta_data(url_rams = .x)) %>% 
   filter(pendlare > 0) %>% 
-  distinct(.keep_all = TRUE)
+  distinct(.keep_all = TRUE) %>% 
+  mutate(bostadsregion = bostadsregion %>% str_remove(" \\(bostad\\)"),
+         arbetsställeregion = arbetsställeregion %>% str_remove(" \\(arbetsställe\\)"))
 
 return(px_df)
 
