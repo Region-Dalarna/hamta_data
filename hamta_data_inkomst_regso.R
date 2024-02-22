@@ -52,7 +52,7 @@ hamta_data_inkomst_regso <- function(region_vekt = "20",
   url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/HE/HE0110/HE0110I/Tab1InkDesoN"
   px_meta <- pxweb_get(url_uttag)          # vi hämtar metadata till tabellen här och gör inga fler uttag nedan = färre API-anrop (och elegantare lösning)
   
-  region_indelning = "RegSO"
+  #region_indelning = "RegSO"
   
   # Data som sourcas från Region Dalarna
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
