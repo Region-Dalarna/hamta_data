@@ -3,7 +3,7 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
     region_vekt = "20",                       # Dalarna defaultvärde
     kon_klartext = NA,                        # finns "kvinnor", "män", c("män", "kvinnor"), NA = så skippar vi denna variabel
     alder_koder = NA,                         # NA så skippar vi denna variabel, finns 1 årsgrupper, 1 - 100+ samt "tot" för alla åldrar - dock, se upp för dubbelräkning med "tot"
-    cont_klartext = "*",                      # finns: "Folkmängd", "Folkökning"
+    cont_klartext = "*",                      # finns: "Inflyttningar", "Utflyttningar", "Invandringar", "Utvandringar", "Flyttningsöverskott", "Invandringsöverskott", "Inrikes inflyttningar", "Inrikes utflyttningar", "Inrikes flyttningsöverskott"
     tid_koder = "*",                          # alla år, finns från 1997, "9999" = senaste år  (koder och klartext är samma sak i denna tabell)
     returnera_df = TRUE,                      # FALSE om man inte vill returnera en df
     mapp_excelfil = NA,                       # var man vill spara sin Excelfil om man vill spara en sådan
@@ -20,7 +20,7 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
   # Möjlig och ganska enkel utveckling av funktionen vore att plocka med tabell för flyttningar år 1968-1996. 
   # 
   # Parametrar som skickas med (= variabler i SCB-tabellen) är:
-  # - Innehåll                                                    # Folkmängd (standard) och/eller Folkökning
+  # - Innehåll                                                    # "Inflyttningar", "Utflyttningar", "Invandringar", "Utvandringar", "Flyttningsöverskott", "Invandringsöverskott", "Inrikes inflyttningar", "Inrikes utflyttningar", "Inrikes flyttningsöverskott"
   # - Region                                                      # tabellen innehåller kommuner, län och riket, det är regionkoder som skickas med
   # - Kön                                                         # finns enbart kvinnor och män (inte totalt)
   # - Ålder                                                       # NA = att variabeln utelämnas (standard), finns i ettårsgrupper tom 100+ år
@@ -48,13 +48,14 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
     
     # url till tabellen i SCB:s statistikdatabas
     url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101J/Flyttningar97"
-    
-    cont_koder <- if (cont_klartext == "*") cont_klartext else hamta_kod_med_klartext(url_uttag, cont_klartext, skickad_fran_variabel = "contentscode")        #        hamta_kod_med_klartext(url_uttag, cont_klartext_vekt)                            # vi använder klartext i parametrar för innehållsvariabel, koder i övriga
-    kon_koder <- if (!is.na(kon_klartext)) hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon") else  "*"
+    px_meta <- pxweb_get(url_uttag)
+      
+    cont_koder <- if (all(cont_klartext == "*")) cont_klartext else hamta_kod_med_klartext(px_meta, cont_klartext, skickad_fran_variabel = "contentscode")        #        hamta_kod_med_klartext(url_uttag, cont_klartext_vekt)                            # vi använder klartext i parametrar för innehållsvariabel, koder i övriga
+    kon_koder <- if (all(!is.na(kon_klartext))) hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") else  "*"
     alder_koder <- alder_koder %>% as.character()       # säkerställ att alder_koder är character och inte numeric
     
     # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
-    giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid")
+    giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
     if (all(tid_koder != "*")) tid_koder <- tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
     
     # variabler som vi vill ha med i uttaget
