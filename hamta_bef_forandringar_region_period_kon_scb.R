@@ -34,7 +34,8 @@ hamta_bef_forandringar_region_alder_kon_scb <- function(
   # 
   # ===========================================================================================================
   
-  pacman::p_load(tidyverse,
+  if (!require("pacman")) install.packages("pacman")
+  p_load(tidyverse,
                  pxweb,
                  writexl)
   
