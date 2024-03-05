@@ -1,15 +1,14 @@
 
 hamta_bef_flyttningar_region_alder_kon_scb <- function(
-    region_vekt = "20",                       # Dalarna defaultvärde
+    region_vekt = "20",                       # Dalarna defaultvärde, tabellen innehåller kommuner, län och riket, det är regionkoder som skickas med
     kon_klartext = NA,                        # finns "kvinnor", "män", c("män", "kvinnor"), NA = så skippar vi denna variabel
     alder_koder = NA,                         # NA så skippar vi denna variabel, finns 1 årsgrupper, 1 - 100+ samt "tot" för alla åldrar - dock, se upp för dubbelräkning med "tot"
     cont_klartext = "*",                      # finns: "Inflyttningar", "Utflyttningar", "Invandringar", "Utvandringar", "Flyttningsöverskott", "Invandringsöverskott", "Inrikes inflyttningar", "Inrikes utflyttningar", "Inrikes flyttningsöverskott"
-    tid_koder = "*",                          # alla år, finns från 1997, "9999" = senaste år  (koder och klartext är samma sak i denna tabell)
+    tid_koder = "*",                          # * = alla år, finns från 1997, "9999" = senaste år  (koder och klartext är samma sak i denna tabell)
     returnera_df = TRUE,                      # FALSE om man inte vill returnera en df
     mapp_excelfil = NA,                       # var man vill spara sin Excelfil om man vill spara en sådan
     filnamn_excelfil = NA,                    # filnamn på sin excelfil 
-    long_format = TRUE                        # TRUE om vi vill ha df i long-format, annars kommer alla innehållsvariabler i wide-format, om man bara har  
-    # med en innehållsvariabel så blir det wide-format
+    long_format = TRUE                        # TRUE om vi vill ha df i long-format, annars kommer alla innehållsvariabler i wide-format
 ) {
   
   # ===========================================================================================================
@@ -18,13 +17,6 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
   # Denna tabell: https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__BE__BE0101__BE0101J/Flyttningar97/  
   #
   # Möjlig och ganska enkel utveckling av funktionen vore att plocka med tabell för flyttningar år 1968-1996. 
-  # 
-  # Parametrar som skickas med (= variabler i SCB-tabellen) är:
-  # - Innehåll                                                    # "Inflyttningar", "Utflyttningar", "Invandringar", "Utvandringar", "Flyttningsöverskott", "Invandringsöverskott", "Inrikes inflyttningar", "Inrikes utflyttningar", "Inrikes flyttningsöverskott"
-  # - Region                                                      # tabellen innehåller kommuner, län och riket, det är regionkoder som skickas med
-  # - Kön                                                         # finns enbart kvinnor och män (inte totalt)
-  # - Ålder                                                       # NA = att variabeln utelämnas (standard), finns i ettårsgrupper tom 100+ år
-  # - tid (dvs. år)                                               # * = alla år (standard). "9999" = senaste tillgängliga år i tabellen. År från och med 1968
   #
   # Skapat av: Peter Möller, Region Dalarna
   #            januari 2024
@@ -34,7 +26,8 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
   # 
   # ===========================================================================================================
   
-  pacman::p_load(tidyverse,
+  if (!require("pacman")) install.packages("pacman")
+  p_load(tidyverse,
                  pxweb,
                  writexl)
   
@@ -84,7 +77,7 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
     
     # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
     # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
-    if (long_format & antal_cont > 1) {
+    if (long_format) {
       retur_df <- retur_df %>% 
         konvertera_till_long_for_contentscode_variabler(url_uttag)
       
