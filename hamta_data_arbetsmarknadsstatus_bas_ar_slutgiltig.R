@@ -8,7 +8,7 @@ hamta_arbetsmarknadsstatus_bas_ar_slutgiltig <- function(
     long_format = TRUE,			# TRUE = konvertera innehållsvariablerna i datasetet till long-format 
     wide_om_en_contvar = TRUE,			# TRUE = om man vill behålla wide-format om det bara finns en innehållsvariabel, FALSE om man vill konvertera till long-format även om det bara finns en innehållsvariabel
     output_mapp = NA,			# anges om man vill exportera en excelfil med uttaget, den mapp man vill spara excelfilen till
-    excel_filnamn = "arbetsmarknadsstatus_bas_ar.xlsx",			# filnamn för excelfil som exporteras om excel_filnamn och output_mapp anges
+    excel_filnamn = "arbetsmarknadsstatus_bas_ar_prel.xlsx",			# filnamn för excelfil som exporteras om excel_filnamn och output_mapp anges
     returnera_df = TRUE			# TRUE om man vill ha en dataframe i retur från funktionen
 ){
   
