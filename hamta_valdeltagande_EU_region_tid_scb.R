@@ -1,5 +1,5 @@
 hamta_valdeltagande_EU_region_tid_scb <- function(
-			region_vekt = "20",			# Val av region.
+			region_vekt = "00",			# Val av region.
 			cont_klartext = "*",			 #  Finns: "Valdeltagande i Europaparlamentsval, procent"
 			tid_koder = "*",			 # "*" = alla år eller månader, "9999" = senaste, finns: "1995", "1999", "2004", "2009", "2014", "2019"
 			output_mapp = NA,			# anges om man vill exportera en excelfil med uttaget, den mapp man vill spara excelfilen till
