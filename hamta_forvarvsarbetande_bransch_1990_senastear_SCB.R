@@ -111,45 +111,45 @@ hamta_data_sysselsatta_1990 <- function(region_vekt = "20", # Val av region.
   
   while(k <= (length(varlista_lista)-1)){
     lista[[k]]$Branschgrupp <- case_when(
-      lista[[k]]$`näringsgren SNI 2007` == "jordbruk, skogsbruk och fiske" ~ "jordbruk, skogsbruk, jakt, fiske",
-      lista[[k]]$`näringsgren SNI 2007` == "tillverkning och utvinning" ~ "utvinning av mineral, tillverkningsindustri",
-      lista[[k]]$`näringsgren SNI 2007` == "energiförsörjning; miljöverksamhet" ~ "energi- o vattenförsörjning, avfallshantering",
-      lista[[k]]$`näringsgren SNI 2007` == "byggverksamhet" ~ "byggindustri",
-      lista[[k]]$`näringsgren SNI 2007` == "handel" ~ "handel; transport, magasinering; kommunikation",
-      lista[[k]]$`näringsgren SNI 2007` == "transport och magasinering"~ "handel; transport, magasinering; kommunikation",
-      lista[[k]]$`näringsgren SNI 2007` == "hotell- och restaurangverksamhet" ~ "personliga och kulturella tjänster",
-      lista[[k]]$`näringsgren SNI 2007` == "information och kommunikation" ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
-      lista[[k]]$`näringsgren SNI 2007` == "finans- och försäkringsverksamhet" ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
-      lista[[k]]$`näringsgren SNI 2007` == "fastighetsverksamhet" ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
-      lista[[k]]$`näringsgren SNI 2007` == "företagstjänster" ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
-      lista[[k]]$`näringsgren SNI 2007` == "offentlig förvaltning och försvar"~ "civila myndigheter, försvar; internat. organisationer",
-      lista[[k]]$`näringsgren SNI 2007` == "utbildning " ~ "forskning o utveckling; utbildning",
-      lista[[k]]$`näringsgren SNI 2007` == "vård och omsorg; sociala tjänster" ~ "enh för hälso- och sjukvård, socialtjänst; veterinärer",
-      lista[[k]]$`näringsgren SNI 2007` == "kulturella och personliga tjänster m.m." ~ "personliga och kulturella tjänster",
-      lista[[k]]$`näringsgren SNI 2007` == "okänd verksamhet"~ "näringsgren okänd")
+      lista[[k]]$`näringslivet` == "jordbruk, skogsbruk och fiske" ~ "jordbruk, skogsbruk, jakt, fiske",
+      lista[[k]]$`näringslivet` == "tillverkning och utvinning" ~ "utvinning av mineral, tillverkningsindustri",
+      lista[[k]]$`näringslivet` == "energiförsörjning; miljöverksamhet" ~ "energi- o vattenförsörjning, avfallshantering",
+      lista[[k]]$`näringslivet` == "byggverksamhet" ~ "byggindustri",
+      lista[[k]]$`näringslivet` == "handel" ~ "handel; transport, magasinering; kommunikation",
+      lista[[k]]$`näringslivet` == "transport och magasinering"~ "handel; transport, magasinering; kommunikation",
+      lista[[k]]$`näringslivet` == "hotell- och restaurangverksamhet" ~ "personliga och kulturella tjänster",
+      lista[[k]]$`näringslivet` == "information och kommunikation" ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
+      lista[[k]]$`näringslivet` == "finans- och försäkringsverksamhet" ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
+      lista[[k]]$`näringslivet` == "fastighetsverksamhet" ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
+      lista[[k]]$`näringslivet` == "företagstjänster" ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
+      lista[[k]]$`näringslivet` == "offentlig förvaltning och försvar"~ "civila myndigheter, försvar; internat. organisationer",
+      lista[[k]]$`näringslivet` == "utbildning " ~ "forskning o utveckling; utbildning",
+      lista[[k]]$`näringslivet` == "vård och omsorg; sociala tjänster" ~ "enh för hälso- och sjukvård, socialtjänst; veterinärer",
+      lista[[k]]$`näringslivet` == "kulturella och personliga tjänster m.m." ~ "personliga och kulturella tjänster",
+      lista[[k]]$`näringslivet` == "okänd verksamhet"~ "näringsgren okänd")
     k=k+1
   }
   
   # Vid byte till bas ändras namn på branscher igen (dessutom läggs totalt till). För att matcha mot tidigare år tas totalt bort och sedan ändras namn på branscher
-  lista[[k]] <- lista[[k]] %>%filter(`näringsgren SNI 2007` != "Total")
+  lista[[k]] <- lista[[k]] %>%filter(`näringslivet` != "Total")
   
   lista[[k]]$Branschgrupp <- case_when(
-    lista[[k]]$`näringsgren SNI 2007` == "företag inom jordbruk, skogsbruk och fiske" ~ "jordbruk, skogsbruk, jakt, fiske",
-    lista[[k]]$`näringsgren SNI 2007` == "tillverkningsindustri; gruvor och mineralutvinningsindustri" ~ "utvinning av mineral, tillverkningsindustri",
-    lista[[k]]$`näringsgren SNI 2007` == "företag inom energi och miljö" ~ "energi- o vattenförsörjning, avfallshantering",
-    lista[[k]]$`näringsgren SNI 2007` == "byggindustri" ~ "byggindustri",
-    lista[[k]]$`näringsgren SNI 2007` == "handel; serviceverkstäder för motorfordon och motorcyklar" ~ "handel; transport, magasinering; kommunikation",
-    lista[[k]]$`näringsgren SNI 2007` == "transport- och magasineringsföretag" ~ "handel; transport, magasinering; kommunikation",
-    lista[[k]]$`näringsgren SNI 2007` == "hotell och restauranger" ~ "personliga och kulturella tjänster",
-    lista[[k]]$`näringsgren SNI 2007` == "informations- och kommunikationsföretag" ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
-    lista[[k]]$`näringsgren SNI 2007` == "kreditinstitut och försäkringsbolag m.m." ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
-    lista[[k]]$`näringsgren SNI 2007` == "fastighetsbolag och fastighetsförvaltare" ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
-    lista[[k]]$`näringsgren SNI 2007` == "företag inom juridik, ekonomi, vetenskap och teknik; företag inom uthyrning, fastighetsservice, resetjänster och andra stödtjänster" ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
-    lista[[k]]$`näringsgren SNI 2007` == "civila myndigheter och försvaret" ~ "civila myndigheter, försvar; internat. organisationer",
-    lista[[k]]$`näringsgren SNI 2007` == "utbildningsväsendet" ~ "forskning o utveckling; utbildning",
-    lista[[k]]$`näringsgren SNI 2007` == "enheter för vård och omsorg, socialtjänst" ~ "enh för hälso- och sjukvård, socialtjänst; veterinärer",
-    lista[[k]]$`näringsgren SNI 2007` == "enheter för kultur, nöje och fritid; andra serviceföretag m.m." ~ "personliga och kulturella tjänster",
-    lista[[k]]$`näringsgren SNI 2007` == "uppgift saknas"~ "näringsgren okänd")
+    lista[[k]]$`näringslivet` == "företag inom jordbruk, skogsbruk och fiske" ~ "jordbruk, skogsbruk, jakt, fiske",
+    lista[[k]]$`näringslivet` == "tillverkningsindustri; gruvor och mineralutvinningsindustri" ~ "utvinning av mineral, tillverkningsindustri",
+    lista[[k]]$`näringslivet` == "företag inom energi och miljö" ~ "energi- o vattenförsörjning, avfallshantering",
+    lista[[k]]$`näringslivet` == "byggindustri" ~ "byggindustri",
+    lista[[k]]$`näringslivet` == "handel; serviceverkstäder för motorfordon och motorcyklar" ~ "handel; transport, magasinering; kommunikation",
+    lista[[k]]$`näringslivet` == "transport- och magasineringsföretag" ~ "handel; transport, magasinering; kommunikation",
+    lista[[k]]$`näringslivet` == "hotell och restauranger" ~ "personliga och kulturella tjänster",
+    lista[[k]]$`näringslivet` == "informations- och kommunikationsföretag" ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
+    lista[[k]]$`näringslivet` == "kreditinstitut och försäkringsbolag m.m." ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
+    lista[[k]]$`näringslivet` == "fastighetsbolag och fastighetsförvaltare" ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
+    lista[[k]]$`näringslivet` == "företag inom juridik, ekonomi, vetenskap och teknik; företag inom uthyrning, fastighetsservice, resetjänster och andra stödtjänster" ~ "kreditinstitut, fastighetsförvaltn, företagstjänster",
+    lista[[k]]$`näringslivet` == "civila myndigheter och försvaret" ~ "civila myndigheter, försvar; internat. organisationer",
+    lista[[k]]$`näringslivet` == "utbildningsväsendet" ~ "forskning o utveckling; utbildning",
+    lista[[k]]$`näringslivet` == "enheter för vård och omsorg, socialtjänst" ~ "enh för hälso- och sjukvård, socialtjänst; veterinärer",
+    lista[[k]]$`näringslivet` == "enheter för kultur, nöje och fritid; andra serviceföretag m.m." ~ "personliga och kulturella tjänster",
+    lista[[k]]$`näringslivet` == "uppgift saknas"~ "näringsgren okänd")
   
   
   # Döper om variabler för att sedan slå ihop de dataset
@@ -161,15 +161,15 @@ hamta_data_sysselsatta_1990 <- function(region_vekt = "20", # Val av region.
     rename("Näringsgren"="näringsgren SNI 2002")
   # 2008-2018
   lista[[3]] <- lista[[3]] %>% 
-    select(-c("näringsgren SNI 2007")) %>% 
+    select(-c("näringslivet")) %>% 
     rename("Näringsgren"="Branschgrupp") 
   # 2019
   lista[[4]] <- lista[[4]] %>% 
-    select(-c("näringsgren SNI 2007")) %>% 
+    select(-c("näringslivet")) %>% 
     rename("Näringsgren"="Branschgrupp")  
   # 2020-
   lista[[5]] <- lista[[5]] %>% 
-    select(-c("näringsgren SNI 2007","födelseregion")) %>% 
+    select(-c("näringslivet","födelseregion")) %>% 
     rename("Näringsgren"="Branschgrupp") 
   
   
