@@ -19,6 +19,7 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
   #
   # Skapad av Jon Frank
   # Uppdaterad senast 2024-01-12 (justering tid)
+  # Justerad: Ändrade variabelnamn till näringslivet (SCB har bytt) 2024-03-07
   # ===========================================================================================================
   # Paket som behövs
   if (!require("pacman")) install.packages("pacman")
@@ -77,7 +78,7 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
         cbind(SNI2007_kod = as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>% 
             select(SNI2007)) %>% 
           rename(branschkod = SNI2007) %>% 
-            relocate(branschkod, .before = 'näringsgren SNI 2007')
+            relocate(branschkod, .before = 'näringslivet')
   
   # Ändrar namn på en av variablerna
   names(px_df)[ncol(px_df)] <- "Anställda 16-64 år (dagbef)"
