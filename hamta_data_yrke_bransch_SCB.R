@@ -31,63 +31,53 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
   
   # Url till SCB:s databas
   url <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0208/AM0208D/YREG56N"
-  
+  px_meta <- pxweb_get(url)          # vi hämtar metadata till tabellen här och gör inga fler uttag nedan = färre API-anrop (och elegantare lösning)
+  cont_kod <- "000003T3"
+    
   # Gör om från klartext till kod som databasen förstår
-  if (all(kon_klartext == "*")){
-    
-    kon_vekt = "*"
-    
-  }else kon_vekt <- hamta_kod_med_klartext(url, kon_klartext, skickad_fran_variabel = "kon")
-  
-  if (all(yrke_klartext == "*")){
-    
-    yrke_vekt = "*"
-    
-  }else yrke_vekt <- hamta_kod_med_klartext(url, yrke_klartext, skickad_fran_variabel = "Yrke2012")
-  
-  if (all(bransch_klartext == "*")){
-    
-    brancsh_vekt = "*"
-    
-  }else brancsh_vekt <- hamta_kod_med_klartext(url, bransch_klartext, skickad_fran_variabel = "SNI2007")
+  kon_vekt <- if (!all(is.na(kon_klartext))) hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") else NA
+  yrke_vekt <- if (!all(is.na(yrke_klartext))) hamta_kod_med_klartext(px_meta, yrke_klartext, skickad_fran_variabel = "Yrke2012") else NA
+  bransch_vekt <- if (!all(is.na(bransch_klartext))) hamta_kod_med_klartext(px_meta, bransch_klartext, skickad_fran_variabel = "SNI2007") else NA
 
   # Om tid har satts till 9999, välj senaste år
   # if("9999" %in% tid) tid = max(hamta_giltiga_varden_fran_tabell(url, "tid"))
   
-  giltiga_ar <- hamta_giltiga_varden_fran_tabell(url, "tid")
+  giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
   if (all(tid != "*")) tid <- tid %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
   
   varlista <- list(
     Region = region_vekt,
     Yrke2012 = yrke_vekt,
-    SNI2007 = brancsh_vekt,
+    SNI2007 = bransch_vekt,
     Kon = kon_vekt,
-    ContentsCode = c("000003T3"),
+    ContentsCode = cont_kod,
     Tid = tid)
+  
+  if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
+  if (all(is.na(yrke_klartext))) varlista <- varlista[names(varlista) != "Yrke2012"]
+  if (all(is.na(bransch_klartext))) varlista <- varlista[names(varlista) != "SNI2007"]
   
   px_uttag <- pxweb_get(url = url,
                         query = varlista) 
   
+  cont_var <- hamta_klartext_med_kod(px_meta, cont_kod, skickad_fran_variabel = "ContentsCode")
   # Lägg API-uttaget i px_df, lägg på ytterligare ett uttag men med koder istället för klartext
   px_df <- as.data.frame(px_uttag) %>% 
-    cbind(Yrke2012_kod = as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>% 
-            select(Yrke2012)) %>% 
-    rename(yrkeskod = Yrke2012) %>% 
-      relocate(yrkeskod, .before = 'Yrke (SSYK 2012)') %>% 
-        cbind(SNI2007_kod = as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>% 
-            select(SNI2007)) %>% 
-          rename(branschkod = SNI2007) %>% 
-            relocate(branschkod, .before = 'näringsgren SNI 2007')
-  
-  # Ändrar namn på en av variablerna
-  names(px_df)[ncol(px_df)] <- "Anställda 16-64 år (dagbef)"
+    cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>% 
+            select(any_of(c(regionkod = "Region", yrkeskod = "Yrke2012", branschkod = "SNI2007", `Anställda 16-64 år (dagbef)` = cont_var)))) %>% 
+    # rename(any_of(c(regionkod = "Region",
+    #                 yrkeskod = "Yrke2012",
+    #                 branschkod = "SNI2007",
+    #                 `Anställda 16-64 år (dagbef)` = cont_var))) %>%
+    select(any_of(c("år", "regionkod", "region", "yrkeskod", "Yrke (SSYK 2012)", "branschkod", "näringsgren SNI 2007", "kön", "Anställda 16-64 år (dagbef)")))
+
 
   # Om användaren vill spara data
   if (!is.na(output_mapp) & !is.na(filnamn)){
     write.xlsx(px_df,paste0(output_mapp,filnamn))
-  }
+    }
   
   # Om användaren vill returnera data som en DF.
-  if(returnera_data == TRUE) return(px_df)
+    if(returnera_data == TRUE) return(px_df)
   
 }
