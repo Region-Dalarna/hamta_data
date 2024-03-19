@@ -58,7 +58,7 @@ hamta_befprognos_data <- function(
     
     if(str_detect(hamta_url, "https://api.scb.se")){
       
-       prognos_ar <- hamta_giltiga_varden_fran_tabell(hamta_url, "tid") %>% min() %>% as.numeric()
+       prognos_ar <- hamta_giltiga_varden_fran_tabell(hamta_url, "tid") %>% min() %>% as.numeric() %>% unique()
       
     } else {
       
@@ -74,7 +74,7 @@ hamta_befprognos_data <- function(
       #                       .[!is.na(.)] %>% 
       #                       .[str_detect(., "prognosperiod")] %>% 
       #                       parse_number(.))
-      prognos_ar <- map_int(filsokvagar, ~ parse_number(.))
+      prognos_ar <- map_int(filsokvagar, ~ parse_number(.))%>% unique()
     }
     
     start_ar <- prognos_ar  #- 1
@@ -135,7 +135,7 @@ hamta_befprognos_data <- function(
       if (!any(hamtakommuner(lan = "20", F, F, F) %in% region_vekt)) filsokvagar <- filsokvagar[!str_detect(filsokvagar, "kommun")]      # ta bort kommunfiler ur sokvagsvektorn om ingen av Dalarnas kommuners kommunkoder är med
       
       # kontrollera vilka prognosår som finns bland profet-filerna i mappen
-      progn_ar <- map_chr(filsokvagar, ~ parse_number(.) %>% as.character())
+      progn_ar <- map_chr(filsokvagar, ~ parse_number(.) %>% as.character()) %>% unique()
 
       # map_chr(filsokvagar, ~ read_xlsx(.x, sheet = "Info") %>% 
         #                     pull() %>% 
