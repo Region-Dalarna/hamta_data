@@ -1,4 +1,4 @@
-hamta_befprogn_inr_utr_fodda_region_inrikesutrikes_kon_alder_tid_scb <- function(
+hamta_befprogn_region_inrikesutrikes_kon_alder_tid_scb <- function(
 			region_vekt = "20",			# Val av region.
 			inrikesutrikes_klartext = c("inrikes födda", "utrikes födda"),			 #  NA = tas inte med i uttaget,  Finns: "inrikes födda", "utrikes födda", "inrikes och utrikes födda"
 			kon_klartext = "*",			 #  NA = tas inte med i uttaget,  Finns: "män", "kvinnor"
