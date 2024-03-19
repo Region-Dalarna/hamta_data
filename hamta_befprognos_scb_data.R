@@ -52,7 +52,7 @@ hamta_befprognos_data <- function(
     
   # ================================== beräkna rätt tid_vekt ==============================================
    
-  if (all(tid_vekt != "*")) {               # om inte "*" är valt
+  if (any(tid_vekt != "*")) {               # om inte "*" är valt
     jmfr_vekt <- tid_vekt[str_detect(tid_vekt, "\\+|\\-")] %>% as.numeric()              # alla år som ska beräknas utifrån prognosår
     andra_ar_vekt <- tid_vekt[!str_detect(tid_vekt, "\\+|\\-")] %>% as.numeric()         # övriga år = år som skickas med som de är, tex. "2015"
     
@@ -145,8 +145,10 @@ hamta_befprognos_data <- function(
         #                     as.character())
       
       # ta ut rätt år utifrån användarens val
-      if (all(prognos_ar == "9999")) filsokvagar <- filsokvagar[which(progn_ar == max(progn_ar))]
-      if (all(!is.na(prognos_ar) & prognos_ar != "9999")) filsokvagar <- filsokvagar[which(progn_ar %in% prognos_ar)]
+      #if (all(prognos_ar == "9999")) filsokvagar <- filsokvagar[which(progn_ar == max(progn_ar))]
+      if (all(prognos_ar == "9999")) filsokvagar <- filsokvagar[str_detect(filsokvagar, max(progn_ar))]
+      #if (all(!is.na(prognos_ar) & prognos_ar != "9999")) filsokvagar <- filsokvagar[which(progn_ar %in% prognos_ar)]
+      if (all(!is.na(prognos_ar) & prognos_ar != "9999")) filsokvagar <- filsokvagar[str_detect(filsokvagar, prognos_ar)]
       if (any(str_detect(prognos_ar, "9999"))) prognos_ar <- prognos_ar %>% str_replace("9999", max(progn_ar))
       
       # vektor för att döpa om kolumner i profetfilen så att de blir samma som i pxwebs befolkningsprognostabeller
@@ -221,7 +223,8 @@ hamta_befprognos_data <- function(
     } # if-sats, else-delen som är om det är en sökväg till en profet-fil
   } # funktion att hämta data från url:er (scb-api:er eller profet-filer)
   
-  retur_df <- map_dfr(hamta_url, ~ hamta_data_fran_tabell(url_prognos = .x))
+  retur_df <- map_dfr(hamta_url, ~ hamta_data_fran_tabell(url_prognos = .x)) %>% 
+    filter(regionkod %in% region_vekt)
   
   return(retur_df)
   
