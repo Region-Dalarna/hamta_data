@@ -144,6 +144,7 @@ hamta_befprognos_data <- function(
         #                     parse_number(.) %>% 
         #                     as.character())
       
+      prognos_ar <- prognos_ar %>% as.character()
       # ta ut rätt år utifrån användarens val
       #if (all(prognos_ar == "9999")) filsokvagar <- filsokvagar[which(progn_ar == max(progn_ar))]
       if (all(prognos_ar == "9999")) filsokvagar <- filsokvagar[str_detect(filsokvagar, max(progn_ar))]
