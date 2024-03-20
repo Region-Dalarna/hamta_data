@@ -19,7 +19,8 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
   #
   # Skapad av Jon Frank
   # Uppdaterad senast 2024-01-12 (justering tid)
-  # Justerad: Ändrade variabelnamn till näringslivet (SCB har bytt) 2024-03-07
+  # Justerad: Ändrade variabelnamn till näringslivet (SCB har bytt) 2024-03-07. Bytte sedan tillbaka när de ändrade tillbaka
+  # Har ändrat `Anställda 16-64 år (dagbef)` till "Anställda 16-64 år med arbetsplats i regionen (dagbef)"
   # ===========================================================================================================
   # Paket som behövs
   if (!require("pacman")) install.packages("pacman")
@@ -65,12 +66,12 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
   # Lägg API-uttaget i px_df, lägg på ytterligare ett uttag men med koder istället för klartext
   px_df <- as.data.frame(px_uttag) %>% 
     cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>% 
-            select(any_of(c(regionkod = "Region", yrkeskod = "Yrke2012", branschkod = "SNI2007", `Anställda 16-64 år (dagbef)` = cont_var)))) %>% 
+            select(any_of(c(regionkod = "Region", yrkeskod = "Yrke2012", branschkod = "SNI2007", `Anställda 16-64 år med arbetsplats i regionen (dagbef)` = cont_var)))) %>% 
     # rename(any_of(c(regionkod = "Region",
     #                 yrkeskod = "Yrke2012",
     #                 branschkod = "SNI2007",
     #                 `Anställda 16-64 år (dagbef)` = cont_var))) %>%
-    select(any_of(c("år", "regionkod", "region", "yrkeskod", "Yrke (SSYK 2012)", "branschkod", "näringsgren SNI 2007", "kön", "Anställda 16-64 år (dagbef)")))
+    select(any_of(c("år", "regionkod", "region", "yrkeskod", "Yrke (SSYK 2012)", "branschkod", "näringsgren SNI 2007", "kön", "Anställda 16-64 år med arbetsplats i regionen (dagbef)")))
 
 
 
