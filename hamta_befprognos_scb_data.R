@@ -135,7 +135,7 @@ hamta_befprognos_data <- function(
       if (!any(hamtakommuner(lan = "20", F, F, F) %in% region_vekt)) filsokvagar <- filsokvagar[!str_detect(filsokvagar, "kommun")]      # ta bort kommunfiler ur sokvagsvektorn om ingen av Dalarnas kommuners kommunkoder är med
       
       # kontrollera vilka prognosår som finns bland profet-filerna i mappen
-      progn_ar <- map_chr(filsokvagar, ~ parse_number(.) %>% as.character()) %>% unique()
+      progn_ar <- map_chr(filsokvagar, ~ parse_number(.) %>% as.character()) 
 
       # map_chr(filsokvagar, ~ read_xlsx(.x, sheet = "Info") %>% 
         #                     pull() %>% 
@@ -144,12 +144,13 @@ hamta_befprognos_data <- function(
         #                     parse_number(.) %>% 
         #                     as.character())
       
-      prognos_ar <- prognos_ar %>% as.character()
+      prognos_ar <- progn_ar %>% as.character() %>% unique()
+      sok_prognos_ar <- prognos_ar %>% paste0(collapse = "|")               # för att kunna använda nedan i str_detect
       # ta ut rätt år utifrån användarens val
       #if (all(prognos_ar == "9999")) filsokvagar <- filsokvagar[which(progn_ar == max(progn_ar))]
       if (all(prognos_ar == "9999")) filsokvagar <- filsokvagar[str_detect(filsokvagar, max(progn_ar))]
       #if (all(!is.na(prognos_ar) & prognos_ar != "9999")) filsokvagar <- filsokvagar[which(progn_ar %in% prognos_ar)]
-      if (all(!is.na(prognos_ar) & prognos_ar != "9999")) filsokvagar <- filsokvagar[str_detect(filsokvagar, prognos_ar)]
+      if (all(!is.na(prognos_ar) & prognos_ar != "9999")) filsokvagar <- filsokvagar[str_detect(filsokvagar, sok_prognos_ar)]
       if (any(str_detect(prognos_ar, "9999"))) prognos_ar <- prognos_ar %>% str_replace("9999", max(progn_ar))
       
       # vektor för att döpa om kolumner i profetfilen så att de blir samma som i pxwebs befolkningsprognostabeller
@@ -162,7 +163,7 @@ hamta_befprognos_data <- function(
       
       las_in_profet_fil <- function(profetfil_sokvag, fil_prognosar) {
         
-      if (jmfr_vekt != "*") {
+      if (hamta_tid_vekt != "*") {
         fil_start_ar <- as.numeric(fil_prognosar)  - 1                # ta bort -1 igen?
         fil_jmfr_ar <- fil_start_ar + jmfr_vekt
         fil_hamta_tid_vekt <- if (length(fil_jmfr_ar) > 0) c(fil_jmfr_ar, andra_ar_vekt) else andra_ar_vekt
