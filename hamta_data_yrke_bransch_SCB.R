@@ -12,7 +12,7 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
   # Skript för att hämta data för förvärvsarbetande baserat på yrke och bransch. Funkar för regioner, kommuner och Sverige
   # Funkar bara för regioner (eller Sverige)
   # För att välja specifika yrken och/eller branscher, använd namn på yrken/branscher från funktionen nedan
-  # pxvardelist("https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0208/AM0208D/YREG56N", "SNI2007")
+  # pxvardelist("https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0208/AM0208D/YREG56N", "SNI2007") 
   #
   # tid: För ett intervall som slutar med sista tillgängliga år, skriv startår:"9999". Exempelvis 2010:"9999".
   # Funkar även med enstaka år c(2010,2015,"9999")

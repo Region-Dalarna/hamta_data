@@ -243,3 +243,4 @@ hamta_befprognos_data <- function(
   return(befprognos_df)
   
 } # slut funktion  
+ 
