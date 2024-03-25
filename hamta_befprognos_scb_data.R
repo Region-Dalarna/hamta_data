@@ -77,7 +77,7 @@ hamta_befprognos_data <- function(
       prognos_ar <- map_int(filsokvagar, ~ parse_number(.))%>% unique()
     }
     
-    start_ar <- prognos_ar  #- 1
+    start_ar <- prognos_ar  - 1                # ta bort -1 igen?
     jmfr_ar <- start_ar + jmfr_vekt
     if (length(jmfr_ar) > 0)  hamta_tid_vekt <- c(jmfr_ar, andra_ar_vekt) else hamta_tid_vekt <- andra_ar_vekt
     
@@ -162,6 +162,12 @@ hamta_befprognos_data <- function(
       
       las_in_profet_fil <- function(profetfil_sokvag, fil_prognosar) {
         
+      if (jmfr_vekt != "*") {
+        fil_start_ar <- as.numeric(fil_prognosar)  - 1                # ta bort -1 igen?
+        fil_jmfr_ar <- fil_start_ar + jmfr_vekt
+        fil_hamta_tid_vekt <- if (length(fil_jmfr_ar) > 0) c(fil_jmfr_ar, andra_ar_vekt) else andra_ar_vekt
+      } else fil_hamta_tid_vekt <- "*"
+        
         # fil_prognosar <- read_xlsx(profetfil_sokvag, sheet = "Info") %>% 
         #   pull() %>% 
         #   .[!is.na(.)] %>% 
@@ -181,7 +187,7 @@ hamta_befprognos_data <- function(
             select(-c(inomin, utomin, inomut, utomut))
         }
         
-        if (all(hamta_tid_vekt == "*")) hamta_tid_vekt <- c((fil_prognosar %>% as.numeric()):2100)
+        if (all(fil_hamta_tid_vekt == "*")) fil_hamta_tid_vekt <- c((fil_prognosar %>% as.numeric()):2100)
         
         profet_df <- profet_df %>% 
           rename(any_of(rename_profet))                                                    # döp om kolumner så de heter samma som i pxweb-befolkningsprognoserna
@@ -194,7 +200,7 @@ hamta_befprognos_data <- function(
                  ålder = ifelse(ålder == 100, paste0(ålder, "+ år"), paste0(ålder, " år")),
                  år = år %>% as.character(),
                  prognos_ar = fil_prognosar) %>%
-          filter(år %in% (hamta_tid_vekt %>% as.character())) %>% 
+          filter(år %in% (fil_hamta_tid_vekt %>% as.character())) %>% 
           left_join(regionnyckel, by = "regionkod") %>% 
           relocate(region, .after = regionkod)
         
