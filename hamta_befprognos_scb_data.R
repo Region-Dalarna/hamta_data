@@ -163,7 +163,7 @@ hamta_befprognos_data <- function(
       
       las_in_profet_fil <- function(profetfil_sokvag, fil_prognosar) {
         
-      if (hamta_tid_vekt != "*") {
+      if (any(hamta_tid_vekt != "*")) {
         fil_start_ar <- as.numeric(fil_prognosar)  - 1                # ta bort -1 igen?
         fil_jmfr_ar <- fil_start_ar + jmfr_vekt
         fil_hamta_tid_vekt <- if (length(fil_jmfr_ar) > 0) c(fil_jmfr_ar, andra_ar_vekt) else andra_ar_vekt
