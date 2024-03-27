@@ -58,7 +58,7 @@ hamta_befprognos_data <- function(
     
     if(str_detect(hamta_url, "https://api.scb.se")){
       
-       prognos_ar <- hamta_giltiga_varden_fran_tabell(hamta_url, "tid") %>% min() %>% as.numeric() %>% unique()
+       valt_ar <- hamta_giltiga_varden_fran_tabell(hamta_url, "tid") %>% min() %>% as.numeric() %>% unique()
       
     } else {
       
@@ -89,6 +89,8 @@ hamta_befprognos_data <- function(
     
     if (str_detect(url_prognos, "https://api.scb.se")) {  
       
+      valt_ar <- hamta_giltiga_varden_fran_tabell(hamta_url, "tid") %>% min() %>% as.numeric() %>% unique()
+      
       # pxvarlist(url_prognos)
       # pxvardelist(url_prognos, "ALDER", skriv_vektlista_till_clipboard = TRUE)
       
@@ -110,7 +112,7 @@ hamta_befprognos_data <- function(
       px_df <- as.data.frame(px_uttag) %>% 
         cbind(regionkod = as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>% 
                 select(Region)) %>% rename(regionkod = Region) %>% relocate(regionkod, .before = region) %>% 
-        mutate(prognos_ar = prognos_ar %>% as.character())
+        mutate(prognos_ar = valt_ar %>% as.character())
       
       
       # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
