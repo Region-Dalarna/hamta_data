@@ -1,6 +1,15 @@
 
-hamta_ek_prognoser_fran_prognosinstitut_ki <- function() {
+hamta_ek_prognoser_fran_prognosinstitut_ki <- function(
+    prognos_ar = "*", 
+    bara_senaste_prognos = TRUE) {
  
+  
+  # Laddar hem data som Konjunkturinstitutet sammanställt från olika banker och andra institut på hur de prognosticerar 
+  # den ekonomiska utvecklingen framåt
+  #
+  # Man kan ange prognos_ar = "*" för att hämta alla prognosår, eller enskilda år som tex c("2024", "2025", "2026"), ett eller flera
+  # bara_senaste_prognos = TRUE om man enbart vill ha varje instituts senaste prognos, vid FALSE så får man alla prognoser de gjort under åren
+  
   if (!require("pacman")) install.packages("pacman")
   p_load(tidyverse,
          readxl,
@@ -44,7 +53,8 @@ hamta_ek_prognoser_fran_prognosinstitut_ki <- function() {
                                             Prognosinstitut == "Reg" ~ "Regeringen",
                                             Prognosinstitut == "SEB" ~ "SEB",
                                             Prognosinstitut == "SKR" ~ "SKR",
-                                            TRUE ~ Prognosinstitut_namn))
+                                            TRUE ~ Prognosinstitut_namn),
+           Prognosinstitut = Prognosinstitut %>% toupper())
   
   # ======================== hämta fil med ekonomiska prognoser från Konjunkturinstitutet ========================
   # hämta html från webbsida
@@ -68,82 +78,71 @@ hamta_ek_prognoser_fran_prognosinstitut_ki <- function() {
   # ta bort flik som innehåller ordet "Utskrift"
   progn_flikar <- progn_flikar[!grepl("Utskrift", progn_flikar)]
   
+  if (prognos_ar != "*") progn_flikar <- progn_flikar[str_detect(progn_flikar, prognos_ar %>% as.character())]
+  
+  if (length(progn_flikar) == 0) stop("Valt/valda prognosår finns inte i datasetet")
+  
   # Funktion för att bearbeta excelfil med prognoser
-  bearbeta_excelflik <- function(excelfil, excelflik, tabort_na_varden = FALSE) {
+  bearbeta_excelflik <- function(excelfil, excelflik, bara_senaste = TRUE) {
   
     inlast_df <- read_excel(excelfil, sheet = excelflik, range = cell_cols("A:YA"), .name_repair = "minimal")
     
     # hitta prognosåret i kolumnamnet eller i första kolumnen
     # Steg 1: Sök efter kolumnnamn som innehåller "Prognosjämförelse"
     finns_i_kolumn <- inlast_df %>% 
-      select(contains("Prognosjämförelse")) %>% 
+      select(all_of(contains("Prognosjämförelse"))) %>% 
       names()
     
     names(inlast_df) <- paste0("Kolumn_", 1:ncol(inlast_df))
     
     # Steg 2: Extrahera numeriskt värde om kolumn finns, annars leta i raderna
-    prognos_ar <- if (length(finns_i_kolumn) > 0) {
+    flik_prognos_ar <- if (length(finns_i_kolumn) > 0) {
       finns_i_kolumn %>% 
         parse_number()
     } else {
       inlast_df %>% 
         filter(!is.na(inlast_df[[1]]),
-          str_detect(inlast_df[[1]], "Prognosjämförelse")) %>%
-        pull(1) %>%
+               str_detect(inlast_df[[1]], "Prognosjämförelse")) %>%
+        dplyr::pull(1) %>% 
         map_dbl(parse_number) %>%
         first()
     }
     
-    start_rad <- which(!is.na(inlast_df[[2]]))[1]
-    slut_kolumn <- which(is.na(inlast_df[2,]))[1]-1
-    kolumn_namn <- inlast_df[start_rad,]
+    # ta bort rader som inte ska vara kvar i datasetet
+    retur_df <- inlast_df %>% 
+      filter(!if_all(everything(), is.na),
+             !str_detect(.[[1]], "där inte annat anges|Kalenderkorrigerad|Årsgenomsnitt|Prognosjämförelse")) 
     
-    slut_kolumn <- kolumn_namn %>% 
-      select(-c(1:2)) %>%  # Exkluderar första kolumnen
-      map_lgl(~ .[1] == kolumn_namn[1, 2]) %>% # Jämför med första raden i kolumn 2
-      which(. == TRUE) %>% 
-      first() %>% 
-      "+"(1)
+    # transformera datasetet genom att först göra om kolumner till rader och tvärtom, därefter göra om det till long-format
+    retur_df <- retur_df %>% t() %>% as.data.frame() %>% 
+      setNames(., unlist(.[1, ])) %>%  # Sätt kolumnnamnen till de värden som finns i rad 1
+      slice(-1) %>% 
+      pivot_longer(cols = 4:20, names_to = "variabel", values_to = "varde", values_drop_na = TRUE) %>% 
+      mutate(Publiceringsdatum = convertToDate(Publiceringsdatum),
+             prognos_ar = flik_prognos_ar)
     
-    kolumn_namn <- kolumn_namn %>% unlist(use.names = FALSE) %>% .[c(1:slut_kolumn)]
+    # markera det senaste värdet för varje Prognosinstitut och variabel
+    retur_df <- retur_df %>% 
+      group_by(Prognosinstitut, variabel) %>% 
+      mutate(senaste_progn = ifelse(Publiceringsdatum == max(Publiceringsdatum), 1, 0)) %>% 
+      ungroup()
+
+    if (bara_senaste) retur_df <- retur_df %>% filter(senaste_progn == 1)
     
-    prognoser_df <- inlast_df %>% 
-      slice(start_rad:nrow(inlast_df)) %>% 
-      select(c(1:slut_kolumn)) %>% 
-      #set_names(kolumn_namn) %>% 
-      filter(!is.na(Kolumn_1)) %>% 
-      rename(variabel = Kolumn_1)
-    
-    nya_kolumnnamn <- as.character(prognoser_df[[1]])
-    
-    prognoser_long <- t(prognoser_df[,-1]) %>% 
-      as.data.frame() %>% 
-      set_names(nya_kolumnnamn) %>%
-      mutate(Publiceringsdatum = as.Date(as.Date("1899-12-30") + as.numeric(Publiceringsdatum)),
-             prognos_ar = prognos_ar) %>%
-      pivot_longer(cols = -c("Prognosinstitut", "prognos_ar", "Publiceringsdatum", "Publiceringsvecka"),
-                   names_to = "variabel",
-                   values_to = "varde") %>% 
-      mutate(varde = varde %>% str_remove_all("\\*") %>% str_replace_all(",", "\\.") %>% as.numeric()) %>% 
-      filter(!is.na(varde)) %>% 
-      group_by(prognos_ar, Prognosinstitut, variabel) %>% 
-      mutate(senaste_progn = max(Publiceringsdatum)) %>% 
-      ungroup() %>% 
-      filter(Publiceringsdatum == senaste_progn)
-  
-    if (tabort_na_varden) prognoser_long <- prognoser_long %>% filter(!is.na(varde))
-    
-    return(prognoser_long)
+    return(retur_df)
   } # slut funktion
   
   
   prognoser_df <- map(progn_flikar, ~ bearbeta_excelflik(excelfil = temp_fil, 
                                                          excelflik = .x,
-                                                         tabort_na_varden = TRUE),) %>% 
-    list_rbind()
+                                                         bara_senaste = bara_senaste_prognos),) %>% 
+    list_rbind() %>% 
+    mutate(Prognosinstitut = Prognosinstitut %>% toupper())
   
   prognoser_df2 <- prognoser_df %>% 
-    left_join(nyckel_df, by = "Prognosinstitut")
+    left_join(nyckel_df, by = "Prognosinstitut") %>% 
+    select(Prognosinstitut, Prognosinstitut_namn, Publiceringsdatum, Publiceringsvecka, prognos_ar, senaste_progn, 
+           variabel, varde)
 
   unlink(temp_fil)
   return(prognoser_df2)
