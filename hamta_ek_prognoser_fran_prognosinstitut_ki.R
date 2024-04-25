@@ -78,7 +78,9 @@ hamta_ek_prognoser_fran_prognosinstitut_ki <- function(
   # ta bort flik som innehåller ordet "Utskrift"
   progn_flikar <- progn_flikar[!grepl("Utskrift", progn_flikar)]
   
-  if (prognos_ar != "*") progn_flikar <- progn_flikar[str_detect(progn_flikar, prognos_ar %>% as.character())]
+  sok_prognos_ar <- prognos_ar %>% as.character() %>% paste0(collapse = "|")
+  
+  if (any(prognos_ar != "*")) progn_flikar <- progn_flikar[str_detect(progn_flikar, sok_prognos_ar)]
   
   if (length(progn_flikar) == 0) stop("Valt/valda prognosår finns inte i datasetet")
   
@@ -142,7 +144,8 @@ hamta_ek_prognoser_fran_prognosinstitut_ki <- function(
   prognoser_df2 <- prognoser_df %>% 
     left_join(nyckel_df, by = "Prognosinstitut") %>% 
     select(Prognosinstitut, Prognosinstitut_namn, Publiceringsdatum, Publiceringsvecka, prognos_ar, senaste_progn, 
-           variabel, varde)
+           variabel, varde) %>% 
+    mutate(varde = varde %>% as.numeric())
 
   unlink(temp_fil)
   return(prognoser_df2)
