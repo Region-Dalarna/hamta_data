@@ -50,11 +50,7 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
   # Gör om från klartext till något som PXweb förstår
   kon_vekt <- hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon")
   
-  if (utbildningsniva_klartext == "*"){
-    
-    utbildningsniva_vekt = "*"
-    
-  }else utbildningsniva_vekt <- hamta_kod_med_klartext(url_uttag, utbildningsniva_klartext, skickad_fran_variabel = "utbildningsniva")
+  if (utbildningsniva_klartext == "*") utbildningsniva_vekt = "*" else utbildningsniva_vekt <- hamta_kod_med_klartext(url_uttag, utbildningsniva_klartext, skickad_fran_variabel = "utbildningsniva")
   
   giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid")
   if (all(tid != "*")) tid <- tid %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
@@ -68,12 +64,15 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
          "Tid" = tid)
   
   # Download data 
-  px_data <- 
+  px_uttag <- 
     pxweb_get(url = url_uttag,
               query = pxweb_query_list)
   
   # Convert to data.frame 
-  px_df <- as.data.frame(px_data, column.name.type = "text", variable.value.type = "text")
+  px_df <- as.data.frame(px_uttag) %>% 
+    cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>% 
+            select(regionkod = Region)) %>% 
+    relocate(regionkod, .before = 1)
   
   if (!is.na(output_mapp) & !is.na(filnamn)){
     write.xlsx(px_df,paste0(output_mapp,filnamn))
@@ -83,7 +82,3 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
   if(returnera_data == TRUE) return(px_df) 
   
 }
-
-
-
-
