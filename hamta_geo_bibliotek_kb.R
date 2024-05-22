@@ -21,7 +21,7 @@ hamta_bibliotek_kb_geo <- function(skickad_lanskod = NA, returnera_geo = TRUE) {
   # sätt ihop en textsträng som skickas med api-sökningen, den är tom om man inte skickat med en länskod
   lan_api_txt <- lanskoder_tabell %>% 
     filter(lanskod %in% skickad_lanskod) %>%
-    pull(lanskod_bokstav) %>% 
+    dplyr::pull(lanskod_bokstav) %>% 
     paste0(., collapse = ",") %>% 
     paste0("&county=", .)
   
