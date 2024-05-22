@@ -12,11 +12,12 @@ hamta_bibliotek_kb_geo <- function(skickad_lanskod = NA, returnera_geo = TRUE) {
   # nyckeltabell för att översätta mellan länskod och länsbokstav
   wiki_url <- "https://sv.wikipedia.org/wiki/ISO_3166-2:SE"
   wiki_html <- read_html(wiki_url)
-  
+
   lanskoder_tabell <- html_table(html_nodes(wiki_html, "table"), fill = TRUE)[[1]] %>% 
     rename(lanskod_bokstav = 1, Lan = 2, lanskod = 3) %>%
     mutate(lanskod = lanskod %>% str_remove("SE-"),
-           lanskod_bokstav = lanskod_bokstav %>% str_remove("SE\\-"))
+           lanskod_bokstav = lanskod_bokstav %>% str_remove("SE\\-"),
+           lanskod_bokstav = ifelse(lanskod_bokstav == "M", "LM", lanskod_bokstav))
   
   # sätt ihop en textsträng som skickas med api-sökningen, den är tom om man inte skickat med en länskod
   lan_api_txt <- lanskoder_tabell %>% 
@@ -38,7 +39,7 @@ hamta_bibliotek_kb_geo <- function(skickad_lanskod = NA, returnera_geo = TRUE) {
     api_url <- paste0("https://bibdb.libris.kb.se/api/lib?start=", start_rad, "&limit=", max_varde, "&country_code=SE", lan_api_txt)
     
     resp <- GET(api_url) %>%                           # hämta data och bearbeta till läsbart format 
-      content(as = "text", encoding = "UTF-8") %>% 
+      httr::content(as = "text", encoding = "UTF-8") %>% 
       fromJSON(., flatten = TRUE)
     
     bib_varv_df <- resp$libraries %>%                      # hämta bibliotek från svaret
