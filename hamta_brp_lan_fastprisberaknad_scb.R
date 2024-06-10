@@ -40,8 +40,7 @@ hamta_brp_lan_fastprisberaknad <- function(region_vekt = "*",
   
   # Här beräknar vi volymutveckling som indextal
   volymutveckling <- volymutveckling %>%
-    rename(volymutveckling = `BRP, volymutveckling i procent`) %>%
-    mutate(volymutveckling = volymutveckling / 100 + 1) %>%
+    mutate(volymutveckling_index = `BRP, volymutveckling i procent` / 100 + 1) %>%
     rename(brp_lopande = `BRP, löpande priser, mnkr`)
   
   # Skapar funktionen fastpris
@@ -55,12 +54,12 @@ hamta_brp_lan_fastprisberaknad <- function(region_vekt = "*",
     
     brp_efter_basar <- brp_geografi %>% 
       filter(år >= skickat_basar) %>%
-      mutate(volymutveckling2 = if_else(år == skickat_basar, 1, volymutveckling)) %>%
+      mutate(volymutveckling2 = if_else(år == skickat_basar, 1, volymutveckling_index)) %>%
       mutate(volymutveckling2 = cumprod(volymutveckling2))
     
     brp_innan_basar <- brp_geografi %>% 
       filter(år <= skickat_basar) %>%
-      mutate(volymutveckling2 = lead(volymutveckling)) %>%
+      mutate(volymutveckling2 = lead(volymutveckling_index)) %>%
       filter(år != skickat_basar) %>%
       arrange(desc(år)) %>%
       mutate(volymutveckling2 = cumprod(volymutveckling2)) %>%
@@ -89,7 +88,6 @@ hamta_brp_lan_fastprisberaknad <- function(region_vekt = "*",
   # (ja, jag vet. Vi hade kunnat låta bli att döpa om kolumnerna för löpande priser och volymutveckling ovan, men jag orkade inte och döpte om dem till originalnamnen här istället)
   retur_df <- retur_df %>% 
     rename(`BRP, löpande priser, mnkr` = brp_lopande,
-           `BRP, volymutveckling i procent` = volymutveckling, 
            !!fastpris_kolumn := brp_fastprisberaknad) 
   
   return(retur_df)                  # returnera bearbetad dataframe med fasta priser
