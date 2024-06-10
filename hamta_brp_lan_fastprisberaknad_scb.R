@@ -24,7 +24,6 @@ hamta_brp_lan_fastprisberaknad <- function(region_vekt = "*",
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R", encoding = "utf-8")
   source("https://raw.githubusercontent.com/Region-Dalarna/hamta_data/main/hamta_brp_lan_region_tid_NR0105ENS2010T01A_scb.R", encoding = "utf-8")
   
-    
   # Hämtar BRP, löpande priser och volymutveckling
   volymutveckling <- suppressWarnings(
     hamta_brp_lan_region_tid_scb(
@@ -39,6 +38,7 @@ hamta_brp_lan_fastprisberaknad <- function(region_vekt = "*",
   if (bas_ar < min(volymutveckling$år)) bas_ar <- min(volymutveckling$år)
   if (bas_ar > max(volymutveckling$år)) bas_ar <- max(volymutveckling$år)
   
+  # Här beräknar vi volymutveckling som indextal
   volymutveckling <- volymutveckling %>%
     rename(volymutveckling = `BRP, volymutveckling i procent`) %>%
     mutate(volymutveckling = volymutveckling / 100 + 1) %>%
