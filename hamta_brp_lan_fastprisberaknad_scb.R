@@ -17,7 +17,6 @@ p_load(tidyverse,
 source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R", encoding = "utf-8")
 source("https://raw.githubusercontent.com/Region-Dalarna/hamta_data/main/hamta_brp_lan_region_tid_NR0105ENS2010T01A_scb.R", encoding = "utf-8")
 
-
 hamta_brp_lan_fastprisberaknad <- function(region_vekt = "*",
                              valda_ar = "*",
                              bas_ar = "2000"){
