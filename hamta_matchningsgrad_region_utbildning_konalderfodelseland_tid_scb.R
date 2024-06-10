@@ -62,8 +62,8 @@ hamta_matchningsgrad_region_utbildning_konalderfodelseland_tid_scb <- function(
   
   px_uttag <- pxweb_get(url = url_uttag, query = varlista)
   
-  var_vektor <- c(regionkod = "Region")
-  var_vektor_klartext <- "region"
+  var_vektor <- c(regionkod = "Region",Utbildning = "Utbildning")
+  var_vektor_klartext <- c("region","utbildning")
   
   px_df <- as.data.frame(px_uttag)
   if (!all(is.na(var_vektor))) {
@@ -78,6 +78,7 @@ hamta_matchningsgrad_region_utbildning_konalderfodelseland_tid_scb <- function(
         relocate(all_of(names(var_vektor)[varflytt_index]), .before = all_of(var_vektor_klartext[varflytt_index]))
     }
   }
+  
   
   # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
   # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
