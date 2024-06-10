@@ -14,6 +14,7 @@ if (!require("pacman")) install.packages("pacman")
 p_load(tidyverse,
        pxweb)
 
+# Hämta funktioner från github som vi använder i skriptet
 source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R", encoding = "utf-8")
 source("https://raw.githubusercontent.com/Region-Dalarna/hamta_data/main/hamta_brp_lan_region_tid_NR0105ENS2010T01A_scb.R", encoding = "utf-8")
 
