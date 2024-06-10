@@ -90,7 +90,7 @@ hamta_brp_lan_fastprisberaknad <- function(region_vekt = "*",
   retur_df <- retur_df %>% 
     rename(`BRP, löpande priser, mnkr` = brp_lopande,
            `BRP, volymutveckling i procent` = volymutveckling, 
-           !!fastpris_kolumn := brp_fastprisberaknad) 
+           !!fastpris_kolumn := brp_fastprisberaknad)
   
   return(retur_df)                  # returnera bearbetad dataframe med fasta priser
   
