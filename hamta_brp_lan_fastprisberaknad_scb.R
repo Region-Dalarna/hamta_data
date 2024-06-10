@@ -45,7 +45,6 @@ hamta_brp_lan_fastprisberaknad <- function(region_vekt = "*",
     rename(brp_lopande = `BRP, löpande priser, mnkr`)
   
   # Skapar funktionen fastpris
-  
   fastpris <- function(skickad_regionkod, skickat_basar, skickad_df){
     
     brp_geografi <- skickad_df %>%
@@ -93,6 +92,6 @@ hamta_brp_lan_fastprisberaknad <- function(region_vekt = "*",
            `BRP, volymutveckling i procent` = volymutveckling, 
            !!fastpris_kolumn := brp_fastprisberaknad)
   
-  return(retur_df)
+  return(retur_df)                  # returnera bearbetad dataframe med fasta priser
   
 } # slut funktion
