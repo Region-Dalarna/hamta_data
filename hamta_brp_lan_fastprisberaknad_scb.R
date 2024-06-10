@@ -22,7 +22,6 @@ hamta_brp_lan_fastprisberaknad <- function(region_vekt = "*",
                              valda_ar = "*",
                              bas_ar = "2000"){
   
-
   
   # Hämtar BRP, löpande priser och volymutveckling
   volymutveckling <- suppressWarnings(
