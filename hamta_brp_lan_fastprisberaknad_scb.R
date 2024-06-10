@@ -76,7 +76,7 @@ hamta_brp_lan_fastprisberaknad <- function(region_vekt = "*",
   } # slut funktion fastpris()
   
   # Skapar en vektor med datasetets unika regionkoder
-  lan_vekt <- unique(volymutveckling$regionkod)
+  lan_vekt <- unique(volymutveckling$regionkod) 
   
   # Använder map för att köra funktionen fastpris för alla regioner, och binda samman i ett dataset
   retur_df <- map(lan_vekt, ~ fastpris(.x, bas_ar, skickad_df = volymutveckling)) %>% 
