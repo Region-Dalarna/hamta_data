@@ -80,7 +80,7 @@ hamta_brp_lan_fastprisberaknad <- function(region_vekt = "*",
   
   # Använder map för att köra funktionen fastpris för alla regioner, och binda samman i ett dataset
   retur_df <- map(lan_vekt, ~ fastpris(.x, bas_ar, skickad_df = volymutveckling)) %>% 
-    list_rbind()
+    list_rbind() 
   
   # skapa ett kolumnnamn för BRP i fasta priser där basåret är med i namnet
   fastpris_kolumn <- paste0("BRP, fasta priser, mnkr (basår ", bas_ar, ")")
