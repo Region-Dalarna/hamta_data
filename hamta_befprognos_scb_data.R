@@ -59,7 +59,8 @@ hamta_befprognos_data <- function(
     if(str_detect(hamta_url, "https://api.scb.se")){
       
        valt_ar <- hamta_giltiga_varden_fran_tabell(hamta_url, "tid") %>% min() %>% as.numeric() %>% unique()
-      
+       if ("9999" %in% prognos_ar) prognos_ar <- prognos_ar[prognos_ar == "9999"] %>% str_replace("9999", as.character(valt_ar)) %>% as.numeric()
+       
     } else {
       
       filsokvagar <- list.files(hamta_url, pattern = ".csv", full.names = TRUE)
@@ -89,22 +90,24 @@ hamta_befprognos_data <- function(
     
     if (str_detect(url_prognos, "https://api.scb.se")) {  
       
-      valt_ar <- hamta_giltiga_varden_fran_tabell(hamta_url, "tid") %>% min() %>% as.numeric() %>% unique()
+      #valt_ar <- hamta_giltiga_varden_fran_tabell(hamta_url, "tid") %>% min() %>% as.numeric() %>% unique()
       
       # pxvarlist(url_prognos)
-      # pxvardelist(url_prognos, "ALDER", skriv_vektlista_till_clipboard = TRUE)
+      # pxvardelist(url_prognos, "kon", skriv_vektlista_till_clipboard = TRUE)
       
       if (all(cont_klartext == "*")) cont_klartext <- hamta_giltiga_varden_fran_tabell(url_prognos, "contentscode", klartext = TRUE)
       cont_vekt <- hamta_kod_med_klartext(url_prognos, cont_klartext, skickad_fran_variabel = "contentscode")
       kon_vekt <- hamta_kod_med_klartext(url_prognos, kon_klartext, skickad_fran_variabel = "kon")
       alder_vekt <- alder_list %>% unlist()
       if (all(cont_klartext == "Födda")) alder_vekt <- "0"
+      #hamta_tid_vekt <- tid_vekt
       
       query_list <- list(Region = region_vekt,
                          Alder = alder_vekt,
                          Kon = kon_vekt,
                          ContentsCode = cont_vekt,
                          Tid = hamta_tid_vekt %>% as.character())
+                         #Tid = valt_ar %>% as.character())
       
       px_uttag <- pxweb_get(url = url_prognos,
                             query = query_list)
