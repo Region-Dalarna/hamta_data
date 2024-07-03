@@ -4,7 +4,7 @@ hamta_valdeltagande_region_bakgrund_kon_tid_scb <- function(
     kon_klartext = "*",			 #  Finns: "män och kvinnor", "män", "kvinnor"
     cont_klartext = "*",			 #  Finns: "Valdeltagande i val till riksdag, procent", "Valdeltagande i val till region, procent", "Valdeltagande i val till kommun, procent"
     tid_koder = "*",			 # "*" = alla år eller månader, "9999" = senaste, finns: "2018", "2022"
-    long_format = TRUE,			# TRUE = konvertera innehållsvariablerna i datasetet till long-format 
+    long_format = FALSE,			# Funkar inte med TRUE pga oklar bugg 
     wide_om_en_contvar = TRUE,			# TRUE = om man vill behålla wide-format om det bara finns en innehållsvariabel, FALSE om man vill konvertera till long-format även om det bara finns en innehållsvariabel
     output_mapp = NA,			# anges om man vill exportera en excelfil med uttaget, den mapp man vill spara excelfilen till
     excel_filnamn = ".xlsx",			# filnamn för excelfil som exporteras om excel_filnamn och output_mapp anges
