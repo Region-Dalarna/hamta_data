@@ -20,7 +20,7 @@ hamta_folkhogskola_kon_kurstyp_nationellbakgrund_regionutb_aldersgrupp_tid_scb <
   # Senast uppdaterad: 03 juli 2024
   #
   # url till tabellens API: https://api.scb.se/OV0104/v1/doris/sv/ssd/START/UF/UF0601/UF0601A/UF0601T01b
-  #
+  # Källa https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__UF__UF0601__UF0601A/UF0601T01b/
   # ====================================================================================================
   
   if (!require("pacman")) install.packages("pacman")
