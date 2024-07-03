@@ -15,7 +15,7 @@ hamta_folkhogskola_kon_kurstyp_nationellbakgrund_regionutb_aldersgrupp_tid_scb <
   #
   # Funktion för att hämta data från SCB:s API med hjälp av pxweb-paketet
   # Automatgenererat av en funktion i R som skrivits av Peter Möller, Region Dalarna
-  #G:/skript/jon/Mindre uppdrag/Länsstyrelsen/hamta_folkhogskola_kon_kurstyp_nationellbakgrund_regionutb_aldersgrupp_tid_UF0601T01b_scb.R
+  #
   # Skapad av: frkjon den 03 juli 2024
   # Senast uppdaterad: 03 juli 2024
   #
