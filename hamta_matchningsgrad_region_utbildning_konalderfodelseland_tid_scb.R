@@ -17,9 +17,9 @@ hamta_matchningsgrad_region_utbildning_konalderfodelseland_tid_scb <- function(
   # Automatgenererat av en funktion i R som skrivits av Peter Möller, Region Dalarna
   #
   # Skapad av: frkjon den 10 juni 2024
-  # Senast uppdaterad: 10 juni 2024
+  # Senast uppdaterad: 16 aug 2024, av Peter. Uppdaterat url:en för att det är en ny hos scb
   #
-  # url till tabellens API: https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM9906/AM9906A/RegionInd19E3N1
+  # url till tabellens API: https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM9906/AM9906A/RegionInd19E3N2
   #
   # ====================================================================================================
   
@@ -32,7 +32,8 @@ hamta_matchningsgrad_region_utbildning_konalderfodelseland_tid_scb <- function(
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
   
   # Url till SCB:s databas
-  url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM9906/AM9906A/RegionInd19E3N1"
+  url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM9906/AM9906A/RegionInd19E3N2"
+               
   px_meta <- pxweb_get(url_uttag)
   
   varlist_koder <- pxvarlist(px_meta)$koder
@@ -65,12 +66,14 @@ hamta_matchningsgrad_region_utbildning_konalderfodelseland_tid_scb <- function(
   var_vektor <- c(regionkod = "Region",Utbildning = "Utbildning")
   var_vektor_klartext <- c("region","utbildning")
   
-  px_df <- as.data.frame(px_uttag)
+  suppress_specific_warning(px_df <- as.data.frame(px_uttag))
   if (!all(is.na(var_vektor))) {
     # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
+    suppress_specific_warning(
     px_df <- px_df %>%
       cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
               select(any_of(var_vektor)))
+    )
     
     # kolumnerna med koder läggs framför motsvarande kolumner med klartext
     for (varflytt_index in 1:length(var_vektor)) {
