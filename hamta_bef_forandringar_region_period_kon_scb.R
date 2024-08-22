@@ -3,7 +3,7 @@ hamta_bef_forandringar_region_alder_kon_scb <- function(
     region_vekt = "20",                       # Dalarna defaultvärde
     forandringar_klartext = "*",              # finns: "folkmängd", "folkökning", "födda", "döda", "födelseöverskott", "samtliga inflyttningar", "samtliga utflyttningar", "inflyttningar från kommuner inom länet", "inflyttningar från övriga län", "invandringar", "utflyttningar till kommuner inom länet", "utflyttningar till övriga län", "utvandringar", "flyttningsöverskott totalt", "flyttningsöverskott eget län", "flyttningsöverskott övriga Sverige", "invandringsöverskott", "justeringspost"
     kon_klartext = NA,                        # finns "män", "kvinnor", "totalt", NA = så skippar vi denna variabel
-    period_klartext = "hela året",            # NA så skippar vi denna variabel, finns 1 årsgrupper, 1 - 100+ samt "tot" för alla åldrar - dock, se upp för dubbelräkning med "tot"
+    period_klartext = "hela året",            # finns: "hela året", "första halvåret", "andra halvåret", "kvartal 1", "kvartal 2", "kvartal 3", "kvartal 4"
     tid_koder = "*",                          # alla år, finns från 1997, "9999" = senaste år  (koder och klartext är samma sak i denna tabell)
     returnera_df = TRUE,                      # FALSE om man inte vill returnera en df
     mapp_excelfil = NA,                       # var man vill spara sin Excelfil om man vill spara en sådan
