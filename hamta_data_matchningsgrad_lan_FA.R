@@ -8,7 +8,7 @@ hamta_data_matchning_lan_fa <-function(region = hamtaAllaLan(tamedriket = TRUE),
   
   # ===========================================================================================================
   # Skript som hämtar data för matchningsgrad i procent på i första hand länsnivå. Finns även för FA-region (från SCB)
-  # Använd pxvardelist("https://api.scb.se/OV0104/v1/doris/sv/ssd/AM/AM9906/AM9906A/RegionInd19M2N", "Region") för en förteckning över regioner
+  # Använd pxvardelist("https://api.scb.se/OV0104/v1/doris/sv/ssd/AM/AM9906/AM9906A/RegionInd19M2N1", "ContentsCode") för en förteckning över regioner
   # Val för variabeln alder_fodelseland:
   # "20-64", "20-39" , "Sverige", "Norden/EU", "Afrika", "Asien", "Övriga_världen", "totalt"
   # Skapad av Jon Frank
@@ -25,7 +25,9 @@ hamta_data_matchning_lan_fa <-function(region = hamtaAllaLan(tamedriket = TRUE),
   
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
   
-  url = "https://api.scb.se/OV0104/v1/doris/sv/ssd/AM/AM9906/AM9906A/RegionInd19M2N"
+  # url = "https://api.scb.se/OV0104/v1/doris/sv/ssd/AM/AM9906/AM9906A/RegionInd19M2N"
+  
+  url = "https://api.scb.se/OV0104/v1/doris/sv/ssd/AM/AM9906/AM9906A/RegionInd19M2N1"
   
   # Använder klartext i vissa fall.
   if (all(kon_klartext == "*")){
@@ -41,7 +43,7 @@ hamta_data_matchning_lan_fa <-function(region = hamtaAllaLan(tamedriket = TRUE),
     list("Region" = region,
          "Kon" = kon_vekt,
          "AlderFodelselandgr" = alder_fodelseland,
-         "ContentsCode" = "000005SF",
+         "ContentsCode" = "000007I3",
          "Tid" = tid)
   
   # Download data 
