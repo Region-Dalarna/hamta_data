@@ -62,7 +62,6 @@ hamta_yrke_region_rams_bas_sni2007_kon_tid_scb <- function(
     tid_koder <- tid_koder %>% .[. != "2020" & . != "2021"]
   }
   
-  
   # query-lista till pxweb-uttag
   varlista <- list(
   "Region" = region_vekt,
@@ -91,7 +90,7 @@ hamta_yrke_region_rams_bas_sni2007_kon_tid_scb <- function(
       # kolumnerna med koder läggs framför motsvarande kolumner med klartext
       for (varflytt_index in 1:length(var_vektor)) {
         px_df <- px_df %>%
-            relocate(all_of(names(var_vektor)[varflytt_index]), .before = all_of(var_vektor_klartext[varflytt_index]))
+            relocate(any_of(names(var_vektor)[varflytt_index]), .before = any_of(var_vektor_klartext[varflytt_index]))
       }
   }
 
