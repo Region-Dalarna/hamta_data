@@ -7,6 +7,7 @@ hamta_bas_arbstatus_region_kon_alder_fodelseregion_prel_manad_scb <- function(
 			tid_koder = "*",			 # "*" = alla år eller månader, "9999" = senaste, finns: "2020M01", "2020M02", "2020M03", "2020M04", "2020M05", "2020M06", "2020M07", "2020M08", "2020M09", "2020M10", "2020M11", "2020M12", "2021M01", "2021M02", "2021M03", "2021M04", "2021M05", "2021M06", "2021M07", "2021M08", "2021M09", "2021M10", "2021M11", "2021M12", "2022M01", "2022M02", "2022M03", "2022M04", "2022M05", "2022M06", "2022M07", "2022M08", "2022M09", "2022M10", "2022M11", "2022M12", "2023M01", "2023M02", "2023M03", "2023M04", "2023M05", "2023M06", "2023M07", "2023M08", "2023M09", "2023M10", "2023M11", "2023M12"
 			long_format = TRUE,			# TRUE = konvertera innehållsvariablerna i datasetet till long-format 
 			wide_om_en_contvar = TRUE,			# TRUE = om man vill behålla wide-format om det bara finns en innehållsvariabel, FALSE om man vill konvertera till long-format även om det bara finns en innehållsvariabel
+			jmfr_manad_antal_bakat = NA,         # NA, hämta inte, annars anges en siffra för hur många månader bakåt man vill jämföra, finns inte aktuell månad så kommer den helt enkelt inte med
 			output_mapp = NA,			# anges om man vill exportera en excelfil med uttaget, den mapp man vill spara excelfilen till
 			excel_filnamn = "bas_syss.xlsx",			# filnamn för excelfil som exporteras om excel_filnamn och output_mapp anges
 			returnera_df = TRUE			# TRUE om man vill ha en dataframe i retur från funktionen
@@ -51,6 +52,14 @@ if (!require("pacman")) install.packages("pacman")
   giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
   if (all(tid_koder != "*")) tid_koder <- tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
 
+  if (!is.na(jmfr_manad_antal_bakat)) {
+    if (all(tid_koder != "*")) {
+      ny_index <- str_which(giltiga_ar, tid_koder)-jmfr_manad_antal_bakat
+      tid_koder <- c(tid_koder, giltiga_ar[ny_index]) %>%
+        .[. %in% giltiga_ar] %>% unique()
+    } # if-sats knntroll att tid_koder inte är "*"
+  } # if-sats kontroll att jmfr_manad_antal_bakat inte är NA
+  
 # query-lista till pxweb-uttag
   varlista <- list(
   "Region" = region_vekt,
