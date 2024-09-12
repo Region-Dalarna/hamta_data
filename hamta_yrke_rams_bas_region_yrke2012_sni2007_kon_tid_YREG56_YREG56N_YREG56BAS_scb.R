@@ -54,15 +54,15 @@ hamta_yrke_region_rams_bas_sni2007_kon_tid_scb <- function(
 
   # Hantera tid-koder
   giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
-  if (all(tid_koder != "*")) tid_koder <- tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
+  if (all(tid_koder != "*")) tid_vekt <- tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique() else tid_vekt <- giltiga_ar
   
   # special, ta bort år 2020 och 2021 om det är RAMS-tabellen (annars blir de dubbelt)
   if (url_uttag == "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0208/AM0208D/YREG56N") {
-    if (tid_koder == "*") tid_koder <- giltiga_ar
-    tid_koder <- tid_koder %>% .[. != "2020" & . != "2021"]
+    if (tid_koder == "*") tid_vekt <- giltiga_ar
+    tid_vekt <- tid_vekt %>% .[. != "2020" & . != "2021"]
   }
   
-  if (length(tid_koder) > 0) {
+  if (length(tid_vekt) > 0) {
     
     # query-lista till pxweb-uttag
     varlista <- list(
@@ -71,7 +71,7 @@ hamta_yrke_region_rams_bas_sni2007_kon_tid_scb <- function(
     "SNI2007" = sni2007_vekt,
     "Kon" = kon_vekt,
     "ContentsCode" = cont_vekt,
-    "Tid" = tid_koder)
+    "Tid" = tid_vekt)
   
     if (all(is.na(yrke2012_klartext))) varlista <- varlista[names(varlista) != "Yrke2012"]
     if (all(is.na(sni2007_klartext))) varlista <- varlista[names(varlista) != "SNI2007"]

@@ -172,7 +172,8 @@ px_df <- map_dfr(url_rams_vekt, ~hamta_data(url_rams = .x)) %>%
   filter(pendlare > 0) %>% 
   distinct(.keep_all = TRUE) %>% 
   mutate(bostadsregion = bostadsregion %>% str_remove(" \\(bostad\\)"),
-         arbetsställeregion = arbetsställeregion %>% str_remove(" \\(arbetsställe\\)"))
+         arbetsställeregion = arbetsställeregion %>% str_remove(" \\(arbetsställe\\)")) %>% 
+  relocate(pendlare, .after = ncol(px_df))
 
 return(px_df)
 
