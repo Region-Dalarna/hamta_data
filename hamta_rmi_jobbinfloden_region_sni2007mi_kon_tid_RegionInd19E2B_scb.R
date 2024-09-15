@@ -24,7 +24,7 @@ hamta_rmi_jobbinfloden_region_sni2007mi_kon_tid_scb <- function(
   # ====================================================================================================
 
   if (!require("pacman")) install.packages("pacman")
-  p_load(pxweb,
+  p_load(pxweb, 
     			tidyverse,
     			writexl)
 
