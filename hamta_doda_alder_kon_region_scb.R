@@ -5,7 +5,8 @@ hamta_doda_alder_kon_region_scb <- function(
     tid_koder = "*",                          # * = alla år, från 1997, "9999" = senaste år
     returnera_df = TRUE,                      # FALSE = ej returnera df
     mapp_excelfil = NA,                       # mapp för Excelfil
-    filnamn_excelfil = NA                    # filnamn för Excelfil 
+    filnamn_excelfil = NA,                    # filnamn för Excelfil 
+    long_format = FALSE                       # TRUE = long-format, FALSE = wide-format
 ) {
   if (!require("pacman")) install.packages("pacman")
   p_load(tidyverse, pxweb, writexl)
@@ -47,6 +48,14 @@ hamta_doda_alder_kon_region_scb <- function(
               select(Region)) %>% 
       rename(regionkod = Region) %>% 
       relocate(regionkod, .before = region)
+    
+    # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
+    # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
+    if (long_format) {
+      retur_df <- retur_df %>% 
+        konvertera_till_long_for_contentscode_variabler(url_uttag)
+      
+    }
     
     if (returnera_df) return(retur_df)
     if (skriv_excelfil) write_xlsx(retur_df, paste0(mapp_excelfil, filnamn_excelfil))

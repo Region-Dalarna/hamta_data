@@ -8,6 +8,7 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
     returnera_df = TRUE,                      # FALSE om man inte vill returnera en df
     mapp_excelfil = NA,                       # var man vill spara sin Excelfil om man vill spara en sådan
     filnamn_excelfil = NA,                    # filnamn på sin excelfil 
+    wide_om_en_contvar = TRUE,                # TRUE om vi vill ha df i wide-format om det bara finns en innehållsvariabel, annars blir det long-format om det är valt
     long_format = TRUE                        # TRUE om vi vill ha df i long-format, annars kommer alla innehållsvariabler i wide-format, om man bara har  
                                               # med en innehållsvariabel så blir det wide-format
     ) {
@@ -53,14 +54,6 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
     if (!all(is.na(kon_klartext))) kon_koder <- hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon") else kon_koder <- NA
 
     # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
-    # senaste_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid") %>% max()
-    # if (max(tid_koder) == "9999") {
-    #   min_ar <- min(tid_koder)
-    #   if (min_ar == "9999") min_ar <- senaste_ar
-    # }
-    # tid_koder <- tid_koder %>% as.character()
-    
-    # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
     giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid")
     if (all(tid_koder != "*")) tid_koder <- tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
   
@@ -91,7 +84,9 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
   
     # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
     # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
-    if (long_format & length(cont_klartext) > 1) {
+    if (wide_om_en_contvar & length(cont_klartext) == 1) long_format <- FALSE
+    
+    if (long_format) {
       retur_df <- retur_df %>% 
         konvertera_till_long_for_contentscode_variabler(url_uttag)
       
