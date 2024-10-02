@@ -11,7 +11,7 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
     wide_om_en_contvar = TRUE,                # TRUE om vi vill ha df i wide-format om det bara finns en innehållsvariabel, annars blir det long-format om det är valt
     long_format = TRUE                        # TRUE om vi vill ha df i long-format, annars kommer alla innehållsvariabler i wide-format, om man bara har  
                                               # med en innehållsvariabel så blir det wide-format
-    ) {
+    ) { 
   
   # ===========================================================================================================
   #
