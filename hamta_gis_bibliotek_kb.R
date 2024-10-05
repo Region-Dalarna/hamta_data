@@ -1,4 +1,4 @@
-hamta_bibliotek_kb_geo <- function(skickad_lanskod = NA, returnera_geo = TRUE) {
+hamta_gis_bibliotek_kb <- function(skickad_lanskod = NA, returnera_geo = TRUE) {
   # Ladda paket
   if (!require("pacman")) install.packages("pacman")
   p_load(tidyverse,
