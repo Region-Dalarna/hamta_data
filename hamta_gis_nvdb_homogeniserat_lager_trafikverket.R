@@ -1,5 +1,6 @@
-hamta_gis_nvdb_homogeniserat_lager_trafikverket <- function(leveransnamn = "Dalarna_med_grannlan",
-                                                            filformat = "gdb",                           # filformat för leveransen
+hamta_gis_nvdb_homogeniserat_lager_trafikverket <- function(leveransnamn,
+                                                            filformat = "zip",                           # filformat för leveransen
+                                                            geo_format = "gdb",                          # format för geofilen
                                                             leveransdatum = NA,                          # NA = senaste versionen, annars anges datum som YYYY-MM-DD
                                                             sparafil_sokvag = NA                         # sökväg med avslutande "/" om man vill behålla filen man laddar ner, annars tas den bort
                                                             ) { 
@@ -8,6 +9,9 @@ hamta_gis_nvdb_homogeniserat_lager_trafikverket <- function(leveransnamn = "Dala
   # Hämta homogeniserat dataset från Lastkajen, Trafikverket, och returnera en lista med ett dataset och en metadatatabell
   # man måste skicka med vad leveransen heter, filformat (zip är default), leveransdatum (eller NA för senaste),
   # om man vill byta filformat (tex från zip till gdb) och om man vill ta bort en del av filnamnet
+  #
+  # För att det ska fungera måste man lägga in sina inloggningsuppgifter till Lastkajen med keyring-paketet och döpa 
+  # servicen till "lastkajen"
   #
   # =======================================================================================================================
   
@@ -27,11 +31,6 @@ hamta_gis_nvdb_homogeniserat_lager_trafikverket <- function(leveransnamn = "Dala
     dir.create(sparafilmapp)
   } else sparafilmapp <- sparafil_sokvag
   
-  # Skapa själva mappen (eftersom tempfile() skapar en fil)
-  
-  # tabortzipfil <- TRUE                  # ta bort zipfilen när alla filer är uppackade
-  # temp_mapp <- "/temp"
-
   inlogg <- POST(url = "https://lastkajen.trafikverket.se/api/Identity/Login", 
                  body = list(UserName = key_list(service = "lastkajen")$username,                                           # användarnamn är sparat under service "lastkajen" i paketet keyring (där lösenord sparas i Windows lösenordshanterare)
                              Password = key_get("lastkajen", key_list(service = "lastkajen")$username)), encode = "json")   # lösenord är sparat under service "lastkajen"
@@ -107,8 +106,8 @@ hamta_gis_nvdb_homogeniserat_lager_trafikverket <- function(leveransnamn = "Dala
       antal_objekt = huvuddata[5],
       uppdaterad_datum = huvuddata[2] %>% str_sub(1,10),
       uppdaterad_tid = huvuddata[2] %>% str_sub(12,16),
-      geografiskt_omrade = list(geografiskt_omrade),
-      variabler = list(variabler)
+      geografiskt_omrade = geografiskt_omrade %>% paste0(collapse = ", "),
+      variabler = variabler %>% paste0(collapse = ", ")
     )
     
     
