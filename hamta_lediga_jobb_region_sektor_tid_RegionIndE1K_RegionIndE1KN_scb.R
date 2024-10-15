@@ -42,6 +42,19 @@ hamta_lediga_jobb_region_sektor_tid_scb <- function(
                          "näringslivet och hushållens icke-vinstdrivande organisationer" = "privat sektor",
                          "hela ekonomin" = "totalt")
   
+  # specialhantering av sektor som är olika i tabellerna
+  if (!all(sektor_klartext == "*")) {
+    if (any(str_detect("offentlig", tolower(sektor_klartext)))) {
+      sektor_klartext <- c(sektor_klartext, "offentlig förvaltning", "offentlig sektor") %>% unique()
+    }
+    if (any(str_detect("privat|näringslivet", tolower(sektor_klartext)))) {
+      sektor_klartext <- c(sektor_klartext, "näringslivet och hushållens icke-vinstdrivande organisationer", "privat sektor") %>% unique()
+    }
+    if (any(str_detect("totalt|hela ekonomin", tolower(sektor_klartext)))) {
+      sektor_klartext <- c(sektor_klartext, "hela ekonomin", "totalt") %>% unique()
+    }
+  }
+  
   # om man vill ha specifikt kvartal så plockas det fram utifrån vilka kvartal som är tillgängliga i tabellerna 
   if (!all(is.na(kvartal_klartext))) {
     alla_tidkoder <- map(url_list, ~ pxvardelist(.x, "tid")) %>% list_rbind() %>% dplyr::pull(kod) %>% sort()  
@@ -52,7 +65,7 @@ hamta_lediga_jobb_region_sektor_tid_scb <- function(
   
   # specialhanteraing av innehållsvariabler som är olika i tabellerna
   if (!all(cont_klartext == "*")) {
-    if (str_detect("lediga jobb", tolower(cont_klartext))) {
+    if (any(str_detect("lediga jobb", tolower(cont_klartext)))) {
       cont_klartext <- c(cont_klartext, "Lediga jobb", "Lediga jobb, totalt") %>% unique()
     }
   } else cont_klartext <- c(cont_klartext, "Lediga jobb", "Lediga jobb, totalt") %>% unique()
@@ -64,8 +77,14 @@ hamta_lediga_jobb_region_sektor_tid_scb <- function(
   varlist_koder <- pxvarlist(px_meta)$koder
   varlist_bada <- pxvarlist(px_meta)
 
+  # Hantera att sektor heter olika
+  if (!all(sektor_klartext == "*")) {
+    alla_sektor <- hamta_giltiga_varden_fran_tabell(px_meta, "sektor", klartext = TRUE)
+    giltiga_sektor <- sektor_klartext %>% .[. %in% alla_sektor] 
+  } else giltiga_sektor <- sektor_klartext
+  
   # Gör om från klartext till kod som databasen förstår
-  sektor_vekt <- hamta_kod_med_klartext(px_meta, sektor_klartext, skickad_fran_variabel = "sektor")
+  sektor_vekt <- hamta_kod_med_klartext(px_meta, giltiga_sektor, skickad_fran_variabel = "sektor")
 
   # Hantera att innehållsvariablerna heter olika
   if (!all(cont_klartext == "*")) {
