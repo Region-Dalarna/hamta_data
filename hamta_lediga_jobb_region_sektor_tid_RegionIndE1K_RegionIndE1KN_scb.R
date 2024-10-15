@@ -37,6 +37,11 @@ hamta_lediga_jobb_region_sektor_tid_scb <- function(
   url_list <- c("https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM9906/AM9906O/RegionIndE1K",
 						"https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM9906/AM9906A/RegionIndE1KN")
 
+  # vektor för att döpa om sektor så att det stämmer mellan åren
+  sektor_namnvektor <- c("offentlig förvaltning" = "offentlig sektor",
+                         "näringslivet och hushållens icke-vinstdrivande organisationer" = "privat sektor",
+                         "hela ekonomin" = "totalt")
+  
   # om man vill ha specifikt kvartal så plockas det fram utifrån vilka kvartal som är tillgängliga i tabellerna 
   if (!all(is.na(kvartal_klartext))) {
     alla_tidkoder <- map(url_list, ~ pxvardelist(.x, "tid")) %>% list_rbind() %>% dplyr::pull(kod) %>% sort()  
@@ -140,6 +145,13 @@ hamta_lediga_jobb_region_sektor_tid_scb <- function(
         rename(`Lediga jobb, totalt, osäkerhetsmarginal` = lediga_ny)
     } else if ("Felmarginal ±" %in% names(px_alla)) px_alla <- px_alla %>% rename(`Lediga jobb, totalt, osäkerhetsmarginal` = `Felmarginal ±`)
   }
+  
+  # döp om sektor så att det stämmer mellan åren
+  px_alla <- px_alla %>%
+    mutate(sektor = recode(sektor, !!!sektor_namnvektor))
+  
+    rename_with(~ sektor_namnvektor[.x], all_of(names(sektor_namnvektor)[names(sektor_namnvektor) %in% names(px_alla)]))
+  
     
   # Om användaren vill spara data till en Excel-fil
   if (!is.na(output_mapp) & !is.na(excel_filnamn)){
