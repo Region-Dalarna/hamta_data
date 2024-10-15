@@ -44,13 +44,13 @@ hamta_lediga_jobb_region_sektor_tid_scb <- function(
   
   # specialhantering av sektor som är olika i tabellerna
   if (!all(sektor_klartext == "*")) {
-    if (any(str_detect("offentlig", tolower(sektor_klartext)))) {
+    if (any(str_detect(tolower(sektor_klartext), "offentlig"))) {
       sektor_klartext <- c(sektor_klartext, "offentlig förvaltning", "offentlig sektor") %>% unique()
     }
-    if (any(str_detect("privat|näringslivet", tolower(sektor_klartext)))) {
+    if (any(str_detect(tolower(sektor_klartext), "privat|näringslivet"))) {
       sektor_klartext <- c(sektor_klartext, "näringslivet och hushållens icke-vinstdrivande organisationer", "privat sektor") %>% unique()
     }
-    if (any(str_detect("totalt|hela ekonomin", tolower(sektor_klartext)))) {
+    if (any(str_detect(tolower(sektor_klartext), "totalt|hela ekonomin"))) {
       sektor_klartext <- c(sektor_klartext, "hela ekonomin", "totalt") %>% unique()
     }
   }
@@ -65,7 +65,7 @@ hamta_lediga_jobb_region_sektor_tid_scb <- function(
   
   # specialhanteraing av innehållsvariabler som är olika i tabellerna
   if (!all(cont_klartext == "*")) {
-    if (any(str_detect("lediga jobb", tolower(cont_klartext)))) {
+    if (any(str_detect(tolower(cont_klartext), "lediga jobb"))) {
       cont_klartext <- c(cont_klartext, "Lediga jobb", "Lediga jobb, totalt") %>% unique()
     }
   } else cont_klartext <- c(cont_klartext, "Lediga jobb", "Lediga jobb, totalt") %>% unique()
