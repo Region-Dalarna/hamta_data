@@ -144,8 +144,8 @@ hamta_lediga_jobb_region_sektor_tid_scb <- function(
   # döp om variabler så att alla heter lika
   if ("variabel" %in% names(px_alla)) {
     px_alla <- px_alla %>% 
-      mutate(variabel = ifelse(variabel == "Lediga jobb", "Lediga jobb, totalt", variabel),
-             variabel = ifelse(variabel == "Felmarginal ±", "Lediga jobb, totalt, osäkerhetsmarginal", variabel))
+      mutate(variabel = ifelse(variabel == "Lediga jobb, totalt", "Lediga jobb", variabel),
+             variabel = ifelse(variabel == "Lediga jobb, totalt, osäkerhetsmarginal", "Felmarginal ±", variabel))
   } else {
   
     # byt ut lediga jobb om det är wide-format och båda finns
@@ -153,21 +153,24 @@ hamta_lediga_jobb_region_sektor_tid_scb <- function(
       px_alla <- px_alla %>% 
         mutate(lediga_ny = ifelse(is.na(`Lediga jobb`), `Lediga jobb, totalt`, `Lediga jobb`)) %>% 
         select(-c(`Lediga jobb`, `Lediga jobb, totalt`)) %>% 
-        rename(`Lediga jobb, totalt` = lediga_ny)
-    } else if ("Lediga jobb" %in% names(px_alla)) px_alla <- px_alla %>% rename(`Lediga jobb, totalt` = `Lediga jobb`)
+        rename(`Lediga jobb` = lediga_ny)
+    } else if ("Lediga jobb, totalt" %in% names(px_alla)) px_alla <- px_alla %>% rename(`Lediga jobb` = `Lediga jobb, totalt`)
   
     # byt ut felmarginal om det är wide-format och båda finns
     if (all(c("Felmarginal ±", "Lediga jobb, totalt, osäkerhetsmarginal") %in% names(px_alla))) {
       px_alla <- px_alla %>% 
         mutate(felmag_ny = ifelse(is.na(`Felmarginal ±`), `Lediga jobb, totalt, osäkerhetsmarginal`, `Felmarginal ±`)) %>% 
         select(-c(`Felmarginal ±`, `Lediga jobb, totalt, osäkerhetsmarginal`)) %>% 
-        rename(`Lediga jobb, totalt, osäkerhetsmarginal` = lediga_ny)
-    } else if ("Felmarginal ±" %in% names(px_alla)) px_alla <- px_alla %>% rename(`Lediga jobb, totalt, osäkerhetsmarginal` = `Felmarginal ±`)
+        rename(`Felmarginal ±` = lediga_ny)
+    } else if ("Lediga jobb, totalt, osäkerhetsmarginal" %in% names(px_alla)) px_alla <- px_alla %>% rename(`Felmarginal ±` = `Lediga jobb, totalt, osäkerhetsmarginal`)
   }
   
   # döp om sektor så att det stämmer mellan åren
   px_alla <- px_alla %>%
-    mutate(sektor = recode(sektor, !!!sektor_namnvektor))
+    mutate(sektor = recode(sektor, !!!sektor_namnvektor),
+           ar = str_sub(kvartal, 1, 4),
+           kvartal_num = str_sub(kvartal, 6, 6) %>% as.numeric(),
+           kvartal_txt = paste0("Kvartal ", kvartal_num))
  
   # Om användaren vill spara data till en Excel-fil
   if (!is.na(output_mapp) & !is.na(excel_filnamn)){
