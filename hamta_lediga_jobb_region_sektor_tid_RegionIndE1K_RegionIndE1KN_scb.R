@@ -17,10 +17,11 @@ hamta_lediga_jobb_region_sektor_tid_scb <- function(
   # Automatgenererat av en funktion i R som skrivits av Peter Möller, Region Dalarna
   #
   # Skapad av: frkjon den 04 oktober 2024
-  # Senast uppdaterad: 04 oktober 2024
+  # Senast uppdaterad: av Peter 15 oktober 2024 för att hantera uttag av enskilda kvartal samt att
+  #                    innehållsvariabler heter olika i olika tabeller
   #
   # url till tabellens API: https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM9906/AM9906O/RegionIndE1K
-  #												https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM9906/AM9906A/RegionIndE1KN
+  #												  https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM9906/AM9906A/RegionIndE1KN
   #
   # ====================================================================================================
 
@@ -37,13 +38,19 @@ hamta_lediga_jobb_region_sektor_tid_scb <- function(
 						"https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM9906/AM9906A/RegionIndE1KN")
 
   # om man vill ha specifikt kvartal så plockas det fram utifrån vilka kvartal som är tillgängliga i tabellerna 
-  if (!is.na(kvartal_klartext)) {
+  if (!all(is.na(kvartal_klartext))) {
     alla_tidkoder <- map(url_list, ~ pxvardelist(.x, "tid")) %>% list_rbind() %>% dplyr::pull(kod) %>% sort()  
     kvartal_senaste <- if ("9999" %in% kvartal_klartext) max(alla_tidkoder) %>% str_sub(., nchar(.))
     kvartal_siffror <- kvartal_klartext %>% as.character() %>% str_remove("K") %>% .[str_sub(., nchar(.)) %in% c("1", "2", "3", "4")]
     kvartal_varde <- c(kvartal_senaste, kvartal_siffror) %>% unique()
   }
   
+  # specialhanteraing av innehållsvariabler som är olika i tabellerna
+  if (!all(cont_klartext == "*")) {
+    if (str_detect("lediga jobb", tolower(cont_klartext))) {
+      cont_klartext <- c(cont_klartext, "Lediga jobb", "Lediga jobb, totalt") %>% unique()
+    }
+  } else cont_klartext <- c(cont_klartext, "Lediga jobb", "Lediga jobb, totalt") %>% unique()
   
  hamta_data <- function(url_uttag) {
 
@@ -55,14 +62,21 @@ hamta_lediga_jobb_region_sektor_tid_scb <- function(
   # Gör om från klartext till kod som databasen förstår
   sektor_vekt <- hamta_kod_med_klartext(px_meta, sektor_klartext, skickad_fran_variabel = "sektor")
 
-  cont_vekt <-  hamta_kod_med_klartext(px_meta, cont_klartext, "contentscode")
+  # Hantera att innehållsvariablerna heter olika
+  if (!all(cont_klartext == "*")) {
+    alla_cont <- hamta_giltiga_varden_fran_tabell(px_meta, "contentscode", klartext = TRUE)
+    giltiga_cont <- cont_klartext %>% .[. %in% alla_cont] 
+  } else giltiga_cont <- cont_klartext
+    
+  cont_vekt <-  hamta_kod_med_klartext(px_meta, giltiga_cont, "contentscode")
+    
   if (length(cont_vekt) > 1) wide_om_en_contvar <- FALSE
 
   # Hantera tid-koder
   giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
   tid_vekt <- if (all(tid_koder != "*")) tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique() else giltiga_ar
   
-  if (!is.na(kvartal_klartext)) {
+  if (!all(is.na(kvartal_klartext))) {
     tid_vekt <- tid_vekt %>% .[str_sub(., nchar(.)) %in% kvartal_varde]
   }
   
@@ -103,6 +117,30 @@ hamta_lediga_jobb_region_sektor_tid_scb <- function(
 
   px_alla <- map(url_list, ~ hamta_data(.x)) %>% list_rbind()
 
+  # döp om variabler så att alla heter lika
+  if ("variabel" %in% names(px_alla)) {
+    px_alla <- px_alla %>% 
+      mutate(variabel = ifelse(variabel == "Lediga jobb", "Lediga jobb, totalt", variabel),
+             variabel = ifelse(variabel == "Felmarginal ±", "Lediga jobb, totalt, osäkerhetsmarginal", variabel))
+  } else {
+  
+    # byt ut lediga jobb om det är wide-format och båda finns
+    if (all(c("Lediga jobb", "Lediga jobb, totalt") %in% names(px_alla))) {
+      px_alla <- px_alla %>% 
+        mutate(lediga_ny = ifelse(is.na(`Lediga jobb`), `Lediga jobb, totalt`, `Lediga jobb`)) %>% 
+        select(-c(`Lediga jobb`, `Lediga jobb, totalt`)) %>% 
+        rename(`Lediga jobb, totalt` = lediga_ny)
+    } else if ("Lediga jobb" %in% names(px_alla)) px_alla <- px_alla %>% rename(`Lediga jobb, totalt` = `Lediga jobb`)
+  
+    # byt ut felmarginal om det är wide-format och båda finns
+    if (all(c("Felmarginal ±", "Lediga jobb, totalt, osäkerhetsmarginal") %in% names(px_alla))) {
+      px_alla <- px_alla %>% 
+        mutate(felmag_ny = ifelse(is.na(`Felmarginal ±`), `Lediga jobb, totalt, osäkerhetsmarginal`, `Felmarginal ±`)) %>% 
+        select(-c(`Felmarginal ±`, `Lediga jobb, totalt, osäkerhetsmarginal`)) %>% 
+        rename(`Lediga jobb, totalt, osäkerhetsmarginal` = lediga_ny)
+    } else if ("Felmarginal ±" %in% names(px_alla)) px_alla <- px_alla %>% rename(`Lediga jobb, totalt, osäkerhetsmarginal` = `Felmarginal ±`)
+  }
+    
   # Om användaren vill spara data till en Excel-fil
   if (!is.na(output_mapp) & !is.na(excel_filnamn)){
     write.xlsx(px_alla, paste0(output_mapp, excel_filnamn))
