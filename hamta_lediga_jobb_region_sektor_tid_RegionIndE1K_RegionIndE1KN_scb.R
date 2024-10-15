@@ -149,10 +149,7 @@ hamta_lediga_jobb_region_sektor_tid_scb <- function(
   # döp om sektor så att det stämmer mellan åren
   px_alla <- px_alla %>%
     mutate(sektor = recode(sektor, !!!sektor_namnvektor))
-  
-    rename_with(~ sektor_namnvektor[.x], all_of(names(sektor_namnvektor)[names(sektor_namnvektor) %in% names(px_alla)]))
-  
-    
+ 
   # Om användaren vill spara data till en Excel-fil
   if (!is.na(output_mapp) & !is.na(excel_filnamn)){
     write.xlsx(px_alla, paste0(output_mapp, excel_filnamn))
