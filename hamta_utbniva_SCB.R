@@ -29,7 +29,7 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
   # Funkar även med enstaka år c(2010,2015,"9999")
   #
   # Skapad av Jon Frank
-  # Uppdaterad senast 2023-01-12
+  # Uppdaterad senast 2024-10-17 av Peter Möller. Lagt till funktionalitet
   # ===========================================================================================================
   
   
@@ -62,6 +62,8 @@ hamta_data_utbniva <- function(region = hamtakommuner("20",tamedlan = TRUE,tamed
          "UtbildningsNiva" = utbildningsniva_vekt,
          "ContentsCode"= "UF0506A1" ,
          "Tid" = tid)
+  
+  if (all(is.na(alder))) pxweb_query_list <- pxweb_query_list[names(pxweb_query_list) != "Alder"]
   
   # Download data 
   px_uttag <- 
