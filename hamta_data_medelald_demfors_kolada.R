@@ -38,6 +38,7 @@ hamta_data_medel_demo = function(region = hamtakommuner("20",tamedlan = TRUE,tam
     medelalder_df <- hamta_kolada_df(kpi_id = cont,
                                       valda_kommuner = region,
                                       valda_ar = tid,
+                                      dop_om_kolumner = FALSE,
                                       konsuppdelat = konsuppdelat)
     
     medelalder_df <- medelalder_df %>% 
@@ -58,6 +59,7 @@ hamta_data_medel_demo = function(region = hamtakommuner("20",tamedlan = TRUE,tam
     demo_df <- hamta_kolada_df(kpi_id = cont,
                                valda_kommuner = region,
                                valda_ar = tid,
+                               dop_om_kolumner = FALSE,
                                konsuppdelat = konsuppdelat)
     
     # Konkurser
