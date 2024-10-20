@@ -21,6 +21,7 @@ hamta_gis_nvdb_homogeniserat_lager_trafikverket <- function(leveransnamn,
          keyring,
          jsonlite,
          sf,
+         zip,
          httr)
   
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_filer.R", encoding = "utf-8", echo = FALSE)
@@ -69,7 +70,7 @@ hamta_gis_nvdb_homogeniserat_lager_trafikverket <- function(leveransnamn,
     
     # ladda upp filen(filerna) i zip-filen, gör bakcup av filer med samma namn i samma mapp om sådana finns
   
-    zipfil_innehall <- unzip(paste0(sparafilmapp, "\\", valt_gislager_filnamn), list = TRUE) %>%
+    zipfil_innehall <- utils::unzip(paste0(sparafilmapp, "\\", valt_gislager_filnamn), list = TRUE) %>%
       filter(!str_detect(Name, "/") | str_detect(Name, "/gdb")) %>% 
       mutate(Name = Name %>% str_remove("/gdb"))
     
