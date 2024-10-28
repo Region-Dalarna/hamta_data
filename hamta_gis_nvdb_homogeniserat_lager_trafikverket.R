@@ -21,9 +21,12 @@ hamta_gis_nvdb_homogeniserat_lager_trafikverket <- function(leveransnamn,
          keyring,
          jsonlite,
          sf,
+         glue,
+         zip,
          httr)
   
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_filer.R", encoding = "utf-8", echo = FALSE)
+  source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_GIS.R", encoding = "utf-8", echo = FALSE)
   
   # inställningar 
   if (is.na(sparafil_sokvag)) {
@@ -69,7 +72,7 @@ hamta_gis_nvdb_homogeniserat_lager_trafikverket <- function(leveransnamn,
     
     # ladda upp filen(filerna) i zip-filen, gör bakcup av filer med samma namn i samma mapp om sådana finns
   
-    zipfil_innehall <- unzip(paste0(sparafilmapp, "\\", valt_gislager_filnamn), list = TRUE) %>%
+    zipfil_innehall <- utils::unzip(paste0(sparafilmapp, "\\", valt_gislager_filnamn), list = TRUE) %>%
       filter(!str_detect(Name, "/") | str_detect(Name, "/gdb")) %>% 
       mutate(Name = Name %>% str_remove("/gdb"))
     
@@ -119,8 +122,20 @@ hamta_gis_nvdb_homogeniserat_lager_trafikverket <- function(leveransnamn,
   nvdb_homogeniserat <- zipfil_innehall$Name %>% .[!str_detect(zipfil_innehall$Name, ".txt")] %>% paste0(zipmapp, "\\", .)                                                       # paste0(zipmapp, "/", fdb_filnamn)
   
   nvdb_homgen_sf <- st_read(nvdb_homogeniserat)
+
+  # vi extraherar vettiga kolumnnamn som vi lägger i en lista för varje gis-fil i gdb-datasetet
+  kolumn_namn_lista <- gdb_extrahera_kolumnnamn_per_gislager(gdb_sokvag = nvdb_homogeniserat)
   
-  nvdb_lager <- st_layers(nvdb_homogeniserat)
+  # extrahera det gis-lager som innehåller texten "VAGDATA", bör bara vara ett gis-lager så det ska funka
+  kolumnnamn_ny <- kolumn_namn_lista[[str_detect(names(kolumn_namn_lista), "VAGDATA")]]
+  
+  # här döper vi om kolumnerna i det ovan inlästa gis-lagret
+  names(nvdb_homgen_sf) <- names(nvdb_homgen_sf) %>%
+    map_chr(~ if (.x %in% names(kolumnnamn_ny)) kolumnnamn_ny[.x] else .x) %>% 
+    str_remove_all("_hogsta_tillatna_hastighet") %>%         # korta ner kolumnnamn
+    str_remove_all("barighet_")                              # korta ner kolumnnamn
+
+  nvdb_lager <- st_layers(nvdb_homogeniserat)                    # vi hämtar lagernamnet  
   
   metadata_df <- metadata_df %>% 
     mutate(lager_namn  = nvdb_lager$name,
