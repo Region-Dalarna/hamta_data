@@ -84,63 +84,65 @@ hamta_rams_bas_region_inrikesutrikes_kon_tid_scb <- function(
       tid_koder <- tid_koder %>% .[. != "2020" & . != "2021"]
     }
     
-    # query-lista till pxweb-uttag
-    varlista <- list(
-      "Region" = region_vekt,
-      "Fodelseregion" = inrikesutrikes_vekt,
-      "Alder" = "20-64",
-      "Kon" = kon_vekt,
-      "ContentsCode" = cont_vekt,
-      "Tid" = tid_koder)
-    
-    if (url_uttag != "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0210/AM0210D/ArRegArbStatus") {
-      varlista <- varlista[names(varlista) != "Alder"]
-      names(varlista)[names(varlista) == "Fodelseregion"] <- "InrikesUtrikes"
-    }
-    if (all(is.na(inrikesutrikes_klartext))) varlista <- varlista[names(varlista) != "InrikesUtrikes"]
-    if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
-    
-    px_uttag <- pxweb_get(url = url_uttag, query = varlista)
-    
-    var_vektor <- c(regionkod = "Region")
-    var_vektor_klartext <- "region"
-    
-    px_df <- as.data.frame(px_uttag)
-    if (!all(is.na(var_vektor))) {
-      # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
-      px_df <- px_df %>%
-        cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
-                select(any_of(var_vektor)))
+    if (length(tid_koder) > 0) {
+      # query-lista till pxweb-uttag
+      varlista <- list(
+        "Region" = region_vekt,
+        "Fodelseregion" = inrikesutrikes_vekt,
+        "Alder" = "20-64",
+        "Kon" = kon_vekt,
+        "ContentsCode" = cont_vekt,
+        "Tid" = tid_koder)
       
-      # kolumnerna med koder läggs framför motsvarande kolumner med klartext
-      for (varflytt_index in 1:length(var_vektor)) {
-        px_df <- px_df %>%
-          relocate(all_of(names(var_vektor)[varflytt_index]), .before = all_of(var_vektor_klartext[varflytt_index]))
+      if (url_uttag != "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0210/AM0210D/ArRegArbStatus") {
+        varlista <- varlista[names(varlista) != "Alder"]
+        names(varlista)[names(varlista) == "Fodelseregion"] <- "InrikesUtrikes"
       }
-    }
-    
-    if ("Förvärvsintensitet , procent" %in% names(px_df)) px_df <- px_df %>% rename(`Förvärvsintensitet, procent` = `Förvärvsintensitet , procent`)
-    dop_om_kol <- c(sysselsättningsgrad = "Förvärvsintensitet, procent",
-                    födelseregion = "inrikes/utrikes född")
-    
-    px_df <- px_df %>% 
-      rename(any_of(dop_om_kol)) %>%
-      # Ändra värden i kolumnen "kön"
-      mutate(
-        kön = if_else(kön == "totalt", "kvinnor och män", kön),
-        # Ändra värden i kolumnen "födelseregion" om den existerar
-        födelseregion = case_when(
-          födelseregion == "inrikes född" ~ "inrikes födda",
-          födelseregion == "utrikes född" ~ "utrikes födda",
-          födelseregion == "totalt" ~ "inrikes och utrikes födda",
-          TRUE ~ födelseregion
-        ),
-        ålder = "20-64 år") %>% 
-      select(any_of(c("år", "regionkod", "region", "födelseregion", "kön", 
-                      "ålder", "sysselsättningsgrad")))
-    
-    return(px_df)
-  }
+      if (all(is.na(inrikesutrikes_klartext))) varlista <- varlista[names(varlista) != "InrikesUtrikes"]
+      if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
+      
+      px_uttag <- pxweb_get(url = url_uttag, query = varlista)
+      
+      var_vektor <- c(regionkod = "Region")
+      var_vektor_klartext <- "region"
+      
+      px_df <- as.data.frame(px_uttag)
+      if (!all(is.na(var_vektor))) {
+        # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
+        px_df <- px_df %>%
+          cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
+                  select(any_of(var_vektor)))
+        
+        # kolumnerna med koder läggs framför motsvarande kolumner med klartext
+        for (varflytt_index in 1:length(var_vektor)) {
+          px_df <- px_df %>%
+            relocate(all_of(names(var_vektor)[varflytt_index]), .before = all_of(var_vektor_klartext[varflytt_index]))
+        }
+      }
+      
+      if ("Förvärvsintensitet , procent" %in% names(px_df)) px_df <- px_df %>% rename(`Förvärvsintensitet, procent` = `Förvärvsintensitet , procent`)
+      dop_om_kol <- c(sysselsättningsgrad = "Förvärvsintensitet, procent",
+                      födelseregion = "inrikes/utrikes född")
+      
+      px_df <- px_df %>% 
+        rename(any_of(dop_om_kol)) %>%
+        # Ändra värden i kolumnen "kön"
+        mutate(
+          kön = if_else(kön == "totalt", "kvinnor och män", kön),
+          # Ändra värden i kolumnen "födelseregion" om den existerar
+          födelseregion = case_when(
+            födelseregion == "inrikes född" ~ "inrikes födda",
+            födelseregion == "utrikes född" ~ "utrikes födda",
+            födelseregion == "totalt" ~ "inrikes och utrikes födda",
+            TRUE ~ födelseregion
+          ),
+          ålder = "20-64 år") %>% 
+        select(any_of(c("år", "regionkod", "region", "födelseregion", "kön", 
+                        "ålder", "sysselsättningsgrad")))
+      
+      return(px_df)
+    } # slut på test om det finns giltiga tid_koder
+  } # slut hamta_data-funktion
   
   px_alla <- map(url_list, ~ hamta_data(.x)) %>% list_rbind()
   

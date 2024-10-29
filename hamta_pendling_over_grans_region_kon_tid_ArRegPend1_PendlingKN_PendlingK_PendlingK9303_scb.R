@@ -55,62 +55,70 @@ hamta_pendling_over_grans_region_kon_tid_scb <- function(
   giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
   tid_vekt <- if (all(tid_koder != "*")) tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique() else giltiga_ar
 
-  # query-lista till pxweb-uttag
-  varlista <- list(
-  	"Region" = region_vekt,
-  	"Kon" = kon_vekt,
-  	"ContentsCode" = cont_vekt,
-  	"Tid" = tid_vekt)
-
-  if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
-
-  # special för bas-tabellen där man bytt ut region mot kommun
-  if (str_detect(url_uttag, "AM0210F")) names(varlista)[names(varlista) == "Region"] <- "Kommun"
-  
-  # Hämta data med varlista
-  px_uttag <- pxweb_get(url = url_uttag, query = varlista)
-
-  var_vektor <- c(regionkod = "Region", regionkod = "Kommun")
-  var_vektor_klartext <- c("region", "region")
-
-  # gör om pxweb-uttaget till en dataframe
-  px_df <- as.data.frame(px_uttag)
-  
-  # special för bas för att döpa om variabler till samma som i rams
-  if (str_detect(url_uttag, "AM0210F")) {
-    px_df <- px_df %>%
-      rename(region = kommun, 
-             `Inpendlare över kommungräns` = `bostad utanför kommunen men arbetsställe i kommunen`,
-             `Utpendlare över kommungräns` = `bostad i kommunen men arbetsställe utanför kommunen`,
-             `Bor och arbetar i kommunen` = `bostad och arbetsställe i kommunen`) 
+  # special, ta bort år 2020 och 2021 om det är RAMS-tabellen (annars blir de dubbelt)
+  if (url_uttag == "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0207/AM0207Z/PendlingKN") {
+    if (tid_vekt != "*") tid_vekt <- tid_vekt %>% .[. != "2020" & . != "2021"]
   }
   
-  if (!all(is.na(var_vektor))) {
-      # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
-      px_df <- px_df %>%
-            cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
-            select(any_of(var_vektor)))
-
-      # kolumnerna med koder läggs framför motsvarande kolumner med klartext
-      for (varflytt_index in 1:length(var_vektor)) {
-        px_df <- px_df %>%
-            relocate(any_of(names(var_vektor)[varflytt_index]), .before = any_of(var_vektor_klartext[varflytt_index]))
-      }
-  }
-
-  # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
-  # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
-  if (long_format & !wide_om_en_contvar){ 
+  if (length(tid_vekt) > 0) {
+    # query-lista till pxweb-uttag
+    varlista <- list(
+    	"Region" = region_vekt,
+    	"Kon" = kon_vekt,
+    	"ContentsCode" = cont_vekt,
+    	"Tid" = tid_vekt)
+  
+    if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
+  
+    # special för bas-tabellen där man bytt ut region mot kommun
+    if (str_detect(url_uttag, "AM0210F")) names(varlista)[names(varlista) == "Region"] <- "Kommun"
+    
+    # Hämta data med varlista
+    px_uttag <- pxweb_get(url = url_uttag, query = varlista)
+  
+    var_vektor <- c(regionkod = "Region", regionkod = "Kommun")
+    var_vektor_klartext <- c("region", "region")
+  
+    # gör om pxweb-uttaget till en dataframe
+    px_df <- as.data.frame(px_uttag)
+    
+    # special för bas för att döpa om variabler till samma som i rams
     if (str_detect(url_uttag, "AM0210F")) {
-      cont_kol <- names(px_df) %>% .[!. %in% c("regionkod", "region", "kön", "år")]
-      px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag, content_kolumner = cont_kol)
-      
-    } else {
-      px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag)
+      px_df <- px_df %>%
+        rename(region = kommun, 
+               `Inpendlare över kommungräns` = `bostad utanför kommunen men arbetsställe i kommunen`,
+               `Utpendlare över kommungräns` = `bostad i kommunen men arbetsställe utanför kommunen`,
+               `Bor och arbetar i kommunen` = `bostad och arbetsställe i kommunen`) %>% 
+        mutate(kön = ifelse(kön == "totalt", "män och kvinnor", kön))
     }
-  } # slut om man vill ha long_format
-
-  return(px_df)
+    
+    if (!all(is.na(var_vektor))) {
+        # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
+        px_df <- px_df %>%
+              cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
+              select(any_of(var_vektor)))
+  
+        # kolumnerna med koder läggs framför motsvarande kolumner med klartext
+        for (varflytt_index in 1:length(var_vektor)) {
+          px_df <- px_df %>%
+              relocate(any_of(names(var_vektor)[varflytt_index]), .before = any_of(var_vektor_klartext[varflytt_index]))
+        }
+    }
+  
+    # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
+    # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
+    if (long_format & !wide_om_en_contvar){ 
+      if (str_detect(url_uttag, "AM0210F")) {
+        cont_kol <- names(px_df) %>% .[!. %in% c("regionkod", "region", "kön", "år")]
+        px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag, content_kolumner = cont_kol)
+        
+      } else {
+        px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag)
+      }
+    } # slut om man vill ha long_format
+  
+    return(px_df)
+   } # slut if-test om det finns mer än noll tid_koder
   } # slut hämta data-funktion 
 
   px_alla <- map(url_list, ~ hamta_data(.x)) %>% list_rbind()
