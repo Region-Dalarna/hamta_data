@@ -117,7 +117,9 @@ hamta_pendling_over_grans_region_kon_tid_scb <- function(
 
   kol_sort <- c("år", "regionkod", "region", "kön", "variabel", "varde")
   kol_sort <- c(kol_sort, names(px_alla)[!names(px_alla) %in% kol_sort])
-  px_alla <- px_alla %>% select(any_of(kol_sort))
+  px_alla <- px_alla %>% 
+    select(any_of(kol_sort)) %>% 
+    arrange(år, regionkod)
   
   # Om användaren vill spara data till en Excel-fil
   if (!is.na(output_mapp) & !is.na(excel_filnamn)){
