@@ -57,7 +57,7 @@ hamta_pendling_over_grans_region_kon_tid_scb <- function(
 
   # special, ta bort år 2020 och 2021 om det är RAMS-tabellen (annars blir de dubbelt)
   if (url_uttag == "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0207/AM0207Z/PendlingKN") {
-    if (tid_vekt != "*") tid_vekt <- tid_vekt %>% .[. != "2020" & . != "2021"]
+    if (all(tid_vekt != "*")) tid_vekt <- tid_vekt %>% .[. != "2020" & . != "2021"]
   }
   
   if (length(tid_vekt) > 0) {

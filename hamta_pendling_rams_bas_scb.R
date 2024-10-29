@@ -175,6 +175,8 @@ px_df <- map_dfr(url_rams_vekt, ~hamta_data(url_rams = .x)) %>%
          arbetsställeregion = arbetsställeregion %>% str_remove(" \\(arbetsställe\\)")) %>% 
   relocate(pendlare, .after = last_col())
 
+if ("kön" %in% names(px_df)) px_df <- px_df %>% mutate(kön = ifelse(kön == "totalt", "män och kvinnor", kön))
+
 return(px_df)
 
 } # slut funktion
