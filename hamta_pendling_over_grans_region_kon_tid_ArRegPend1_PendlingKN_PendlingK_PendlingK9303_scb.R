@@ -38,6 +38,30 @@ hamta_pendling_over_grans_region_kon_tid_scb <- function(
                 "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0207/AM0207L/PendlingK",
                 "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0207/AM0207L/PendlingK9303")
 
+  # hantera att innehållsvariablerna heter olika de olika åren
+  px_meta_list <- map(url_list, ~ pxweb_get(.x))
+  px_meta_enkel_list <- extrahera_unika_varden_flera_scb_tabeller(px_meta_list)  
+
+  cont_var_vekt <- px_meta_enkel_list %>%
+    keep(~ .$code == "ContentsCode") %>%
+    pluck(1, "valueTexts")
+  
+  bor_samma_vekt <- cont_var_vekt %>% .[str_detect(., "och")] %>% unique()
+  inpendlare_vekt <- cont_var_vekt %>% 
+    .[!. %in% bor_samma_vekt] %>%
+    .[str_detect(., "Inpendlare") | str_detect(., "arbetsställe i")] %>% unique() 
+  utpendlare_vekt <- cont_var_vekt %>% 
+    .[!. %in% bor_samma_vekt] %>%
+    .[str_detect(., "Utpendlare") | str_detect(., "arbetsställe utanför")] %>% unique()
+  
+  if (any(cont_klartext %in% bor_samma_vekt)) cont_klartext <- c(cont_klartext, bor_samma_vekt) %>% unique()
+  if (any(cont_klartext %in% inpendlare_vekt)) cont_klartext <- c(cont_klartext, inpendlare_vekt) %>% unique()
+  if (any(cont_klartext %in% utpendlare_vekt)) cont_klartext <- c(cont_klartext, utpendlare_vekt) %>% unique()
+  
+  # speciallösning för att det finns olika benämningar på båda könen-värdet på variabeln kön
+  kon_bada_var <- c("totalt", "män och kvinnor")
+  if (any(kon_klartext %in% kon_bada_var)) kon_klartext <- c(kon_klartext, kon_bada_var) %>% unique()
+  
  hamta_data <- function(url_uttag) {
 
   px_meta <- pxweb_get(url_uttag)
@@ -85,11 +109,12 @@ hamta_pendling_over_grans_region_kon_tid_scb <- function(
     # special för bas för att döpa om variabler till samma som i rams
     if (str_detect(url_uttag, "AM0210F")) {
       px_df <- px_df %>%
-        rename(region = kommun, 
-               `Inpendlare över kommungräns` = `bostad utanför kommunen men arbetsställe i kommunen`,
-               `Utpendlare över kommungräns` = `bostad i kommunen men arbetsställe utanför kommunen`,
-               `Bor och arbetar i kommunen` = `bostad och arbetsställe i kommunen`) %>% 
         mutate(kön = ifelse(kön == "totalt", "män och kvinnor", kön))
+      
+      if ("bostad utanför kommunen men arbetsställe i kommunen" %in% names(px_df)) px_df <- px_df %>% rename(`Inpendlare över kommungräns` = `bostad utanför kommunen men arbetsställe i kommunen`)
+      if ("bostad i kommunen men arbetsställe utanför kommunen" %in% names(px_df)) px_df <- px_df %>% rename(`Utpendlare över kommungräns` = `bostad i kommunen men arbetsställe utanför kommunen`)
+      if ("bostad och arbetsställe i kommunen" %in% names(px_df)) px_df <- px_df %>% rename(`Bor och arbetar i kommunen` = `bostad och arbetsställe i kommunen`)
+      if ("kommun" %in% names(px_df)) px_df <- px_df %>% rename(region = kommun)
     }
     
     if (!all(is.na(var_vektor))) {
