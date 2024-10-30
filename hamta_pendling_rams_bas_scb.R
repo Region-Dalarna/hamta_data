@@ -9,8 +9,7 @@ hamta_pendling_rams_bas_scb <- function(region_vekt = "20",
   #
   # Skript för att hämta pendlingsdata från RAMS och BAS, SCB. Årsvis. Skriptet hämtar data från fyra olika tabeller,
   # pendling år 1993-2003, 2004-2018 samt 2019-2021. Man får vara lite försiktig i sina analyser då det kan 
-  # skilja sig något i definitioner, metod etc. Planen är att bygga in BAS-pendlingsdata när den kommer så 
-  # vi kan fortsätta med långa tidsserier. Det kan vara en bra idé att i visualiseringen tydliggöra att data
+  # skilja sig något i definitioner, metod etc. Det kan vara en bra idé att i visualiseringen tydliggöra att data
   # kommer från olika tabeller, med ex. olika färger. 
   # 
   # 
