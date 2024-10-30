@@ -1,9 +1,9 @@
-hamta_integration_region_bakgrund_tid_kon_scb <- function(
-    region_vekt = "20",			   # Val av region. Finns: "01", "03", "04", "05", "06", "07", "08", "09", "10", "12", "13", "14", "17", "18", "19", "20", "21", "22", "23", "24", "25", "00"
-    bakgrund_klartext = "*",			 #  Finns: "andel 0-19 år, procent", "andel 20-64 år, procent", "samtliga kvinnor och män, procent", "andel män, procent", "andel kvinnor, procent", "andel 65+ år, procent", "samtliga utbildningsnivåer, procent", "andel med förgymnasial utbildning, procent", "andel med gymnasial utbildning, procent", "andel med eftergymnasial utbildning, procent", "andel där uppgift saknas för utbildningsnivå, procent", "samtliga, procent"
-			cont_klartext = "*",			 #  Finns: "Födda i Sverige", "Utländsk bakgrund", "Utrikes födda", "Födda i Norden exkl. Sverige", "Födda i EU/EFTA exkl. Norden", "Födda i övriga världen"
-			tid_koder = "*",			 # "*" = alla år eller månader, "9999" = senaste, finns: "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022"
+hamta_integration_gymn_hogsk_behorighet_region_kon_bakgrund_tid_scb <- function(
+			region_vekt = "20",			   # Val av region. Finns: "00", "01", "03", "04", "05", "06", "07", "08", "09", "10", "12", "13", "14", "17", "18", "19", "20", "21", "22", "23", "24", "25"
 			kon_klartext = "*",			 #  Finns: "män och kvinnor", "män", "kvinnor"
+			bakgrund_klartext = "*",			 #  Finns: "samtliga", "födelseregion: Sverige", "födelseregion: Norden exkl. Sverige", "födelseregion: EU/EFTA exkl. Norden", "födelseregion: övriga världen", "samtliga utrikes födda invandrare", "skäl till invandring: skyddsbehövande och deras anhöriga", "skäl till invandring: övriga utrikes födda invandrare", "samtliga utrikes födda", "vistelsetid 0-1 år", "vistelsetid 2-3 år", "vistelsetid 4-9 år", "vistelsetid 10- år"
+			cont_klartext = "*",			 #  Finns: "Andel behöriga till gymnasium, procent", "Andel behöriga till högskola, procent"
+			tid_koder = "*",			 # "*" = alla år eller månader, "9999" = senaste, finns: "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022"
 			long_format = TRUE,			# TRUE = konvertera innehållsvariablerna i datasetet till long-format 
 			wide_om_en_contvar = TRUE,			# TRUE = om man vill behålla wide-format om det bara finns en innehållsvariabel, FALSE om man vill konvertera till long-format även om det bara finns en innehållsvariabel
 			output_mapp = NA,			# anges om man vill exportera en excelfil med uttaget, den mapp man vill spara excelfilen till
@@ -19,9 +19,8 @@ hamta_integration_region_bakgrund_tid_kon_scb <- function(
   # Skapad av: moepet den 30 oktober 2024
   # Senast uppdaterad: 30 oktober 2024
   #
-  # url till tabellens API: https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__AA__AA0003__AA0003E/IntGr3KomS/
-  #												https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__AA__AA0003__AA0003E/IntGr3LanKONS/
-  #												https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__AA__AA0003__AA0003E/IntGr3RikKONS/
+  # url till tabellens API: https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__AA__AA0003__AA0003H/IntGr8RikKON2/
+  #												https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__AA__AA0003__AA0003H/IntGr8LanKON2/
   #
   # ====================================================================================================
 
@@ -34,8 +33,8 @@ hamta_integration_region_bakgrund_tid_kon_scb <- function(
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
 
   # Url till SCB:s databas
-  url_list <- c("https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003E/IntGr3LanKONS",
-                "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003E/IntGr3RikKONS")
+  url_list <- c("https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003H/IntGr8RikKON2",
+						"https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003H/IntGr8LanKON2")
 
  hamta_data <- function(url_uttag) {
 
@@ -43,14 +42,14 @@ hamta_integration_region_bakgrund_tid_kon_scb <- function(
 
   varlist_koder <- pxvarlist(px_meta)$koder
   varlist_bada <- pxvarlist(px_meta)
-
+  
   # Hantera region-koder då vi har en tabell för riket och en för länen
   giltiga_regionkoder <- hamta_giltiga_varden_fran_tabell(px_meta, "region")
-  region_giltig_vekt <- region_vekt[region_vekt %in% giltiga_regionkoder] 
-  
+  region_giltig_vekt <- region_vekt[region_vekt %in% giltiga_regionkoder]
+
   # Gör om från klartext till kod som databasen förstår
-  bakgrund_vekt <- hamta_kod_med_klartext(px_meta, bakgrund_klartext, skickad_fran_variabel = "bakgrund")
   kon_vekt <- hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon")
+  bakgrund_vekt <- hamta_kod_med_klartext(px_meta, bakgrund_klartext, skickad_fran_variabel = "bakgrund")
 
   cont_vekt <-  hamta_kod_med_klartext(px_meta, cont_klartext, "contentscode")
   if (length(cont_vekt) > 1) wide_om_en_contvar <- FALSE
@@ -59,15 +58,14 @@ hamta_integration_region_bakgrund_tid_kon_scb <- function(
   giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
   tid_vekt <- if (all(tid_koder != "*")) tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique() else giltiga_ar
 
-
-	if (length(region_giltig_vekt) > 0) {
+  if (length(region_giltig_vekt) > 0) {
 	  # query-lista till pxweb-uttag
 	  varlista <- 	list(
   	"Region" = region_giltig_vekt,
+  	"Kon" = kon_vekt,
   	"Bakgrund" = bakgrund_vekt,
   	"ContentsCode" = cont_vekt,
-  	"Tid" = tid_vekt,
-  	"Kon" = kon_vekt)	
+  	"Tid" = tid_vekt)	
 
 		  # Hämta data med varlista
 	  px_uttag <- pxweb_get(url = url_uttag, query = varlista)
@@ -76,12 +74,11 @@ hamta_integration_region_bakgrund_tid_kon_scb <- function(
 	  var_vektor_klartext <- "region"
 	
 	  # gör om pxweb-uttaget till en dataframe
-	  px_df <- as.data.frame(px_uttag)
+	  px_df <- suppress_specific_warning(as.data.frame(px_uttag), "NAs introduced by coercion")
 	  if (!all(is.na(var_vektor))) {
 	      # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
-	      px_df <- px_df %>%
-	            cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
-	            select(any_of(var_vektor)))
+	      px_df <- suppress_specific_warning( px_df %>% cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
+	            select(any_of(var_vektor))), "NAs introduced by coercion")
 
 	      # kolumnerna med koder läggs framför motsvarande kolumner med klartext
 	      for (varflytt_index in 1:length(var_vektor)) {
@@ -108,4 +105,3 @@ hamta_integration_region_bakgrund_tid_kon_scb <- function(
   # Returnera data som en dataframe om användern valt det
   if (returnera_df) return(px_alla)
 } # slut hämta data-funktion
-
