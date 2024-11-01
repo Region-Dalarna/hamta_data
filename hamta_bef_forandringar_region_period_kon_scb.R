@@ -51,7 +51,7 @@ hamta_bef_forandringar_region_alder_kon_scb <- function(
     url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101G/BefforandrKvRLK"
     cont_kod <- "000002Z9"
     
-    kon_koder <- if (!is.na(kon_klartext) & !all(kon_klartext == "*")) hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon") else "*"
+    kon_koder <- if (!all(is.na(kon_klartext)) & !all(kon_klartext == "*")) hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon") else "*"
     period_koder <- if (!all(is.na(period_klartext)) & !all(period_klartext == "*")) hamta_kod_med_klartext(url_uttag, period_klartext, skickad_fran_variabel = "period") else  "*"
     forandringar_koder <- if (all(forandringar_klartext == "*")) forandringar_klartext else hamta_kod_med_klartext(url_uttag, forandringar_klartext, skickad_fran_variabel = "forandringar")        
     
