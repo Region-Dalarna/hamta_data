@@ -29,7 +29,7 @@ hamta_gymn_avg_genomstromning_4ar_prg_skolverket <- function(region_vekt = "20",
   
   # extrahera senaste år från en tabell på Skolverkets webbplats där länken inte är bunden till vilket år det är
   GET("https://siris.skolverket.se/siris/sitevision_doc.getFile?p_id=552731", write_disk(tf_artalfil <- tempfile(fileext = ".xlsx")))
-  excel_sheets(tf_artalfil)
+  #excel_sheets(tf_artalfil)
   artal_txt <- suppressMessages(read_excel(tf_artalfil, sheet = "Tabell 3 B Sid 2")) %>% 
     dplyr::pull(1) %>%
     .[!is.na(.)] %>% 
