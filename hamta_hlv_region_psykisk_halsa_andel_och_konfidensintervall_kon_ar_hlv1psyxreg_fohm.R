@@ -30,7 +30,7 @@ hamta_hlv_region_psykisk_halsa_andel_och_konfidensintervall_kon_ar_fohm <- funct
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
 
   # Url till SCB:s databas
-  url_uttag <- "http://fohm-app.folkhalsomyndigheten.se/Folkhalsodata/api/v1/sv/A_Folkhalsodata/B_HLV/dPsykhals/hlv1psyxreg.px"
+  url_uttag <- "https://fohm-app.folkhalsomyndigheten.se/Folkhalsodata/api/v1/sv/A_Folkhalsodata/B_HLV/dPsykhals/hlv1psyxreg.px"
   px_meta <- pxweb_get(url_uttag)
 
   varlist_koder <- pxvarlist(px_meta)$koder
@@ -78,13 +78,12 @@ hamta_hlv_region_psykisk_halsa_andel_och_konfidensintervall_kon_ar_fohm <- funct
   var_vektor_klartext <- "Region"
 
   # gör om pxweb-uttaget till en dataframe
-  px_df <- suppress_specific_warning(as.data.frame(px_uttag), "NAs introduced by coercion")
+  px_df <- as.data.frame(px_uttag)
   if (!all(is.na(var_vektor))) {
       # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
       px_df <- px_df %>%
-            suppress_specific_warning(
             cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
-            select(any_of(var_vektor))))
+            select(any_of(var_vektor)))
 
       # kolumnerna med koder läggs framför motsvarande kolumner med klartext
       for (varflytt_index in 1:length(var_vektor)) {
