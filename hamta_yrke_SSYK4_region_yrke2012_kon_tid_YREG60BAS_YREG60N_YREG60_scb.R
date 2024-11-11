@@ -27,6 +27,8 @@ hamta_yrke_SSYK4_region_yrke2012_kon_tid_scb <- function(
   # data längre tillbaka i tiden men då är det en äldre version av SSYK som stökar till det
   # Källa: https://www.scb.se/hitta-statistik/statistik-efter-amne/arbetsmarknad/sysselsattning-forvarvsarbete-och-arbetstider/yrkesregistret-med-yrkesstatistik/#_TabelleriStatistikdatabasen
   # Se det 6:e plusset under tabeller i statistikdatabasen.
+  #
+  # Notera en märklighet där skriptet, om man väljer senaste år, även skickar med 2018. Oklart varför
   # ====================================================================================================
 
   if (!require("pacman")) install.packages("pacman")
