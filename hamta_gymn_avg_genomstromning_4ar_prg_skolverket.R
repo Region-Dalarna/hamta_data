@@ -4,6 +4,7 @@
 
 
 hamta_gymn_avg_genomstromning_4ar_prg_skolverket <- function(region_vekt = "20",                     # NA = riket, alla län och alla kommuner
+                                                             gymnasieprogram = "*",                     # "*" = alla gymnasieprogram, annars anges programnamn, dessa finns: "Nationella program", "Högskoleförberedande program", "Yrkesprogram", "Introduktionsprogrammen", "Barn- och fritidsprogrammet", "Bygg- och anläggningsprogramme", "Ekonomiprogrammet", "El- och energiprogrammet", "Estetiska programmet", "Fordons- och transportprogramm", "Försäljnings- och serviceprogr", "Handels- och administrationspr", "Hantverksprogrammet", "Hotell- och turismprogrammet", "Humanistiska programmet", "Industritekniska programmet", "International Baccalaureate", "Introduktionsprogram, Individu", "Introduktionsprogram, Programi", "Introduktionsprogram, Språkint", "Introduktionsprogram, Yrkesint", "Naturbruksprogrammet", "Naturvetenskapsprogrammet", "Restaurang- och livsmedelsprog", "Riksrekryterande utbildningar", "Samhällsvetenskapsprogrammet", "Teknikprogrammet", "VVS- och fastighetsprogrammet", "Vård- och omsorgsprogrammet"
                                                              huvudman = "Samtliga",                     # finns: "Samtliga", "Kommunal" och "Enskild", det går att välja flera
                                                              konvertera_andel_till_numerisk = TRUE      # TRUE = numerisk kolumn av andel, då försvinner prickar och liknande och blir NA. Vill man se vad som är prickar och hur många det är kan man sätta denna till FALSE
 ) {         
@@ -55,6 +56,7 @@ hamta_gymn_avg_genomstromning_4ar_prg_skolverket <- function(region_vekt = "20",
     
     GET(fil_url, write_disk(tf_excelfil <- tempfile(fileext = ".xlsx")))
     flikar <- excel_sheets(tf_excelfil) %>% .[!str_detect(., "beskrivning")]
+    if (!all(gymnasieprogram == "*")) flikar <- flikar[flikar %in% gymnasieprogram]
     
     genomstr_df <- map(flikar, ~ read_excel(tf_excelfil, sheet = .x, skip = 6, col_types = "text") %>%
                          pivot_longer(starts_with("20"), values_to = "andel", names_to = "läsår") %>%
