@@ -48,10 +48,10 @@ hamta_bas_rams_region_sni2007_dagbef_kon_tid_fodelseregion_scb <- function(
   sni2007_vekt <- hamta_kod_med_klartext(px_meta, sni2007_klartext, skickad_fran_variabel = "sni2007")
   
   # lite special för att "totalt" finns bara i en tabell
-  if (!is.na(kon_klartext)) {
+  if (!all(is.na(kon_klartext))) {
     kon_klartext <- if (all(kon_klartext == "*")) c("män", "kvinnor") else kon_klartext %>% .[. != "totalt"]
     kon_vekt <- if (!all(is.na(kon_klartext))) hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") else NA
-  }
+  } else kon_vekt <- NA
   
   # vi tar bara hem dagbefolkning
   cont_klartext <- c("Förvärvsarbetande 16-74 år med arbetsplats i regionen (dagbefolkning) (RAMS)", "Förvärvsarbetande 16+ år med arbetsplats i regionen (dagbefolkning) (RAMS)", "sysselsatta efter arbetsställets belägenhet")
