@@ -52,7 +52,7 @@ hamta_gis_nvdb_homogeniserat_lager_trafikverket <- function(leveransnamn,
     resp_egnafiler <- fromJSON(httr::content(egnafiler, as = "text"), flatten = TRUE)
     
     # om man inte skickat med något leveransdatum så blir det det senaste leveransdatumet som finns för leveransen, annars det datum man skickat med
-    leveransdatum <- if (is.na(leveransdatum))  max(resp_egnafiler$dateTime) %>% str_sub(1,10) else leveransdatum
+    leveransdatum <- if (is.na(leveransdatum))  max(resp_egnafiler$dateTime[str_detect(resp_egnafiler$name, paste0("(?=.*", filformat, ")(?=.*", leveransnamn, ")"))]) %>% str_sub(1,10) else leveransdatum
     
     # vi sorterar ut den fil som innehåller det leveransnamn man skickat med, är en zip-fil och 
     valt_gislager_filnamn <- resp_egnafiler$name[str_detect(resp_egnafiler$name, paste0("(?=.*", filformat, ")(?=.*", leveransnamn, ")")) & resp_egnafiler$dateTime %>% str_sub(1,10) == leveransdatum]
@@ -81,7 +81,7 @@ hamta_gis_nvdb_homogeniserat_lager_trafikverket <- function(leveransnamn,
     unzip(paste0(sparafilmapp, "\\", valt_gislager_filnamn), exdir = zipmapp)                        # packa upp zip-fil
     file.remove(paste0(sparafilmapp, "\\", valt_gislager_filnamn))                                   # ta bort zip fil
     
-    metadatafil <- read_csv(paste0(sparafilmapp, "\\", "Leveransinformation.txt")) %>% 
+    metadatafil <- read_csv(paste0(sparafilmapp, "\\", "Leveransinformation.txt"), show_col_types = FALSE) %>% 
       dplyr::pull(`Information om beställning`)
     
     extraherad_info <- metadatafil %>%
@@ -127,7 +127,7 @@ hamta_gis_nvdb_homogeniserat_lager_trafikverket <- function(leveransnamn,
   kolumn_namn_lista <- gdb_extrahera_kolumnnamn_per_gislager(gdb_sokvag = nvdb_homogeniserat)
   
   # extrahera det gis-lager som innehåller texten "VAGDATA", bör bara vara ett gis-lager så det ska funka
-  kolumnnamn_ny <- kolumn_namn_lista[[str_detect(names(kolumn_namn_lista), "VAGDATA")]]
+  kolumnnamn_ny <- kolumn_namn_lista[[1]]
   
   # här döper vi om kolumnerna i det ovan inlästa gis-lagret
   names(nvdb_homgen_sf) <- names(nvdb_homgen_sf) %>%
@@ -135,6 +135,8 @@ hamta_gis_nvdb_homogeniserat_lager_trafikverket <- function(leveransnamn,
     str_remove_all("_hogsta_tillatna_hastighet") %>%         # korta ner kolumnnamn
     str_remove_all("barighet_")                              # korta ner kolumnnamn
 
+  st_geometry(nvdb_homgen_sf) <- "geom"                      # säkerställ att en geometrikolumn är vald
+  
   nvdb_lager <- st_layers(nvdb_homogeniserat)                    # vi hämtar lagernamnet  
   
   metadata_df <- metadata_df %>% 
