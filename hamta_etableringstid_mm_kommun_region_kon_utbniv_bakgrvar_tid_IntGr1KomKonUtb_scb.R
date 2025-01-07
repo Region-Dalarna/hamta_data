@@ -31,6 +31,8 @@ hamta_etableringstid_mm_kommun_region_kon_utbniv_bakgrvar_tid_scb <- function(
 
   # Behändiga funktioner som används i skriptet
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
+  
+  print("!OBS Skript fungerar inte längre. Uppdaterad version heter hamta_etableringstid_mm_kommun_region_kon_utbniv_bakgrvar_tid_IntGr1KomKonUtb_ny_BAS_scb.R ")
 
   # Url till SCB:s databas
   url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003B/IntGr1KomKonUtb"
