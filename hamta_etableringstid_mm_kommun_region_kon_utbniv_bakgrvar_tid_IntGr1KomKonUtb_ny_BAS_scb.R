@@ -24,6 +24,7 @@ hamta_etableringstid_mm_kommun_region_kon_utbniv_bakgrvar_tid_scb_ny <- function
   #												https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__AA__AA0003__AA0003B/IntGr1LanUtbBAS/
   #
   # Notera att data slås ihop från två olika tabeller, där den första använder RAMS och den andra BAS. Ålder har sannolikt ändrats från 20-64 år till 20-65 år.
+  # Notera även att vissa kategorier, exempelvis sysselsatta byter namn från förvärvsarbetande till sysselsatta.
   # För mer info, se länkarna till statistikdatabasen ovan.
   # ====================================================================================================
   
