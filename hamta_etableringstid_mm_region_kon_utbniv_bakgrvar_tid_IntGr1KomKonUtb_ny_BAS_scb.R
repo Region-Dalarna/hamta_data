@@ -59,7 +59,7 @@ hamta_etableringstid_mm_region_kon_utbniv_bakgrvar_tid_scb_ny <- function(
     "Region" = region_vekt,
     "Kon" = kon_vekt,
     "UtbNiv" = utbniv_vekt,
-    "BakgrVar" = bakgrvtid_vekt,
+    "BakgrVar" = bakgrvar_vekt,
     "ContentsCode" = cont_vekt,
     "Tid" = tid_vekt)
   
