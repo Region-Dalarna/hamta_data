@@ -1,4 +1,4 @@
-hamta_etableringstid_mm_kommun_region_kon_utbniv_bakgrvar_tid_scb_ny <- function(
+hamta_etableringstid_mm_region_kon_utbniv_bakgrvar_tid_scb_ny <- function(
     region_vekt = "20",			   # Val av region. Finns: "01", "03", "04", "05", "06", "07", "08", "09", "10", "12", "13", "14", "17", "18", "19", "20", "21", "22", "23", "24", "25"
     kon_klartext = "*",			 #  Finns: "män och kvinnor", "män", "kvinnor"
     utbniv_klartext = "*",			 #  Finns: "samtliga utbildningsnivåer", "utbildningsnivå: förgymnasial utbildning", "utbildningsnivå: gymnasial utbildning", "utbildningsnivå: eftergymnasial utbildning", "utbildningsnivå: uppgift saknas"
