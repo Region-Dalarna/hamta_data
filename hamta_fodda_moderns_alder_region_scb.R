@@ -10,6 +10,8 @@ hamta_fodda_moderns_alder_region_scb <- function(
   if (!require("pacman")) install.packages("pacman")
   p_load(tidyverse, pxweb, writexl)
   
+  # I sektionen retur_df har jag ändrat från `Levande födda` till Antal då SCB verkar ha ändrat namnet på variabeln. /Jon 20250109
+  
   # Använd hjälpfunktioner
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R", encoding = "utf-8", echo = FALSE)
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_text.R", encoding = "utf-8", echo = FALSE)
@@ -46,7 +48,7 @@ hamta_fodda_moderns_alder_region_scb <- function(
       cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
               select(Region)) %>% 
       rename(regionkod = Region,
-             födda = `Levande födda`) %>% 
+             födda = Antal) %>% 
       relocate(regionkod, .before = region)
     
     if (returnera_df) return(retur_df)
