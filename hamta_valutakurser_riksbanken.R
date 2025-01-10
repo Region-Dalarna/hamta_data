@@ -33,20 +33,20 @@ valutalista <- fromJSON(httr::content(GET(paste0("https://api-test.riksbank.se/s
 till_datum <- valutalista %>% 
   filter(shortDescription %in% valutakoder) %>% 
   select(observationMaxDate) %>% 
-  pull() %>% 
+  dplyr::pull() %>% 
   max()
 
 # hämta id-nummer för de valutor vi valt
 valda_valutor_id <- valutalista %>% 
   filter(shortDescription %in% valutakoder) %>% 
   select(seriesId) %>% 
-  pull()
+  dplyr::pull()
 
 # hämta valutakoderna här också, så att vi vet att vi får dem i samma ordning som id-numren ovan
 valda_valutor_kod <- valutalista %>% 
   filter(shortDescription %in% valutakoder) %>% 
   select(shortDescription) %>% 
-  pull()
+  dplyr::pull()
 
 # hämta data
 tidsserie <- map2_dfr(valda_valutor_id, valda_valutor_kod, ~ fromJSON(httr::content(GET(paste0("https://api.riksbank.se/swea/v1/ObservationAggregates/", .x, "/m/", start_datum, "/", till_datum)), as = "text", encoding = "utf-8"), flatten = TRUE) %>% as.data.frame() %>% mutate(valuta = .y))
