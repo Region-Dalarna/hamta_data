@@ -19,12 +19,13 @@ hamta_valutakurser <- function(start_datum = "2015-01-02",
   #
   # Skapat av: Peter Möller, Region Dalarna
   #            september 2023
-  # Senast uppdaterat:  december 2023
-  #                     (mindre justeringar)
+  # Senast uppdaterat:  januari 2025
+  #                     (mindre buggfixar med krock funktionsnamn så dplyr::pull() och httr::content() får det att fungera)
   # 
   # ===========================================================================================================
   
 
+if (is.na(start_datum)) start_datum <- "1993-01-04"  
   
 # i nuläget endast för att hämta månadsvis data, men det går att hämta per dag, vecka, månad och år
   
