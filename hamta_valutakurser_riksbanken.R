@@ -28,7 +28,7 @@ hamta_valutakurser <- function(start_datum = "2015-01-02",
   
 # i nuläget endast för att hämta månadsvis data, men det går att hämta per dag, vecka, månad och år
   
-valutalista <- fromJSON(content(GET(paste0("https://api-test.riksbank.se/swea/v1/Series/ExchangeRateSeries")), as = "text", encoding = "utf-8"), flatten = TRUE)
+valutalista <- fromJSON(httr::content(GET(paste0("https://api-test.riksbank.se/swea/v1/Series/ExchangeRateSeries")), as = "text", encoding = "utf-8"), flatten = TRUE)
 
 till_datum <- valutalista %>% 
   filter(shortDescription %in% valutakoder) %>% 
@@ -49,7 +49,7 @@ valda_valutor_kod <- valutalista %>%
   pull()
 
 # hämta data
-tidsserie <- map2_dfr(valda_valutor_id, valda_valutor_kod, ~ fromJSON(content(GET(paste0("https://api.riksbank.se/swea/v1/ObservationAggregates/", .x, "/m/", start_datum, "/", till_datum)), as = "text", encoding = "utf-8"), flatten = TRUE) %>% as.data.frame() %>% mutate(valuta = .y))
+tidsserie <- map2_dfr(valda_valutor_id, valda_valutor_kod, ~ fromJSON(httr::content(GET(paste0("https://api.riksbank.se/swea/v1/ObservationAggregates/", .x, "/m/", start_datum, "/", till_datum)), as = "text", encoding = "utf-8"), flatten = TRUE) %>% as.data.frame() %>% mutate(valuta = .y))
 
 # bearbeta datasetet
 valutor_df <- tidsserie %>% 
@@ -65,7 +65,7 @@ return(valutor_df)
 
 lista_valutor <- function(){
   
-  valutalista <- fromJSON(content(GET(paste0("https://api.riksbank.se/swea/v1/Series/ExchangeRateSeries")), as = "text", encoding = "utf-8"), flatten = TRUE)
+  valutalista <- fromJSON(httr::content(GET(paste0("https://api.riksbank.se/swea/v1/Series/ExchangeRateSeries")), as = "text", encoding = "utf-8"), flatten = TRUE)
   
   return(valutalista)
 }
