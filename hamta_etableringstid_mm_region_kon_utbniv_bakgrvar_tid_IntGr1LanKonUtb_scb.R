@@ -22,6 +22,8 @@ hamta_etableringstid_mm_region_kon_utbniv_bakgrvar_tid_scb <- function(
   #
   # url till tabellens API: https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__AA__AA0003__AA0003B/IntGr1LanKonUtb/
   #
+  # Adress till API har ändrats till https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__AA__AA0003__AA0003X/IntGr1LanKonUtb/
+  # Justerat av: frkjon den 13 januari 2025
   # ====================================================================================================
 
   if (!require("pacman")) install.packages("pacman")
@@ -33,7 +35,7 @@ hamta_etableringstid_mm_region_kon_utbniv_bakgrvar_tid_scb <- function(
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
 
   # Url till SCB:s databas
-  url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003B/IntGr1LanKonUtb"
+  url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003X/IntGr1LanKonUtb"
   px_meta <- pxweb_get(url_uttag)
 
   varlist_koder <- pxvarlist(px_meta)$koder
