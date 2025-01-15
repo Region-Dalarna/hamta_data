@@ -6,7 +6,13 @@ hamta_befprognos_data <- function(
     cont_klartext = "Folkmängd",       # "Folkmängd", "Födda", "Döda", "Inrikes inflyttning", "Inrikes utflyttning", "Invandring", "Utvandring"
     tid_vekt = "*",                    # kan vara enskilda år, om "+" eller "-" skickas med så tas prognosåret + eller - antalet år som skickas med, 
                                        # ex. "+0" så tas själva prognosåret med. Om man vill ha pronosåret och ytterligare 10 år efter det så lägger man med: paste0("+", c(0:10))
-    url_prognos_vektor = "G:/Samhällsanalys/Statistik/Befolkningsprognoser/Profet/datafiler/",           # behövs i både pxweb och profetdelen 
+    url_prognos_vektor = "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0401/BE0401A/BefProgOsiktRegN",
+    
+                # profet: "G:/Samhällsanalys/Statistik/Befolkningsprognoser/Profet/datafiler/"
+                #  c("https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0401/BE0401A/BefProgOsiktRegN",
+                #    "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0401/BE0401B/BefProgOsiktRegN21",
+                #    "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0401/BE0401B/BefProgOsiktRegN20"),
+    
     prognos_ar = "9999",               # NA = alla år, eller enskilda år, "9999" = senaste år
     long_format = FALSE
 ) {
