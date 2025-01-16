@@ -96,7 +96,7 @@ hamta_befprognos_data <- function(
     
     if (str_detect(url_prognos, "https://api.scb.se")) {  
       
-      #valt_ar <- hamta_giltiga_varden_fran_tabell(hamta_url, "tid") %>% min() %>% as.numeric() %>% unique()
+      valt_ar <- hamta_giltiga_varden_fran_tabell(hamta_url, "tid") %>% min() %>% as.numeric() %>% unique()
       
       # pxvarlist(url_prognos)
       # pxvardelist(url_prognos, "kon", skriv_vektlista_till_clipboard = TRUE)
