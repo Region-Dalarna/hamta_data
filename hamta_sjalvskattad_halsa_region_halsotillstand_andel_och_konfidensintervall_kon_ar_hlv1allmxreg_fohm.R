@@ -17,7 +17,7 @@ hamta_sjalvskattad_halsa_region_halsotillstand_andel_och_konfidensintervall_kon_
   # Skapad av: moepet den 20 oktober 2024
   # Senast uppdaterad: 20 oktober 2024
   #
-  # url till tabellens API: http://fohm-app.folkhalsomyndigheten.se/Folkhalsodata/pxweb/sv/A_Folkhalsodata/A_Folkhalsodata__B_HLV__bFyshals__bbaFyshalsallman/hlv1allmxreg.px/
+  # url till tabellens API: https://fohm-app.folkhalsomyndigheten.se/Folkhalsodata/pxweb/sv/A_Folkhalsodata/A_Folkhalsodata__B_HLV__bFyshals__bbaFyshalsallman/hlv1allmxreg.px/
   #
   # ====================================================================================================
 
@@ -30,7 +30,7 @@ hamta_sjalvskattad_halsa_region_halsotillstand_andel_och_konfidensintervall_kon_
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
 
   # Url till SCB:s databas
-  url_uttag <- "http://fohm-app.folkhalsomyndigheten.se/Folkhalsodata/api/v1/sv/A_Folkhalsodata/B_HLV/bFyshals/bbaFyshalsallman/hlv1allmxreg.px"
+  url_uttag <- "https://fohm-app.folkhalsomyndigheten.se/Folkhalsodata/api/v1/sv/A_Folkhalsodata/B_HLV/bFyshals/bbaFyshalsallman/hlv1allmxreg.px"
   px_meta <- pxweb_get(url_uttag)
 
   varlist_koder <- pxvarlist(px_meta)$koder
