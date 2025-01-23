@@ -54,8 +54,10 @@ hamta_bas_rams_region_sni2007_dagbef_kon_tid_fodelseregion_scb <- function(
   } else kon_vekt <- NA
   
   # vi tar bara hem dagbefolkning
-  cont_klartext <- c("Förvärvsarbetande 16-74 år med arbetsplats i regionen (dagbefolkning) (RAMS)", "Förvärvsarbetande 16+ år med arbetsplats i regionen (dagbefolkning) (RAMS)", "sysselsatta efter arbetsställets belägenhet")
-  cont_vekt <-  hamta_kod_med_klartext(px_meta, cont_klartext, "contentscode")
+  cont_alla <- hamta_giltiga_varden_fran_tabell(px_meta, "contentscode")         # hämta alla contentsvariabler
+  cont_klar <- hamta_klartext_med_kod(px_meta, cont_alla, "contentscode") %>%    # hämta klartext för dem
+    .[!str_detect(., "bostad")]                                                  # sortera bort contentsvariabler som innehåller ordet "bostad" (så får vi dagbefolkningn i alla tabeller)
+  cont_vekt <-  hamta_kod_med_klartext(px_meta, cont_klar, "contentscode")       # konvertera till kod för contentsvariabeln
 
   # Hantera tid-koder
   giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
