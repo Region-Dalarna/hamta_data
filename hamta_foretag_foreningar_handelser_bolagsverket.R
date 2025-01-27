@@ -73,16 +73,32 @@ hamta_foretag_foreningar_handelser <- function(region_vekt = "*",
   tid_koder <- tid_koder %>%           # ersätt "9999" med senaste år
     str_replace_all("9999", giltiga_armanad %>% max())
   
-  # hantera tid_koder som startar med ett år där alla månader ska vara med
+  # hantera tid_koder som startar med ett år där alla månader ska vara med samt även 
+  # intervaller där alla giltiga värden mellan två år eller år-måander ska vara med
   tid_vekt <- if (all(tid_koder == "*")) {
     giltiga_armanad
   } else {
     
-    # ta ut alla koder, för år som har skickats med tas alla månader med etc. 
-    tid_koder %>%
+    tid_koder_ej_kolon <- tid_koder[!str_detect(tid_koder, ":")]
+    tid_koder_med_kolon <- tid_koder[str_detect(tid_koder, ":")]
+    
+    # ta ut alla koder, om bara år har skickats med tas alla månader med etc. 
+    tid_koder_ej_kolon <- tid_koder_ej_kolon %>%
       map(~ giltiga_armanad[str_starts(giltiga_armanad, .x)]) %>%
       unlist()
-  }
+    
+    tid_vekt_med_kolon <- map(tid_koder_med_kolon, function(period) {
+      
+      period_justerad <- str_split(period, ":") %>% unlist() %>%
+        map_chr(~ if_else(str_length(.x) == 4, str_c(.x, "01"), .x))
+      
+      intervall <- map_int(period_justerad, ~ which(giltiga_armanad == .x))
+      retur_txt <- giltiga_armanad[intervall[1]:intervall[2]] %>% unlist()
+      return(retur_txt)
+    }) %>% unlist()
+    
+    retur_vekt <- c(tid_koder_ej_kolon, tid_vekt_med_kolon) %>% sort()
+  } # slut if-sats om tid_koder == "*"
   
   # filtrera bort rader användaren inte behöver
   if (any(bolagsform_kod != "*")) retur_df <- retur_df %>% filter(org_kod %in% bolagsform_kod)
