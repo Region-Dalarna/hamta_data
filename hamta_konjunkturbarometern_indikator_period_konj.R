@@ -38,9 +38,6 @@ hamta_konjunkturbarometern <- function(
   indikator_vekt <- hamta_kod_med_klartext(px_meta, indikator_klartext, skickad_fran_variabel = "indikator")
   period_vekt <- hamta_kod_med_klartext(px_meta, period_klartext, skickad_fran_variabel = "period")
 
-  cont_vekt <-  hamta_kod_med_klartext(px_meta, cont_klartext, "contentscode")
-  if (length(cont_vekt) > 1) wide_om_en_contvar <- FALSE
-
   # Hantera tid-koder
   giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "period")
   if (all(period_vekt != "*")) period_vekt <- period_vekt %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
@@ -56,7 +53,7 @@ hamta_konjunkturbarometern <- function(
 
 var_vektor <- NA
 var_vektor_klartext <- NA
-  px_df <- as.data.frame(px_uttag)
+  px_df <- suppress_specific_warning(as.data.frame(px_uttag))
   if (!is.na(var_vektor)) {      px_df <- px_df %>%
             cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
             select(any_of(var_vektor)))
