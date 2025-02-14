@@ -5,8 +5,7 @@ library(readxl)
 
 hamta_yrkesprognos_region_af <- function() {
 
-  
-  yrken_url <- "https://arbetsformedlingen.se/statistik/yrkes--och-kompetensanalyser"
+    yrken_url <- "https://arbetsformedlingen.se/statistik/yrkes--och-kompetensanalyser"
   
   af_grund_url <- "https://arbetsformedlingen.se"
   # Hämta sidan
@@ -50,7 +49,7 @@ hamta_yrkesprognos_region_af <- function() {
   tempfil_sokvag <- tempfile(fileext = ".xlsx")
   
   # Spara innehållet i den temporära filen
-  writeBin(content(yrkesbarometer, as = "raw"), tempfil_sokvag)
+  writeBin(httr::content(yrkesbarometer, as = "raw"), tempfil_sokvag)
   
   # Läs in Excel-filen
   
