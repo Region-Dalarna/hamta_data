@@ -67,7 +67,7 @@ hamta_konkurser_region_bransch_juridisk_form_tva <- function(
 
   # gör om pxweb-uttaget till en dataframe
   px_df <- as.data.frame(px_uttag)
-  px_df <- px_df %>% region_kolumn_splitta_kod_klartext("Region")
+  px_df <- px_df %>% region_kolumn_splitta_kod_klartext("region")
   if (!all(is.na(var_vektor))) {
       # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
       px_df <- px_df %>%
