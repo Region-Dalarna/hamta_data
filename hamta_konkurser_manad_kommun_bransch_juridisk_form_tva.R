@@ -62,24 +62,27 @@ hamta_konkurser_region_bransch_juridisk_form_tva <- function(
   # Hämta data med varlista
   px_uttag <- pxweb_get(url = url_uttag, query = varlista)
 
-  var_vektor <- c(regionkod = "Region")
-  var_vektor_klartext <- "region"
+  # Kod om inte verkar uppfylla någon funktion. Kommenteras bort
+  # var_vektor <- c(regionkod = "Region")
+  # var_vektor_klartext <- "region"
 
   # gör om pxweb-uttaget till en dataframe
   px_df <- as.data.frame(px_uttag)
   px_df <- px_df %>% region_kolumn_splitta_kod_klartext("region")
-  if (!all(is.na(var_vektor))) {
-      # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
-      px_df <- px_df %>%
-            cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
-            select(any_of(var_vektor)))
-
-      # kolumnerna med koder läggs framför motsvarande kolumner med klartext
-      for (varflytt_index in 1:length(var_vektor)) {
-        px_df <- px_df %>%
-            relocate(any_of(names(var_vektor)[varflytt_index]), .before = any_of(var_vektor_klartext[varflytt_index]))
-      }
-  }
+  
+  # Kod om inte verkar uppfylla någon funktion. Kommenteras bort
+  # if (!all(is.na(var_vektor))) {
+  #     # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
+  #     px_df <- px_df %>%
+  #           cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
+  #           select(any_of(var_vektor)))
+  # 
+  #     # kolumnerna med koder läggs framför motsvarande kolumner med klartext
+  #     for (varflytt_index in 1:length(var_vektor)) {
+  #       px_df <- px_df %>%
+  #           relocate(any_of(names(var_vektor)[varflytt_index]), .before = any_of(var_vektor_klartext[varflytt_index]))
+  #     }
+  # }
 
   # Om användaren vill spara data till en Excel-fil
   if (!is.na(output_mapp) & !is.na(excel_filnamn)){
