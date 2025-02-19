@@ -36,6 +36,11 @@ hamta_yrke_region_ssyk3_kon_tid_scb <- function(
 						"https://api.scb.se/OV0104/v1/doris/sv/ssd/AM/AM0208/AM0208D/YREG58N",
 						"https://api.scb.se/OV0104/v1/doris/sv/ssd/AM/AM0208/AM0208D/YREG58")
 
+  giltiga_ar <- map(url_list, ~hamta_giltiga_varden_fran_tabell(.x, "tid")) %>% unlist()
+  if (all(tid_koder != "*")) tid_koder <- tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique() else tid_vekt <- giltiga_ar
+  
+  if (length(tid_koder) < 1) stop("Inga giltiga år i tid_koder, kontrollera parametern och försök igen.")
+  
  hamta_data <- function(url_uttag) {
 
   px_meta <- pxweb_get(url_uttag)
