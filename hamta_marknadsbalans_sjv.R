@@ -8,6 +8,8 @@ hamta_marknadsbalans_sjv <- function(produkt = "mejeriprodukter", flik_sokord = 
   # produkt = "mejeriprodukter", "griskott", "farkott", "matfagel", "notkott", "hastkott", "mejeriprodukter" eller "viltkott"
   # flik_sokord = t.ex. "ekvivalenter" eller "balans" men man får kolla fliken manuellt för att se vad den heter
   
+  # Ändrar download.file till GET på rad 31-32 för att se om det funkar. / Jon 2025-03-11
+  
   ## Ange URL till sidan som innehåller länken till marknadsbalans
   url_inlas_sjv <- "https://jordbruksverket.se/mat-och-drycker/handel-och-marknad/priser-och-marknadsinformation-for-livsmedel"
   
@@ -26,8 +28,8 @@ hamta_marknadsbalans_sjv <- function(produkt = "mejeriprodukter", flik_sokord = 
   td = tempdir()              # skapa temporär mapp
   marknadsbalans_fil <- tempfile(tmpdir=td, fileext = ".xlsx")
   
-  download.file(lank_fil, destfile = marknadsbalans_fil, mode = "wb")       # ladda hem hela filen, mode = "wb" viktigt, annars blir det fel
-  
+  #download.file(lank_fil, destfile = marknadsbalans_fil, mode = "wb")       # ladda hem hela filen, mode = "wb" viktigt, annars blir det fel
+  GET(lank_fil, write_disk(marknadsbalans_fil, overwrite = TRUE))
   # hämta namn på den flik som innehåller texten i flik_sokord
   
   vald_flik <- excel_sheets(marknadsbalans_fil) %>%        # kolla vilka flikar som finns i filen
