@@ -56,5 +56,46 @@ hamta_yrkesprognos_region_af <- function() {
   flikar <- excel_sheets(tempfil_sokvag)
   yrkesprognos <- read_xlsx(tempfil_sokvag, sheet = flikar[str_detect(flikar, "barometer")])
   
-  return(yrkesprognos)
+  yrkesprognos_join <- yrkesprognos %>% 
+    mutate(ssyk_en = strsplit(ssyk, ", ")) %>%  # Dela upp koderna till listor
+    unnest_longer(ssyk_en)  # Gör om listorna till rader
+  
+  # Läs in yrkesstatistik från scb:s öppna statistikdatabas
+  source("https://raw.githubusercontent.com/Region-Dalarna/hamta_data/main/hamta_yrke_SSYK4_region_yrke2012_kon_tid_YREG60BAS_YREG60N_YREG60_scb.R")
+  ssyk4_df <- hamta_yrke_SSYK4_region_yrke2012_kon_tid_scb(region_vekt = "*",
+                                                           tid_koder = "9999") %>% 
+    filter(år == max(år)) %>% 
+    pivot_wider(names_from = "kön", values_from = "Antal")
+  
+  regionnyckel <- hamtaregtab()
+  
+  konsbalans_vekt <- c("kraftigt kvinnodominerat yrke", 
+                       "kvinnodominerat yrke",
+                       "yrke med jämn könsbalans",
+                       "kraftigt mansdominerat yrke",
+                       "mansdominerat yrke")
+  
+  # Lägg till regionnyckel och yrkesstatistik
+  retur_df <- yrkesprognos_join %>%
+    mutate(lan_namn = if_else(lan_namn == "Nationellt", "Riket", lan_namn)) %>% 
+    left_join(regionnyckel, by = c("lan_namn" = "region")) %>%
+    left_join(ssyk4_df, by = c("ssyk_en" = "yrke2012kod", "regionkod")) %>% 
+    mutate(antal_tot = män + kvinnor) %>% 
+    group_by(omgang, yrkesomrade, yb_yrke, regionkod, region, jobbmojligheter,
+             rekryteringssituation, paradox, prognos, text_jobbmojligheter,
+             text_rekryteringssituation, ssyk, ssyk_text) %>%
+    summarise(antal_tot = sum(antal_tot, na.rm = TRUE),
+              män = sum(män, na.rm = TRUE),
+              kvinnor = sum(kvinnor, na.rm = TRUE),
+              .groups = "drop") %>%
+    mutate(
+           andel_kvinnor = kvinnor / antal_tot *100,
+           konsbalans = case_when(between(andel_kvinnor, 80, 100) ~ "kraftigt kvinnodominerat yrke",
+                                  between(andel_kvinnor, 60, 80) ~ "kvinnodominerat yrke",
+                                  between(andel_kvinnor, 40, 60) ~ "yrke med jämn könsbalans",
+                                  between(andel_kvinnor, 20, 40) ~ "mansdominerat yrke",
+                                  between(andel_kvinnor, 0, 20) ~ "kraftigt mansdominerat yrke"),
+           konsbalans = factor(konsbalans, levels = konsbalans_vekt))
+  
+  return(retur_df)
 } # slut funktion
