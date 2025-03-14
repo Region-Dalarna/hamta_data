@@ -17,7 +17,7 @@ hamta_helarsekvivalenter_region_kon_aldersgrupp_tid_scb <- function(
   # Automatgenererat av en funktion i R som skrivits av Peter Möller, Region Dalarna
   #
   # Skapad av: moepet den 26 mars 2024
-  # Senast uppdaterad: 26 mars 2024
+  # Senast uppdaterad: 14 mars 2025, SCB har flyttat tabellen = ny url
   #
   # url till tabellens API: https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__HE__HE0000/HE0000T02N2/
   #
@@ -32,7 +32,8 @@ if (!require("pacman")) install.packages("pacman")
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
 
   # Url till SCB:s databas
-  url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/HE/HE0000/HE0000T02N2"
+  #url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/HE/HE0000/HE0000T02N2"
+  url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/HE/HE0112/HE0000T02N2"
   px_meta <- pxweb_get(url_uttag)
 
   varlist_koder <- pxvarlist(px_meta)$koder
