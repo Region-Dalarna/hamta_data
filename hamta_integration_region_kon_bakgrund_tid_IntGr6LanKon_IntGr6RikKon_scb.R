@@ -1,3 +1,4 @@
+test <- hamta_integration_region_kon_bakgrund_tid_scb()
 hamta_integration_region_kon_bakgrund_tid_scb <- function(
 			region_vekt = "20",			   # Val av region. Finns: "01", "03", "04", "05", "06", "07", "08", "09", "10", "12", "13", "14", "17", "18", "19", "20", "21", "22", "23", "24", "25", "00"
 			kon_klartext = "*",			 #  Finns: "män och kvinnor", "män", "kvinnor"
@@ -12,6 +13,9 @@ hamta_integration_region_kon_bakgrund_tid_scb <- function(
 ){
 
   # ====================================================================================================
+  #
+  # OBS!!! Skript fungerar inte pga oklar felaktighet på rad 101. Namn är inte unika.  OBS!!!
+  # if (long_format & !wide_om_en_contvar) px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag)
   #
   # Funktion för att hämta data från SCB:s API med hjälp av pxweb-paketet
   # Automatgenererat av en funktion i R som skrivits av Peter Möller, Region Dalarna
