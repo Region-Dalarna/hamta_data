@@ -93,7 +93,7 @@ hamta_integration_valdeltagande_region_bakgrund_kon_tid_scb <- function(
       # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
       # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
       #if (long_format & !wide_om_en_contvar) px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag)
-      if (long_format & !wide_om_en_contvar) px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag, content_var = "bakgrund")
+      if (long_format & !wide_om_en_contvar) px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag, content_var = "val")
       
       return(px_df)
     } # test om det finns giltig(a) tid-kod(er) i aktuell tabell
