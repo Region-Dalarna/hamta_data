@@ -13,6 +13,9 @@ hamta_valdeltagande_region_bakgrund_kon_tid_scb <- function(
   
   # ====================================================================================================
   #
+  # OBS!!! Finns ett nytt skript som även innefattar data för riket och kommunerna. 
+  # Se hamta_integration_valdeltagande_region_bakgrund_kon_tid_IntGr11Riket1_IntGr11Lan1_IntGr11Kom1_scb.R
+  #
   # Funktion för att hämta data från SCB:s API med hjälp av pxweb-paketet
   # Automatgenererat av en funktion i R som skrivits av Peter Möller, Region Dalarna
   #
