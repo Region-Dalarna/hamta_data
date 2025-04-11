@@ -16,7 +16,8 @@ hamta_konkurser_manad_lan_variabel_tva <- function(
   # Senast uppdaterad: 16 oktober 2024
   #
   # url till tabellens API: https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Konkurser och offentliga ackord/konk_manad_lan_1996.px
-  #
+  # Ändrat till ny URL, då den gamla inte längre fungerar.
+  # Ny: https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Konkurser och offentliga ackord/12_konk_manad_lan_1996.px
   # ====================================================================================================
   
   if (!require("pacman")) install.packages("pacman")
@@ -28,7 +29,7 @@ hamta_konkurser_manad_lan_variabel_tva <- function(
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
   
   # Url till SCB:s databas
-  url_uttag <- "https://statistik.tillvaxtanalys.se:443:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Konkurser och offentliga ackord/konk_manad_lan_1996.px"
+  url_uttag <- "https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Konkurser och offentliga ackord/12_konk_manad_lan_1996.px"
   px_meta <- pxweb_get(url_uttag)
   
   varlist_koder <- pxvarlist(px_meta)$koder

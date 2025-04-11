@@ -21,6 +21,8 @@ hamta_konkurser_region_bransch_juridisk_form_tva <- function(
   # Enligt Tillväxtanalys är det preliminär statistik som på sikt kan utökas med flera typer av juridisk form.
   # Av oklar anledning hade url-adressen ändrats till 
   # https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Konkurser och offentliga ackord/z_anstallda_manad_kom_bransch_juridisk_form_popAH_20250307_081423.px
+  # Ytterligare en ändring av url-adress
+  # https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Konkurser och offentliga ackord/13_konkurser_manad_kom_bransch_juridisk_form_storleksklass_popAH_20250411_090038.px
   # ====================================================================================================
 
   if (!require("pacman")) install.packages("pacman")
@@ -32,7 +34,7 @@ hamta_konkurser_region_bransch_juridisk_form_tva <- function(
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
 
   # Url till databas
-  url_uttag <- "https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Konkurser och offentliga ackord/z_anstallda_manad_kom_bransch_juridisk_form_popAH_20250307_081423.px"
+  url_uttag <- "https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Konkurser och offentliga ackord/13_konkurser_manad_kom_bransch_juridisk_form_storleksklass_popAH_20250411_090038.px"
   px_meta <- pxweb_get(url_uttag)
 
   varlist_koder <- pxvarlist(px_meta)$koder
