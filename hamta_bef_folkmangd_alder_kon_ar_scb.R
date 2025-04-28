@@ -51,8 +51,12 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
     if (!all(is.na(alder_koder))) alder_koder <- alder_koder %>% as.character() else alder_koder <- NA
     if (!all(is.na(civilstand_klartext))) civilstand_koder <- hamta_kod_med_klartext(url_uttag, civilstand_klartext, skickad_fran_variabel = "civilstand") else civilstand_koder <- NA
     cont_koder <- hamta_kod_med_klartext(url_uttag, cont_klartext, skickad_fran_variabel = "contentscode")        #        hamta_kod_med_klartext(url_uttag, cont_klartext_vekt)                            # vi använder klartext i parametrar för innehållsvariabel, koder i övriga
-    if (!all(is.na(kon_klartext))) kon_koder <- hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon") else kon_koder <- NA
-
+    
+    if (any(kon_klartext == "*")) {
+      kon_koder <- "*"
+    } else {
+      if (!all(is.na(kon_klartext))) kon_koder <- hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon") else kon_koder <- NA
+    }
     # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
     giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid")
     if (all(tid_koder != "*")) tid_koder <- tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
