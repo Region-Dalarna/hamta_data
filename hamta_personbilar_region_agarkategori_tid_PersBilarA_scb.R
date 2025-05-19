@@ -5,7 +5,8 @@ hamta_personbilar_region_agarkategori_tid_scb <- function(
 			tid_koder = "*",			 # "*" = alla år eller månader, "9999" = senaste, finns: "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024"
 			output_mapp = NA,			# anges om man vill exportera en excelfil med uttaget, den mapp man vill spara excelfilen till
 			excel_filnamn = "personbilar.xlsx",			# filnamn för excelfil som exporteras om excel_filnamn och output_mapp anges
-			returnera_df = TRUE			# TRUE om man vill ha en dataframe i retur från funktionen
+			returnera_df = TRUE,			# TRUE om man vill ha en dataframe i retur från funktionen
+			hamta_url = FALSE                         # TRUE om vi enbart vill ha url:en till tabellen
 ){
 
   # ====================================================================================================
@@ -20,6 +21,10 @@ hamta_personbilar_region_agarkategori_tid_scb <- function(
   #
   # ====================================================================================================
 
+  # Url till databas
+  url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/TK/TK1001/TK1001A/PersBilarA"
+  if (hamta_url) return(url_uttag) # om vi bara vill ha url:en till tabellen så returnerar vi den och avslutar funktionen)
+  
   if (!require("pacman")) install.packages("pacman")
   p_load(pxweb,
     			tidyverse,
@@ -28,8 +33,6 @@ hamta_personbilar_region_agarkategori_tid_scb <- function(
   # Behändiga funktioner som används i skriptet
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
 
-  # Url till databas
-  url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/TK/TK1001/TK1001A/PersBilarA"
   px_meta <- pxweb_get(url_uttag)
 
   varlist_koder <- pxvarlist(px_meta)$koder
