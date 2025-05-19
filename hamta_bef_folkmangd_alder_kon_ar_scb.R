@@ -9,8 +9,9 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
     mapp_excelfil = NA,                       # var man vill spara sin Excelfil om man vill spara en sådan
     filnamn_excelfil = NA,                    # filnamn på sin excelfil 
     wide_om_en_contvar = TRUE,                # TRUE om vi vill ha df i wide-format om det bara finns en innehållsvariabel, annars blir det long-format om det är valt
-    long_format = TRUE                        # TRUE om vi vill ha df i long-format, annars kommer alla innehållsvariabler i wide-format, om man bara har  
+    long_format = TRUE,                       # TRUE om vi vill ha df i long-format, annars kommer alla innehållsvariabler i wide-format, om man bara har  
                                               # med en innehållsvariabel så blir det wide-format
+    hamta_url = FALSE                         # TRUE om vi enbart vill ha url:en till tabellen
     ) { 
   
   # ===========================================================================================================
@@ -27,10 +28,15 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
   #
   # Skapat av: Peter Möller, Region Dalarna
   #            november 2023
-  # Senast uppdaterat:  december 2023
+  # Senast uppdaterat:  maj 2025
   #                     (mindre justeringar)
   #                     Uppdaterat kod så att det går att ta med "9999" som senaste år. Tidigare kod bortkommenterad. Jon 2024-01-19
+  #                     Buggfix på kon_klartext så att både "*" och NA hanteras samt lagt till möjlighet att bara hämta url till tabellen. Peter 2025-05-06
   # ===========================================================================================================
+  
+  # url till tabellen i SCB:s statistikdatabas
+  url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101A/BefolkningNy"
+  if (hamta_url) return(url_uttag) # om vi bara vill ha url:en till tabellen så returnerar vi den och avslutar funktionen)
   
   if (!require("pacman")) install.packages("pacman")
   pacman::p_load(tidyverse,
@@ -44,9 +50,6 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
   skriv_excelfil <- if (!is.na(mapp_excelfil) & !is.na(filnamn_excelfil)) TRUE else FALSE
   
   if (returnera_df | skriv_excelfil) {                       # skriptet körs bara om användaren valt att returnera en dataframe och/eller excelfil
-    
-    # url till tabellen i SCB:s statistikdatabas
-    url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101A/BefolkningNy"
     
     if (!all(is.na(alder_koder))) alder_koder <- alder_koder %>% as.character() else alder_koder <- NA
     if (!all(is.na(civilstand_klartext))) civilstand_koder <- hamta_kod_med_klartext(url_uttag, civilstand_klartext, skickad_fran_variabel = "civilstand") else civilstand_koder <- NA
