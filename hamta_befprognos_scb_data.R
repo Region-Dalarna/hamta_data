@@ -37,8 +37,8 @@ hamta_befprognos_data <- function(
   #
   # Skapat av: Peter Möller, Region Dalarna
   #            november 2023
-  # Senast uppdaterat:  december 2023
-  #                     (mindre justeringar)
+  # Senast uppdaterat:  juni 2025
+  #                     (justerat så att filer från Hallands befolkningsprognosskript läses in)
   # 
   # ===========================================================================================================
   
@@ -69,11 +69,16 @@ hamta_befprognos_data <- function(
        
     } else {
       
-      filsokvagar <- list.files(hamta_url, pattern = ".csv", full.names = TRUE)
+      filsokvagar <- list.files(hamta_url, pattern = ".csv|.xlsx", full.names = TRUE)
+      filsokvagar_csv <- filsokvagar[str_detect(filsokvagar, ".csv")]
+      filsokvagar_xlsx <- filsokvagar[str_detect(filsokvagar, ".xlsx")]
       
-      # behåll de som finns i region_vekt
-      if (!"20" %in% region_vekt) filsokvagar <- filsokvagar[!str_detect(filsokvagar, "lan")]                        # ta bort länsfiler ur sokvagsvektorn om inte "lan" är med i sökvägen
-      if (!any(hamtakommuner(lan = "20", F, F, F) %in% region_vekt)) filsokvagar <- filsokvagar[!str_detect(filsokvagar, "kommun")]      # ta bort kommunfiler ur sokvagsvektorn om ingen av Dalarnas kommuners kommunkoder är med
+      # behåll de som finns i region_vekt i filskokvagar_csv (dvs. från Profet)
+      if (!"20" %in% region_vekt) filsokvagar_csv <- filsokvagar_csv[!str_detect(filsokvagar_csv, "lan")]                        # ta bort länsfiler ur sokvagsvektorn om inte "lan" är med i sökvägen
+      if (!any(hamtakommuner(lan = "20", F, F, F) %in% region_vekt)) filsokvagar_csv <- filsokvagar_csv[!str_detect(filsokvagar_csv, "kommun")]      # ta bort kommunfiler ur sokvagsvektorn om ingen av Dalarnas kommuners kommunkoder är med
+      
+      # och så sätter vi ihop csv- och xlsx-sökvägar igen
+      filsokvagar <- c(filsokvagar_csv, filsokvagar_xlsx)
       
       # kontrollera vilka prognosår som finns bland profet-filerna i mappen
       # prognos_ar <- map_int(filsokvagar, ~ read_xlsx(.x, sheet = "Info") %>% 
@@ -81,7 +86,10 @@ hamta_befprognos_data <- function(
       #                       .[!is.na(.)] %>% 
       #                       .[str_detect(., "prognosperiod")] %>% 
       #                       parse_number(.))
-      prognos_ar <- map_int(filsokvagar, ~ parse_number(.))%>% unique()
+
+      existerande_ar <- map_int(filsokvagar, ~ parse_number(.))%>% unique()
+      if ("9999" %in% prognos_ar) prognos_ar <- prognos_ar %>% str_replace("9999", as.character(max(existerande_ar))) %>% as.numeric()
+      prognos_ar <- prognos_ar[prognos_ar %in% existerande_ar]
     }
     
     start_ar <- prognos_ar  - 1                # ta bort -1 igen?
@@ -135,22 +143,7 @@ hamta_befprognos_data <- function(
       
     } else {                    # om vi inte har en url som innehåller en adress till SCB:s API så utgår vi från att det är en profet-fil
       
-      # hämta regionnyckel
-      regionnyckel <- hamtaregtab()
-      
-      
-      filsokvagar <- list.files(hamta_url, pattern = ".csv", full.names = TRUE)
-      
-      # behåll de som finns i region_vekt
-      if (!"20" %in% region_vekt) filsokvagar <- filsokvagar[!str_detect(filsokvagar, "lan")]                        # ta bort länsfiler ur sokvagsvektorn om inte "20" är med som regionkod
-      if (!any(hamtakommuner(lan = "20", F, F, F) %in% region_vekt)) filsokvagar <- filsokvagar[!str_detect(filsokvagar, "kommun")]      # ta bort kommunfiler ur sokvagsvektorn om ingen av Dalarnas kommuners kommunkoder är med
-
-      # map_chr(filsokvagar, ~ read_xlsx(.x, sheet = "Info") %>% 
-        #                     pull() %>% 
-        #                     .[!is.na(.)] %>% 
-        #                     .[str_detect(., "prognosperiod")] %>% 
-        #                     parse_number(.) %>% 
-        #                     as.character())
+      filsokvagar <- list.files(hamta_url, pattern = ".csv|.xlsx", full.names = TRUE)
       
       alla_prognos_ar <- map_chr(filsokvagar, ~ parse_number(.) %>% as.character()) %>% unique()
       sok_prognos_ar <- prognos_ar %>% paste0(collapse = "|")               # för att kunna använda nedan i str_detect
@@ -161,81 +154,158 @@ hamta_befprognos_data <- function(
       if (all(!is.na(prognos_ar) & prognos_ar != "9999")) filsokvagar <- filsokvagar[str_detect(filsokvagar, sok_prognos_ar)]
       if (any(str_detect(prognos_ar, "9999"))) prognos_ar <- alla_prognos_ar %>% str_replace("9999", max(alla_prognos_ar))
       
-      # kontrollera vilka prognosår som finns bland profet-filerna i mappen som ska användas
-      progn_ar <- map_chr(filsokvagar, ~ parse_number(.) %>% as.character()) 
+      retur_profet <- NULL
+      befskript_df <- NULL
+      filsokvagar_xlsx <- filsokvagar[str_detect(filsokvagar, ".xlsx")]
+      filsokvagar_csv <- filsokvagar[str_detect(filsokvagar, ".csv")]
+      # här läser vi in filer som är skapade med Hallands skript
+      if (length(filsokvagar_xlsx) > 0) {
       
-      # vektor för att döpa om kolumner i profetfilen så att de blir samma som i pxwebs befolkningsprognostabeller
-      rename_profet <- c("regionkod" = "lan_kod", "regionkod" = "kommun_kod", "ålder" = "age", "kön" = "kon", "år" = "year", 
-                         "Folkmängd" = "pop", "Födda" = "fodda", "Döda" = "doda", "Inrikes inflyttning" = "inrikes_inflyttade", 
-                         "Inrikes utflyttning" = "inrikes_utflyttade", "Invandring" = "immigranter", "Utvandring" = "emigranter")
+        # kontrollera vilka prognosår som finns bland profet-filerna i mappen som ska användas
+        progn_ar <- map_chr(filsokvagar_xlsx, ~ parse_number(.) %>% as.character()) 
+        
+        # vektor för att döpa om kolumner i profetfilen så att de blir samma som i pxwebs befolkningsprognostabeller
+        rename_befskript <- c("regionkod" = "lan_kod", "regionkod" = "kommun_kod", "ålder" = "alder", "kön" = "kon", "år" = "ar", 
+                           "Folkmängd" = "total_folkmangd", "Födda" = "fodda", "Döda" = "doda", "Inrikes inflyttning" = "inrikes_inflyttning", 
+                           "Inrikes utflyttning" = "inrikes_utflyttning", "Invandring" = "invandring", "Utvandring" = "utvandring")
+          
+          
+        
+        contvar_vekt <- c("Folkmängd", "Födda", "Döda", "Inrikes inflyttning", "Inrikes utflyttning", "Invandring", "Utvandring")
+        if (all(cont_klartext == "*")) cont_klartext <- contvar_vekt
       
-      contvar_vekt <- c("Folkmängd", "Födda", "Döda", "Inrikes inflyttning", "Inrikes utflyttning", "Invandring", "Utvandring")
-      if (all(cont_klartext == "*")) cont_klartext <- contvar_vekt
+        if (any(hamta_tid_vekt != "*")) {
+          fil_start_ar <- as.numeric(fil_prognosar)  - 1                # ta bort -1 igen?
+          fil_jmfr_ar <- fil_start_ar + jmfr_vekt
+          fil_hamta_tid_vekt <- if (length(fil_jmfr_ar) > 0) c(fil_jmfr_ar, andra_ar_vekt) else andra_ar_vekt
+        } else fil_hamta_tid_vekt <- "*"
       
-      las_in_profet_fil <- function(profetfil_sokvag, fil_prognosar) {
+        progn_ar <- map_chr(filsokvagar_xlsx, ~ parse_number(.) %>% as.character()) 
         
-      if (any(hamta_tid_vekt != "*")) {
-        fil_start_ar <- as.numeric(fil_prognosar)  - 1                # ta bort -1 igen?
-        fil_jmfr_ar <- fil_start_ar + jmfr_vekt
-        fil_hamta_tid_vekt <- if (length(fil_jmfr_ar) > 0) c(fil_jmfr_ar, andra_ar_vekt) else andra_ar_vekt
-      } else fil_hamta_tid_vekt <- "*"
-        
-        # fil_prognosar <- read_xlsx(profetfil_sokvag, sheet = "Info") %>% 
-        #   pull() %>% 
-        #   .[!is.na(.)] %>% 
-        #   .[str_detect(., "prognosperiod")] %>% 
-        #   parse_number(.) %>% 
-        #   as.character()
-        
-        #profet_df <- read_xlsx(profetfil_sokvag, sheet = "Data")                          # gammal, när vi läste in excelfiler, nu kör vi csv (som vi zippar för att spara utrymme)
-        profet_df <- read_csv(profetfil_sokvag, show_col_types = FALSE) 
-        kolnamn <- names(profet_df)                                                        # hämta kolumnnamn för att kunna avgöra om det är kommuner eller län
-        
-        # kolla om det är kommunfil, i så fall lägger vi ihop in- och utflyttning inom län och från utanför län
-        if (all(c("utomin", "inomin", "utomut", "inomut") %in% kolnamn)) {
-          profet_df <- profet_df %>% 
-            mutate(inrikes_inflyttade = inomin + utomin,
-                   inrikes_utflyttade = inomut + utomut) %>% 
-            select(-c(inomin, utomin, inomut, utomut))
-        }
+        befskript_df <- map2(filsokvagar_xlsx, progn_ar, ~ read_xlsx(.x) %>% 
+                              mutate(prognos_ar = .y) %>%
+                               filter(ar %in% (as.numeric(progn_ar)+jmfr_vekt-1))) %>%    # ta bara ut jämförelseåret
+          list_rbind()
         
         if (all(fil_hamta_tid_vekt == "*")) fil_hamta_tid_vekt <- c((fil_prognosar %>% as.numeric()):2100)
+        if (all(cont_klartext != "*")) tabort_contvar <- contvar_vekt[contvar_vekt != cont_klartext] 
         
-        profet_df <- profet_df %>% 
-          rename(any_of(rename_profet))                                                    # döp om kolumner så de heter samma som i pxweb-befolkningsprognoserna
+        befskript_df <- befskript_df %>% 
+          rename(any_of(rename_befskript))
         
-        regionkod_len <- if (any(str_detect(kolnamn, "lan_kod"))) 2 else 4                 # kolla om det är län eller kommuner, väljer längd på regionkoden utifrån vad vi har i datasetet
-        
-        profet_df <- profet_df %>% 
-          mutate(regionkod = regionkod %>% str_sub(1,regionkod_len),
-                 kön = ifelse(kön == 1, "män", "kvinnor"),
-                 ålder = ifelse(ålder == 100, paste0(ålder, "+ år"), paste0(ålder, " år")),
-                 år = år %>% as.character(),
-                 prognos_ar = fil_prognosar) %>%
-          filter(år %in% (fil_hamta_tid_vekt %>% as.character())) %>% 
-          left_join(regionnyckel, by = "regionkod") %>% 
-          relocate(region, .after = regionkod)
-        
-        tabort_contvar <- contvar_vekt[contvar_vekt != cont_klartext]                      # ta bort den innehållsvariabel som användaren vill ha ur vektorn, använd den för att ta bort variabler
+        befskript_df <- befskript_df %>% 
+          mutate(kön = ifelse(kön == 1, "män", "kvinnor"),
+                 ålder = ifelse(ålder > 99, "100+ år", paste0(ålder, " år")),
+                 år = år %>% as.character()) #%>%
+          #filter(år %in% (fil_hamta_tid_vekt %>% as.character())) %>% 
+        setDT(befskript_df)
+        befskript_df <- befskript_df[, lapply(.SD, sum, na.rm = TRUE), by = setdiff(names(befskript_df), names(befskript_df)[sapply(befskript_df, is.numeric)])]
         
         # ta bort variabler som användaren inte valt
-        profet_df <- profet_df %>% 
+        befskript_df <- befskript_df %>% 
           select(-all_of(tabort_contvar))
         
-        if (all(cont_klartext == "Födda")) profet_df <- profet_df %>% filter(ålder == 0)
+        if (all(cont_klartext == "Födda")) befskript_df <- befskript_df %>% filter(ålder == 0)
         
         # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
         # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
         if (long_format) {
           
-          profet_df <- profet_df %>% 
+          befskript_df <- befskript_df %>% 
             konvertera_till_long_for_contentscode_variabler(url_scbtabell)
           
         } # slut if-sats som kontrollera om vi vill ha df i long-format
-        return(profet_df)
-      } # slut funktion för att läsa in profetfiler
+        
       
-      retur_filer <- map2_dfr(filsokvagar, progn_ar, ~ las_in_profet_fil(.x, .y))
+      } # slut test om det finns .xlsx-filer (= filer från Hallands skript)
+      
+      
+      if (length(filsokvagar_csv) > 0){
+        # hämta regionnyckel
+        regionnyckel <- hamtaregtab()
+        
+        # behåll de som finns i region_vekt
+        if (!"20" %in% region_vekt) filsokvagar_csv <- filsokvagar_csv[!str_detect(filsokvagar_csv, "lan")]                        # ta bort länsfiler ur sokvagsvektorn om inte "20" är med som regionkod
+        if (!any(hamtakommuner(lan = "20", F, F, F) %in% region_vekt)) filsokvagar_csv <- filsokvagar_csv[!str_detect(filsokvagar_csv, "kommun")]      # ta bort kommunfiler ur sokvagsvektorn om ingen av Dalarnas kommuners kommunkoder är med
+  
+        # kontrollera vilka prognosår som finns bland profet-filerna i mappen som ska användas
+        progn_ar <- map_chr(filsokvagar_csv, ~ parse_number(.) %>% as.character()) 
+        
+        # vektor för att döpa om kolumner i profetfilen så att de blir samma som i pxwebs befolkningsprognostabeller
+        rename_profet <- c("regionkod", "region", "ålder" = "age", "kön" = "kon", "år" = "year", 
+                           "Folkmängd" = "pop", "Födda" = "fodda", "Döda" = "doda", "Inrikes inflyttning" = "inrikes_inflyttade", 
+                           "Inrikes utflyttning" = "inrikes_utflyttade", "Invandring" = "immigranter", "Utvandring" = "emigranter")
+        
+        contvar_vekt <- c("Folkmängd", "Födda", "Döda", "Inrikes inflyttning", "Inrikes utflyttning", "Invandring", "Utvandring")
+        if (all(cont_klartext == "*")) cont_klartext <- contvar_vekt
+        
+        las_in_profet_fil <- function(profetfil_sokvag, fil_prognosar) {
+          
+        if (any(hamta_tid_vekt != "*")) {
+          fil_start_ar <- as.numeric(fil_prognosar)  - 1                # ta bort -1 igen?
+          fil_jmfr_ar <- fil_start_ar + jmfr_vekt
+          fil_hamta_tid_vekt <- if (length(fil_jmfr_ar) > 0) c(fil_jmfr_ar, andra_ar_vekt) else andra_ar_vekt
+        } else fil_hamta_tid_vekt <- "*"
+          
+          # fil_prognosar <- read_xlsx(profetfil_sokvag, sheet = "Info") %>% 
+          #   pull() %>% 
+          #   .[!is.na(.)] %>% 
+          #   .[str_detect(., "prognosperiod")] %>% 
+          #   parse_number(.) %>% 
+          #   as.character()
+          
+          #profet_df <- read_xlsx(profetfil_sokvag, sheet = "Data")                          # gammal, när vi läste in excelfiler, nu kör vi csv (som vi zippar för att spara utrymme)
+          profet_df <- read_csv(profetfil_sokvag, show_col_types = FALSE) 
+          kolnamn <- names(profet_df)                                                        # hämta kolumnnamn för att kunna avgöra om det är kommuner eller län
+          
+          # kolla om det är kommunfil, i så fall lägger vi ihop in- och utflyttning inom län och från utanför län
+          if (all(c("utomin", "inomin", "utomut", "inomut") %in% kolnamn)) {
+            profet_df <- profet_df %>% 
+              mutate(inrikes_inflyttade = inomin + utomin,
+                     inrikes_utflyttade = inomut + utomut) %>% 
+              select(-c(inomin, utomin, inomut, utomut))
+          }
+          
+          if (all(fil_hamta_tid_vekt == "*")) fil_hamta_tid_vekt <- c((fil_prognosar %>% as.numeric()):2100)
+          
+          profet_df <- profet_df %>% 
+            rename(any_of(rename_profet))                                                    # döp om kolumner så de heter samma som i pxweb-befolkningsprognoserna
+          
+          regionkod_len <- if (any(str_detect(kolnamn, "lan_kod"))) 2 else 4                 # kolla om det är län eller kommuner, väljer längd på regionkoden utifrån vad vi har i datasetet
+          
+          profet_df <- profet_df %>% 
+            mutate(regionkod = regionkod %>% str_sub(1,regionkod_len),
+                   kön = ifelse(kön == 1, "män", "kvinnor"),
+                   ålder = ifelse(ålder == 100, paste0(ålder, "+ år"), paste0(ålder, " år")),
+                   år = år %>% as.character(),
+                   prognos_ar = fil_prognosar) %>%
+            filter(år %in% (fil_hamta_tid_vekt %>% as.character())) %>% 
+            left_join(regionnyckel, by = "regionkod") %>% 
+            relocate(region, .after = regionkod)
+          
+          if (all(cont_klartext != "*")) tabort_contvar <- contvar_vekt[contvar_vekt != cont_klartext]                      # ta bort den innehållsvariabel som användaren vill ha ur vektorn, använd den för att ta bort variabler
+          
+          # ta bort variabler som användaren inte valt
+          profet_df <- profet_df %>% 
+            select(-all_of(tabort_contvar))
+          
+          if (all(cont_klartext == "Födda")) profet_df <- profet_df %>% filter(ålder == 0)
+          
+          # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
+          # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
+          if (long_format) {
+            
+            profet_df <- profet_df %>% 
+              konvertera_till_long_for_contentscode_variabler(url_scbtabell)
+            
+          } # slut if-sats som kontrollera om vi vill ha df i long-format
+          return(profet_df)
+        } # slut funktion för att läsa in profetfiler
+        
+        retur_profet <- map2_dfr(filsokvagar_csv, progn_ar, ~ las_in_profet_fil(.x, .y))
+      } # slut test om det finns csv-filer att läsa in (= filer från Profet)
+      
+      retur_filer <- bind_rows(retur_profet, befskript_df)
       
       return(retur_filer)
       
