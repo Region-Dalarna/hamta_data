@@ -45,6 +45,7 @@ hamta_befprognos_data <- function(
   if (!require("pacman")) install.packages("pacman")
   p_load(tidyverse,
          pxweb,
+         data.table,
          readxl)
   options(scipen = 999)
   
@@ -174,11 +175,11 @@ hamta_befprognos_data <- function(
         contvar_vekt <- c("Folkmängd", "Födda", "Döda", "Inrikes inflyttning", "Inrikes utflyttning", "Invandring", "Utvandring")
         if (all(cont_klartext == "*")) cont_klartext <- contvar_vekt
       
-        if (any(hamta_tid_vekt != "*")) {
-          fil_start_ar <- as.numeric(fil_prognosar)  - 1                # ta bort -1 igen?
-          fil_jmfr_ar <- fil_start_ar + jmfr_vekt
-          fil_hamta_tid_vekt <- if (length(fil_jmfr_ar) > 0) c(fil_jmfr_ar, andra_ar_vekt) else andra_ar_vekt
-        } else fil_hamta_tid_vekt <- "*"
+        # if (any(hamta_tid_vekt != "*")) {
+        #   fil_start_ar <- as.numeric(fil_prognosar)  - 1                # ta bort -1 igen?
+        #   fil_jmfr_ar <- fil_start_ar + jmfr_vekt
+        #   fil_hamta_tid_vekt <- if (length(fil_jmfr_ar) > 0) c(fil_jmfr_ar, andra_ar_vekt) else andra_ar_vekt
+        # } else fil_hamta_tid_vekt <- "*"
       
         progn_ar <- map_chr(filsokvagar_xlsx, ~ parse_number(.) %>% as.character()) 
         
@@ -187,7 +188,7 @@ hamta_befprognos_data <- function(
                                filter(ar %in% (as.numeric(progn_ar)+jmfr_vekt-1))) %>%    # ta bara ut jämförelseåret
           list_rbind()
         
-        if (all(fil_hamta_tid_vekt == "*")) fil_hamta_tid_vekt <- c((fil_prognosar %>% as.numeric()):2100)
+        # if (all(fil_hamta_tid_vekt == "*")) fil_hamta_tid_vekt <- c((fil_prognosar %>% as.numeric()):2100)
         if (all(cont_klartext != "*")) tabort_contvar <- contvar_vekt[contvar_vekt != cont_klartext] 
         
         befskript_df <- befskript_df %>% 
