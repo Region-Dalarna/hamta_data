@@ -80,7 +80,7 @@ if (!require("pacman")) install.packages("pacman")
   px_uttag <- pxweb_get(url = url_uttag, query = varlista)
 
 var_vektor <- c(regionutbkod = "RegionUtb")
-var_vektor_klartext <- "region, där utbildningen bedrivs"
+var_vektor_klartext <- "region där utbildningen bedrivs"
   px_df <- as.data.frame(px_uttag)
   if (!is.na(var_vektor)) {      px_df <- px_df %>%
             cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
