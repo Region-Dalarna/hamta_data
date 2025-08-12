@@ -81,14 +81,17 @@ if (!require("pacman")) install.packages("pacman")
 
 var_vektor <- c(regionutbkod = "RegionUtb")
 
-var_vektor_klartext <- "region, där utbildningen bedrivs"
+var_vektor_klartext <- "region där utbildningen bedrivs"
   px_df <- suppress_specific_warning(
     as.data.frame(px_uttag)
   )
 
-  if (!is.na(var_vektor)) {      px_df <- px_df %>%
-            cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
-            select(any_of(var_vektor)))
+  if (!is.na(var_vektor)) {      
+    px_df <- suppress_specific_warning(
+      px_df %>%
+        cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
+                select(any_of(var_vektor)))
+    )
 
       px_df <- map2(names(var_vektor), var_vektor_klartext, ~ px_df %>% relocate(all_of(.x), .before = all_of(.y))) %>% list_rbind()
   }
