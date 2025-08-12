@@ -68,7 +68,7 @@ if (!require("pacman")) install.packages("pacman")
   "UtbLangd" = utblangd_vekt,
   "UtbExam" = utbexam_vekt,
   "ContentsCode" = cont_vekt,
-  "Tid" = tid_koder)
+  "Tid" = tid_koder) 
 
   if (all(is.na(utbildninriktn_klartext))) varlista <- varlista[names(varlista) != "UtbildnInriktn"]
   if (all(is.na(regionutb_vekt))) varlista <- varlista[names(varlista) != "RegionUtb"]
