@@ -101,6 +101,7 @@ hamta_rams_bas_region_inrikesutrikes_kon_tid_scb <- function(
         names(varlista)[names(varlista) == "Fodelseregion"] <- "InrikesUtrikes"
       }
       if (all(is.na(inrikesutrikes_klartext))) varlista <- varlista[names(varlista) != "InrikesUtrikes"]
+      if (all(is.na(inrikesutrikes_klartext))) varlista <- varlista[names(varlista) != "Fodelseregion"]
       if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
       
       px_uttag <- pxweb_get(url = url_uttag, query = varlista)
@@ -131,14 +132,15 @@ hamta_rams_bas_region_inrikesutrikes_kon_tid_scb <- function(
         rename(any_of(dop_om_kol)) %>%
         # Ändra värden i kolumnen "kön"
         mutate(
-          kön = if_else(kön == "totalt", "kvinnor och män", kön),
-          # Ändra värden i kolumnen "födelseregion" om den existerar
-          födelseregion = case_when(
-            födelseregion == "inrikes född" ~ "inrikes födda",
-            födelseregion == "utrikes född" ~ "utrikes födda",
-            födelseregion == "totalt" ~ "inrikes och utrikes födda",
-            TRUE ~ födelseregion
-          ),
+          across(any_of("kön"),
+                 ~ if_else(as.character(.x) == "totalt", "kvinnor och män", as.character(.x))),
+          across(any_of("födelseregion"),
+                 ~ case_when(
+                   .x == "inrikes född"  ~ "inrikes födda",
+                   .x == "utrikes född"  ~ "utrikes födda",
+                   .x == "totalt"        ~ "inrikes och utrikes födda",
+                   TRUE                  ~ .x
+                 )),
           ålder = "20-64 år") %>% 
         select(any_of(c("år", "regionkod", "region", "födelseregion", "kön", 
                         "ålder", "sysselsättningsgrad")))
