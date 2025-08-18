@@ -43,10 +43,10 @@ hamta_befprognos_data <- function(
   # ===========================================================================================================
   
   if (!require("pacman")) install.packages("pacman")
-  p_load(tidyverse,
-         pxweb,
+  p_load(pxweb,
          data.table,
-         readxl)
+         readxl,
+         tidyverse)
   options(scipen = 999)
   
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R", encoding = "utf-8", echo = FALSE)
@@ -194,9 +194,9 @@ hamta_befprognos_data <- function(
       
         progn_ar <- map_chr(filsokvagar_xlsx, ~ parse_number(.) %>% as.character()) 
         
-        befskript_df <- map2(filsokvagar_xlsx, progn_ar, ~ read_xlsx(.x) %>% 
+        befskript_df <- map2(filsokvagar_xlsx, progn_ar, ~ readxl::read_xlsx(.x) %>% 
                               mutate(prognos_ar = .y) %>%
-                               filter(ar %in% (as.numeric(progn_ar)+jmfr_vekt-1))) %>%    # ta bara ut jämförelseåret
+                               dplyr::filter(ar %in% (as.numeric(progn_ar)+jmfr_vekt-1))) %>%    # ta bara ut jämförelseåret
           list_rbind()
         
         # if (all(fil_hamta_tid_vekt == "*")) fil_hamta_tid_vekt <- c((fil_prognosar %>% as.numeric()):2100)
