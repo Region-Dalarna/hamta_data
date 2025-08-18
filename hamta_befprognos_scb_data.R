@@ -6,7 +6,7 @@ hamta_befprognos_data <- function(
     cont_klartext = "Folkmängd",       # "Folkmängd", "Födda", "Döda", "Inrikes inflyttning", "Inrikes utflyttning", "Invandring", "Utvandring"
     tid_vekt = "*",                    # kan vara enskilda år, om "+" eller "-" skickas med så tas prognosåret + eller - antalet år som skickas med, 
                                        # ex. "+0" så tas själva prognosåret med. Om man vill ha pronosåret och ytterligare 10 år efter det så lägger man med: paste0("+", c(0:10))
-    url_prognos_vektor = "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0401/BE0401A/BefProgOsiktRegN",
+    url_prognos_vektor = "G:/Samhällsanalys/Statistik/Befolkningsprognoser/Profet/datafiler/",
     
                 # profet: "G:/Samhällsanalys/Statistik/Befolkningsprognoser/Profet/datafiler/"
                 #  c("https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0401/BE0401A/BefProgOsiktRegN",
@@ -51,8 +51,19 @@ hamta_befprognos_data <- function(
   
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R", encoding = "utf-8", echo = FALSE)
   
-  url_scbtabell <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0401/BE0401A/BefProgOsiktRegN"   # används för profet att hämta innehållsvariabler
-
+  url_scbtabell <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0401/BE0401A/BefProgOsiktRegN"
+  
+  before_n <- length(url_prognos_vektor)
+  
+  # byt ut endast om det inte är https:// OCH inte en befintlig mapp
+  to_replace <- !str_detect(url_prognos_vektor, "^https://") & !dir.exists(url_prognos_vektor)
+  
+  url_prognos_vektor[to_replace] <- url_scbtabell
+  url_prognos_vektor <- unique(url_prognos_vektor)
+  
+  if (any(to_replace)) cat("Ersatte", sum(to_replace), "värde(n) med SCB-url.\n")
+  if (length(url_prognos_vektor) < before_n) cat("Tog bort", before_n - length(url_prognos_vektor), "dubblett(er).\n")
+    
   #if (region_vekt[!hamtakommuner(lan = profet_lan, T, F)] )
   
   hamta_url_rad_i_vektor <- function(hamta_url) {
