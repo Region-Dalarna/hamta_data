@@ -31,11 +31,14 @@ hamta_syss_vistelsetid_inr_utr_fodda_scb <- function(
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
   
   
-  url_adress <- c("https://api.scb.se/OV0104/v1/doris/sv/ssd/AA/AA0003/AA0003B/IntGr1RikKonUtb",
-                  "https://api.scb.se/OV0104/v1/doris/sv/ssd/AA/AA0003/AA0003B/IntGr1LanKonUtb",
-                  "https://api.scb.se/OV0104/v1/doris/sv/ssd/AA/AA0003/AA0003B/IntGr1KomKonUtb")
+  url_adress <- c("https://api.scb.se/OV0104/v1/doris/sv/ssd/AA/AA0003/AA0003X/IntGr1RikKonUtb",
+                  "https://api.scb.se/OV0104/v1/doris/sv/ssd/AA/AA0003/AA0003X/IntGr1LanKonUtb",
+                  "https://api.scb.se/OV0104/v1/doris/sv/ssd/AA/AA0003/AA0003X/IntGr1KomKonUtb",
+                  "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003B/IntGr1RikUtbBAS",
+                  "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003B/IntGr1LanUtbBAS",
+                  "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003B/IntGr1KomUtbBAS")
   
-  giltig_tid <- hamta_giltiga_varden_fran_tabell(url_adress[1], "tid")
+  giltig_tid <- map(url_adress, ~ hamta_giltiga_varden_fran_tabell(.x, "tid")) %>% unlist() %>% unique()
   
   # ge tid_var värde utifrån om det är NA, "9999" eller har medskickade år
   tid_var <- if (all(is.na(tid_vekt))) giltig_tid else if (all(tid_vekt == "9999")) giltig_tid %>% max() else tid_vekt
@@ -46,15 +49,24 @@ hamta_syss_vistelsetid_inr_utr_fodda_scb <- function(
   # funktion för att hämta data i de tre olika tabellerna (en för riket, en för län och en för kommuner)
     hamta_data_url <- function(vald_url) {
       
-      giltiga_regioner <- hamta_giltiga_varden_fran_tabell(vald_url, "region")
+      px_meta <- pxweb_get(vald_url)
+      
+      giltiga_regioner <- hamta_giltiga_varden_fran_tabell(px_meta, "region")
       region_var <- region_vekt[region_vekt %in% giltiga_regioner]
       
-      if (length(region_var) > 0) {
+      giltig_tid_tab <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
+      hamta_tid <- tid_var[tid_var %in% giltig_tid_tab]
+      
+      if (length(region_var) > 0 & length(hamta_tid) > 0) {
         
-        cont_var <- hamta_kod_med_klartext(vald_url, cont_klartext, skickad_fran_variabel = "contentscode")
-        kon_var <- hamta_kod_med_klartext(vald_url, kon_klartext, skickad_fran_variabel = "kon")
-        utbniva_var <- hamta_kod_med_klartext(vald_url, utbniva_klartext, skickad_fran_variabel = "utbniv")
-        bakgr_var <- hamta_kod_med_klartext(vald_url, bakgr_klartext, skickad_fran_variabel = "BakgrVar") 
+        cont_var <- hamta_kod_med_klartext(px_meta, cont_klartext, skickad_fran_variabel = "contentscode")
+        if (length(cont_var) == 0) cont_var <- hamta_kod_med_klartext(px_meta, cont_klartext %>% str_remove(" \\(.*$"), skickad_fran_variabel = "contentscode")
+        if (length(cont_var) == 0) cont_var <- hamta_kod_med_klartext(px_meta, cont_klartext %>% str_remove(" \\(.*$") %>% str_replace("förvärvsarbetande", "sysselsatta"), skickad_fran_variabel = "contentscode")
+        if (length(cont_var) == 0) cont_var <- hamta_kod_med_klartext(px_meta, cont_klartext %>% str_replace("sysselsatta", "förvärvsarbetande (ny definition från och med 2019)"), skickad_fran_variabel = "contentscode")
+        
+        kon_var <- hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon")
+        utbniva_var <- hamta_kod_med_klartext(px_meta, utbniva_klartext, skickad_fran_variabel = "utbniv")
+        bakgr_var <- hamta_kod_med_klartext(px_meta, bakgr_klartext, skickad_fran_variabel = "BakgrVar") 
         
         # API-uttag 
         px_uttag <- pxweb_get(url = vald_url,
@@ -64,7 +76,7 @@ hamta_syss_vistelsetid_inr_utr_fodda_scb <- function(
                                 UtbNiv = utbniva_var,
                                 BakgrVar = bakgr_var,
                                 ContentsCode = cont_var,
-                                Tid = tid_var
+                                Tid = hamta_tid
                               )
         ) 
         
@@ -81,6 +93,11 @@ hamta_syss_vistelsetid_inr_utr_fodda_scb <- function(
             konvertera_till_long_for_contentscode_variabler(vald_url)
           
         } # slut if-sats som kontrollera om vi vill ha df i long-format
+        
+        px_df <- px_df %>% 
+          rename_with(~ .x %>% 
+                        str_remove(" \\(.*$") %>%         # ta bort mellanslag + första parentes och allt efter
+                        str_replace("förvärvsarbetande", "sysselsatta"))
         
         return(px_df)
       } # slut if-sats om aktuell region finns i tabellen      
