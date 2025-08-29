@@ -196,7 +196,8 @@ hamta_befprognos_data <- function(
         
         befskript_df <- map2(filsokvagar_xlsx, progn_ar, ~ readxl::read_xlsx(.x) %>% 
                               mutate(prognos_ar = .y) %>%
-                               dplyr::filter(ar %in% (as.numeric(progn_ar)+jmfr_vekt-1))) %>%    # ta bara ut jämförelseåret
+                               #dplyr::filter(ar %in% (as.numeric(progn_ar)+jmfr_vekt-1))) %>%    # ta bara ut jämförelseåret
+                               dplyr::filter(ar %in% hamta_tid_vekt)) %>%    # ta bara ut jämförelseåret
           list_rbind()
         
         # if (all(fil_hamta_tid_vekt == "*")) fil_hamta_tid_vekt <- c((fil_prognosar %>% as.numeric()):2100)
