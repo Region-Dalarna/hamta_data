@@ -101,7 +101,7 @@ hamta_flytt_regso_region_bakgrund_tid_scb <- function(
   
   # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
   # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
-  if (long_format & !wide_om_en_contvar) px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag)
+  if (long_format & !wide_om_en_contvar) px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag,content_var = "flytt_variabel")
   
   # Om användaren vill spara data till en Excel-fil
   if (!is.na(output_mapp) & !is.na(excel_filnamn)){
