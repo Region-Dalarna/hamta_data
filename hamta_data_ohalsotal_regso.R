@@ -32,6 +32,9 @@ hamta_data_ohalsotal_regso <- function(region_vekt = "20",
   #
   # Skapad av Jon Frank 2024-02-08
   #             Reviderat av Peter Möller 2024-02-13
+  #
+  # Ändrat ett par felaktigheter under if (region_vekt != "*")
+  # 
   # ===========================================================================================================
   
   if (!require("pacman")) install.packages("pacman")
@@ -54,20 +57,36 @@ hamta_data_ohalsotal_regso <- function(region_vekt = "20",
   # vi tar ut endast RegSO eller DeSO beroende på vad användaren valt
   alla_regionkoder <- if(region_indelning == "RegSO") alla_regionkoder[str_detect(alla_regionkoder, "R")] else alla_regionkoder[str_detect(alla_regionkoder, "A|B|C")]
   
-  if (region_vekt != "*") {
+  if (!("*" %in% region_vekt)) {
     # här delar vi upp de medskickade regionkoderna i RegSO/DeSO, länskoder och kommunkoder 
-    fardiga_regionkoder <- region_vekt[str_length(region_vekt) == 9]           # RegSO eller DeSO
+    fardiga_regionkoder <- region_vekt[str_length(region_vekt) > 7]           # RegSO eller DeSO
     lanskoder <- region_vekt[str_length(region_vekt) == 2]                     # länskoder
     kommunkoder <- region_vekt[str_length(region_vekt) == 4]                   # kommunkoder
     
     # här hämtar vi alla RegSO/DeSO för de länskoder eller kommunkoder som skickats med
     region_lan <- alla_regionkoder[str_sub(alla_regionkoder, 1,2) %in% lanskoder & str_length(alla_regionkoder) > 7]
-    region_kommun <- alla_regionkoder[str_sub(alla_regionkoder, 1,4) %in% lanskoder & str_length(alla_regionkoder) > 7]
+    region_kommun <- alla_regionkoder[str_sub(alla_regionkoder, 1,4) %in% kommunkoder & str_length(alla_regionkoder) > 7]
     
     # vi lägger ihop vektorerna för färdiga RegSO/DeSO, samt RegSO/DeSO för de län och kommuner som skickats med samt tar bort dubletter
     alla_region <- c(fardiga_regionkoder, region_lan, region_kommun) %>% .[!duplicated(.)]
     
   } else alla_region <- alla_regionkoder                     # om användaren vill ha samtliga koder för RegSO eller DeSO
+  
+  # Tidigare - felaktigt
+  # if (region_vekt != "*") {
+  #   # här delar vi upp de medskickade regionkoderna i RegSO/DeSO, länskoder och kommunkoder 
+  #   fardiga_regionkoder <- region_vekt[str_length(region_vekt) == 9]           # RegSO eller DeSO
+  #   lanskoder <- region_vekt[str_length(region_vekt) == 2]                     # länskoder
+  #   kommunkoder <- region_vekt[str_length(region_vekt) == 4]                   # kommunkoder
+  #   
+  #   # här hämtar vi alla RegSO/DeSO för de länskoder eller kommunkoder som skickats med
+  #   region_lan <- alla_regionkoder[str_sub(alla_regionkoder, 1,2) %in% lanskoder & str_length(alla_regionkoder) > 7]
+  #   region_kommun <- alla_regionkoder[str_sub(alla_regionkoder, 1,4) %in% lanskoder & str_length(alla_regionkoder) > 7]
+  #   
+  #   # vi lägger ihop vektorerna för färdiga RegSO/DeSO, samt RegSO/DeSO för de län och kommuner som skickats med samt tar bort dubletter
+  #   alla_region <- c(fardiga_regionkoder, region_lan, region_kommun) %>% .[!duplicated(.)]
+  #   
+  # } else alla_region <- alla_regionkoder                     # om användaren vill ha samtliga koder för RegSO eller DeSO
   #########################################################################################################################
   
   # Gör om från klartext
