@@ -15,6 +15,7 @@ hamta_data_ohalsotal_regso <- function(region_vekt = "20",
                                        filnamn = "ohalsotal_regso.xlsx",  # Filnamn om man vill spara en excelfil i output_mapp.
                                        returnera_data = TRUE,             # Om man vill returnera data som en dataframe från funktionen
                                        long_format = TRUE,                # om man tar med fler än en innehållsvariabel så görs format om från wide till long
+                                       wide_om_en_contvar = TRUE,			# TRUE = om man vill behålla wide-format om det bara finns en innehållsvariabel, FALSE om man vill konvertera till long-format även om det bara finns en innehållsvariabel
                                        tid = "*")                         # Sätts till "9999" om man enbart vill ha senaste år, alternativt ett intervall som slutar 
                                                                           # på "9999". "*" ger samtliga år
 {
@@ -33,8 +34,7 @@ hamta_data_ohalsotal_regso <- function(region_vekt = "20",
   # Skapad av Jon Frank 2024-02-08
   #             Reviderat av Peter Möller 2024-02-13
   #
-  # Ändrat ett par felaktigheter under if (region_vekt != "*"). Har dessutom ändrat under if (long_format & length(cont_klartext) > 1) 
-  # till cont_vekt) > 1 då cont_klartext är 1 vid "*".
+  # Ändrat ett par felaktigheter under if (region_vekt != "*"). Har dessutom ändrat under if-satsen kopplat till long-format då den inte fungerade Jon 2025-09-04
   # 
   # ===========================================================================================================
   
@@ -114,7 +114,13 @@ hamta_data_ohalsotal_regso <- function(region_vekt = "20",
   
   # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
   # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
-  if (long_format & length(cont_vekt) > 1) {
+  # Tidigare
+  # if (long_format & length(cont_klartext) > 1) {
+  #   ohalsotal <- ohalsotal %>% 
+  #     konvertera_till_long_for_contentscode_variabler(api_url = px_meta, content_var = "ohalso_variabel")
+  # } # slut if-sats som kontrollera om vi vill ha df i long-format
+  
+  if (long_format & !wide_om_en_contvar) {
     ohalsotal <- ohalsotal %>% 
       konvertera_till_long_for_contentscode_variabler(api_url = px_meta, content_var = "ohalso_variabel")
   } # slut if-sats som kontrollera om vi vill ha df i long-format
