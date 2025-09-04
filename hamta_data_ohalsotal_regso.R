@@ -33,7 +33,7 @@ hamta_data_ohalsotal_regso <- function(region_vekt = "20",
   # Skapad av Jon Frank 2024-02-08
   #             Reviderat av Peter Möller 2024-02-13
   #
-  # Ändrat ett par felaktigheter under if (region_vekt != "*")
+  # Ändrat ett par felaktigheter under if (region_vekt != "*"). Har dessutom ändrat under if (long_format & length(cont_klartext) > 1) då den kodsnutten inte verkar fungera (se bortkommenterad del)
   # 
   # ===========================================================================================================
   
@@ -115,7 +115,8 @@ hamta_data_ohalsotal_regso <- function(region_vekt = "20",
   # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
   if (long_format & length(cont_klartext) > 1) {
     ohalsotal <- ohalsotal %>% 
-      konvertera_till_long_for_contentscode_variabler(api_url = px_meta, content_var = "ohalso_variabel")
+      #konvertera_till_long_for_contentscode_variabler(api_url = px_meta, content_var = "ohalso_variabel")
+      konvertera_till_long_for_contentscode_variabler(url_uttag,content_var = "ohalso_variabel")
   } # slut if-sats som kontrollera om vi vill ha df i long-format
   
   if (!is.na(output_mapp) & !is.na(filnamn)){
