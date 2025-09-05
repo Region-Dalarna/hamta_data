@@ -41,6 +41,7 @@ hamta_data_inkomst_regso <- function(region_vekt = "20",
   # Nettoinkomst är summan av en persons alla skattepliktiga och skattefria inkomster minus skatt och övriga negativa transfereringar (exempelvis återbetalt studielån).
   #
   # Skapad av Jon Frank 2024-02-22
+  # Reviderat av Jon Frank 2025-09-05, se hamta_data_ohalsotal_regso för kommentarer om ändringar
   # ===========================================================================================================
   
   if (!require("pacman")) install.packages("pacman")
@@ -63,20 +64,36 @@ hamta_data_inkomst_regso <- function(region_vekt = "20",
   # vi tar ut endast RegSO eller DeSO beroende på vad användaren valt
   alla_regionkoder <- if(region_indelning == "RegSO") alla_regionkoder[str_detect(alla_regionkoder, "R")] else alla_regionkoder[str_detect(alla_regionkoder, "A|B|C")]
   
-  if (region_vekt != "*") {
+  if (!("*" %in% region_vekt)) {
     # här delar vi upp de medskickade regionkoderna i RegSO/DeSO, länskoder och kommunkoder 
-    fardiga_regionkoder <- region_vekt[str_length(region_vekt) == 9]           # RegSO eller DeSO
+    fardiga_regionkoder <- region_vekt[str_length(region_vekt) > 7]           # RegSO eller DeSO
     lanskoder <- region_vekt[str_length(region_vekt) == 2]                     # länskoder
     kommunkoder <- region_vekt[str_length(region_vekt) == 4]                   # kommunkoder
     
     # här hämtar vi alla RegSO/DeSO för de länskoder eller kommunkoder som skickats med
     region_lan <- alla_regionkoder[str_sub(alla_regionkoder, 1,2) %in% lanskoder & str_length(alla_regionkoder) > 7]
-    region_kommun <- alla_regionkoder[str_sub(alla_regionkoder, 1,4) %in% lanskoder & str_length(alla_regionkoder) > 7]
+    region_kommun <- alla_regionkoder[str_sub(alla_regionkoder, 1,4) %in% kommunkoder & str_length(alla_regionkoder) > 7]
     
     # vi lägger ihop vektorerna för färdiga RegSO/DeSO, samt RegSO/DeSO för de län och kommuner som skickats med samt tar bort dubletter
     alla_region <- c(fardiga_regionkoder, region_lan, region_kommun) %>% .[!duplicated(.)]
     
   } else alla_region <- alla_regionkoder                     # om användaren vill ha samtliga koder för RegSO eller DeSO
+  
+  # Tidigare
+  # if (region_vekt != "*") {
+  #   # här delar vi upp de medskickade regionkoderna i RegSO/DeSO, länskoder och kommunkoder 
+  #   fardiga_regionkoder <- region_vekt[str_length(region_vekt) == 9]           # RegSO eller DeSO
+  #   lanskoder <- region_vekt[str_length(region_vekt) == 2]                     # länskoder
+  #   kommunkoder <- region_vekt[str_length(region_vekt) == 4]                   # kommunkoder
+  #   
+  #   # här hämtar vi alla RegSO/DeSO för de länskoder eller kommunkoder som skickats med
+  #   region_lan <- alla_regionkoder[str_sub(alla_regionkoder, 1,2) %in% lanskoder & str_length(alla_regionkoder) > 7]
+  #   region_kommun <- alla_regionkoder[str_sub(alla_regionkoder, 1,4) %in% lanskoder & str_length(alla_regionkoder) > 7]
+  #   
+  #   # vi lägger ihop vektorerna för färdiga RegSO/DeSO, samt RegSO/DeSO för de län och kommuner som skickats med samt tar bort dubletter
+  #   alla_region <- c(fardiga_regionkoder, region_lan, region_kommun) %>% .[!duplicated(.)]
+  #   
+  # } else alla_region <- alla_regionkoder                     # om användaren vill ha samtliga koder för RegSO eller DeSO
   #########################################################################################################################
   
   # Gör om från klartext
@@ -103,9 +120,9 @@ hamta_data_inkomst_regso <- function(region_vekt = "20",
   
   # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
   # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
-  if (long_format & length(cont_klartext) > 1) {
+  if (long_format & !wide_om_en_contvar) {
     inkomst <- inkomst %>% 
-      konvertera_till_long_for_contentscode_variabler(api_url = px_meta, content_var = "ohalso_variabel")
+      konvertera_till_long_for_contentscode_variabler(api_url = px_meta, content_var = "inkomst_variabel")
   } # slut if-sats som kontrollera om vi vill ha df i long-format
   
   if (!is.na(output_mapp) & !is.na(filnamn)){
