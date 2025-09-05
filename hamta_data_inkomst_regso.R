@@ -15,6 +15,7 @@ hamta_data_inkomst_regso <- function(region_vekt = "20",
                                      filnamn = "inkomst_regso.xlsx",  # Filnamn om man vill spara en excelfil i output_mapp.
                                      returnera_data = TRUE,             # Om man vill returnera data som en dataframe från funktionen
                                      long_format = TRUE,                # om man tar med fler än en innehållsvariabel så görs format om från wide till long
+                                     wide_om_en_contvar = TRUE,			# TRUE = om man vill behålla wide-format om det bara finns en innehållsvariabel, FALSE om man vill konvertera till long-format även om det bara finns en innehållsvariabel
                                      tid = "*")                         # Sätts till "9999" om man enbart vill ha senaste år, alternativt ett intervall som slutar 
 # på "9999". "*" ger samtliga år
 {
