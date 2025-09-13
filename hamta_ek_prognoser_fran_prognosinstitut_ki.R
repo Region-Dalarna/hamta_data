@@ -1,7 +1,9 @@
 
 hamta_ek_prognoser_fran_prognosinstitut_ki <- function(
     prognos_ar = "*", 
-    bara_senaste_prognos = TRUE) {
+    bara_senaste_prognos = TRUE,           # tar bara med vara prognosinstituts senaste år
+    ta_bort_gamla_ar = TRUE                # tar bort år som är innan nu, det år som är nu kommer med
+    ) {
  
   
   # Laddar hem data som Konjunkturinstitutet sammanställt från olika banker och andra institut på hur de prognosticerar 
@@ -18,135 +20,121 @@ hamta_ek_prognoser_fran_prognosinstitut_ki <- function(
          openxlsx)
   
   options(dplyr.summarise.inform = FALSE)
-  url_progn <- "https://www.konj.se/prognosjamforelse"       # url till Konjunkturinstitutets webbsida med ekonomiska prognoser
+  url_progn <- "https://www.konj.se/publikationer/prognosjamforelse"       # url till Konjunkturinstitutets webbsida med ekonomiska prognoser
   
   # ======================== hämta fil med nyckeltabell för prognosinstitut från Konjunkturinstitutet ========================
   # extrahera tabell med koder och klartext för prognosinstitut direkt från konjunkturinstitutets webbsida
   progn_html <- read_html(url_progn)
   
-  nyckel_tabell_raw <- progn_html %>% 
-    html_nodes(xpath = "//*[@id='svid12_1998392e14f7d36ec6bbe77a']") %>% 
-    as.character()
-    # xml_contents() %>% 
-    # html_text(trim = FALSE) %>% 
-    # .[. != ""]
-  
-  # nyckel_tabell <- tabell_raw %>% 
-  #   str_replace_all("(?<=\\p{Lu})(?=\\p{Lu})", "\n") %>% 
-  #   str_replace_all(" = ", "\t")
-  
-  ## lösning när inte rvest och html_nodes och xml_contents fungerade
-  # html_txt <- readLines(url_progn)
-  #nyckel_tabell_raw <- html_txt[html_txt %>% str_detect("svid12_1998392e14f7d36ec6bbe77a")]
-  nyckel_tabell <- nyckel_tabell_raw %>%
-    str_extract("<p class=\\\"normal\\\">(.*?)</p></div>\\n</div>") %>%
-    str_replace_all("<p class=\\\"normal\\\">|</p></div>\\n</div>", "") %>%
-    str_replace_all("<br>", "\n") %>%
-    str_replace_all(" = ", "\t")
-    
-  nyckel_df <- read_delim(nyckel_tabell, delim = "\t", col_names = c("Prognosinstitut", "Prognosinstitut_namn"), show_col_types = FALSE) %>% 
-    mutate(Prognosinstitut = Prognosinstitut %>% toupper(),
-           Prognosinstitut_namn = case_when(Prognosinstitut == "OECD" ~ "OECD",
-                                            Prognosinstitut == "EU" ~ "EU (Kommissionen)",
-                                            Prognosinstitut == "LO" ~ "LO",
-                                            Prognosinstitut == "REG" ~ "Regeringen",
-                                            Prognosinstitut == "Reg" ~ "Regeringen",
-                                            Prognosinstitut == "SEB" ~ "SEB",
-                                            Prognosinstitut == "SKR" ~ "SKR",
-                                            TRUE ~ Prognosinstitut_namn),
-           Prognosinstitut = Prognosinstitut %>% toupper())
-  
-  # ======================== hämta fil med ekonomiska prognoser från Konjunkturinstitutet ========================
-  # hämta html från webbsida
-  progn_html <- read_html(url_progn)
-  
-  # extrahera länk till Progtab.xlsx som finns på webbsidan
-  progn_lank <- progn_html %>% 
-    html_nodes("a") %>% 
+  prognos_xlsx_url <- progn_html %>%
+    html_nodes("a") %>%
     html_attr("href") %>% 
-    str_subset("Progtab.xlsx")
+    .[str_detect(., "prognos") & str_detect(., "xlsx")]
   
-  prognos_fil_url <- paste0("https://www.konj.se", progn_lank)
+  temp_xlsx <- tempfile(fileext = ".xlsx")
   
-  # ladda ner filen som temporär fil som vi läser in och därefter raderar
-  temp_fil <- tempfile(fileext = ".xlsx")
-  capture.output(download.file(prognos_fil_url, temp_fil, mode = "wb"), type = "message")
+  # Ladda ner excelfilen till temp-filen
+  GET(prognos_xlsx_url, write_disk(temp_xlsx, overwrite = TRUE))
   
-  # läs in excelfil och lista flikar
-  progn_flikar <- excel_sheets(temp_fil)
+  # Se till att tempfilen tas bort när R-sessionen avslutas
+  on.exit(unlink(temp_xlsx), add = TRUE)
   
-  # ta bort flik som innehåller ordet "Utskrift"
-  progn_flikar <- progn_flikar[!grepl("Utskrift", progn_flikar)]
+  # Läs in filen som en data.frame (tibble)
   
-  sok_prognos_ar <- prognos_ar %>% as.character() %>% paste0(collapse = "|")
+  progn_flikar <- excel_sheets(temp_xlsx) %>% 
+    .[!str_detect(tolower(.), "utskrift")]
   
-  if (any(prognos_ar != "*")) progn_flikar <- progn_flikar[str_detect(progn_flikar, sok_prognos_ar)]
+  institutnyckelflik <- progn_flikar %>% 
+    .[str_detect(tolower(.), "inst")]
   
-  if (length(progn_flikar) == 0) stop("Valt/valda prognosår finns inte i datasetet")
+  progn_list <- map(progn_flikar, ~ read.xlsx(temp_xlsx, sheet = .x, colNames = FALSE))
+  names(progn_list) <- progn_flikar
   
-  # Funktion för att bearbeta excelfil med prognoser
-  bearbeta_excelflik <- function(excelfil, excelflik, bara_senaste = TRUE) {
+  institutionnyckel <- pluck(progn_list, institutnyckelflik) %>% 
+    rename(inst_kod = 1, Prognosinstitut = 2, Prognosinstitut_eng = 3) %>% 
+    mutate(inst_kod = inst_kod %>% toupper())
   
-    inlast_df <- read_excel(excelfil, sheet = excelflik, range = cell_cols("A:YA"), .name_repair = "minimal")
+  las_in_flik <- function(inlast_flik, inlast_flik_namn) {
     
-    # hitta prognosåret i kolumnamnet eller i första kolumnen
-    # Steg 1: Sök efter kolumnnamn som innehåller "Prognosjämförelse"
-    finns_i_kolumn <- inlast_df %>% 
-      select(all_of(contains("Prognosjämförelse"))) %>% 
-      names()
+    fliknamn <- inlast_flik_namn %>% str_extract("-?[0-9]+\\.?[0-9]*")
     
-    names(inlast_df) <- paste0("Kolumn_", 1:ncol(inlast_df))
+    inlast_flik <- inlast_flik %>%
+      mutate(across(everything(), ~ na_if(., ""))) %>%
+      filter(if_any(everything(), ~ !is.na(.))) %>%       # ta bort helt tomma rader
+      select(where(~ any(!is.na(.)))) %>%                 # ta bort helt tomma kolumner
+      filter(if_any(2:ncol(.), ~ !is.na(.)))
     
-    # Steg 2: Extrahera numeriskt värde om kolumn finns, annars leta i raderna
-    flik_prognos_ar <- if (length(finns_i_kolumn) > 0) {
-      finns_i_kolumn %>% 
-        parse_number()
-    } else {
-      inlast_df %>% 
-        filter(!is.na(inlast_df[[1]]),
-               str_detect(inlast_df[[1]], "Prognosjämförelse")) %>%
-        dplyr::pull(1) %>% 
-        map_dbl(parse_number) %>%
-        first()
-    }
+    bnp_rad <- inlast_flik %>%
+      filter(.[[1]] == "BNP") 
     
-    # ta bort rader som inte ska vara kvar i datasetet
-    retur_df <- inlast_df %>% 
-      filter(!if_all(everything(), is.na),
-             !str_detect(.[[1]], "där inte annat anges|Kalenderkorrigerad|Årsgenomsnitt|Prognosjämförelse")) 
+    varde_vektor <- unlist(bnp_rad[ , -1])
+    sista_kolumn <- max(which(!is.na(varde_vektor))) + 1 
     
-    # transformera datasetet genom att först göra om kolumner till rader och tvärtom, därefter göra om det till long-format
-    retur_df <- retur_df %>% t() %>% as.data.frame() %>% 
-      setNames(., unlist(.[1, ])) %>%  # Sätt kolumnnamnen till de värden som finns i rad 1
-      slice(-1) %>% 
-      pivot_longer(cols = 4:20, names_to = "variabel", values_to = "varde", values_drop_na = TRUE) %>% 
-      mutate(Publiceringsdatum = convertToDate(Publiceringsdatum),
-             prognos_ar = flik_prognos_ar)
+    inlast_flik <- inlast_flik[, 1:sista_kolumn]
     
-    # markera det senaste värdet för varje Prognosinstitut och variabel
-    retur_df <- retur_df %>% 
-      group_by(Prognosinstitut, variabel) %>% 
-      mutate(senaste_progn = ifelse(Publiceringsdatum == max(Publiceringsdatum), 1, 0)) %>% 
-      ungroup()
-
-    if (bara_senaste) retur_df <- retur_df %>% filter(senaste_progn == 1)
+    inst_kod   <- unlist(inlast_flik[1, -1])
+    publiceringsdatum <- unlist(inlast_flik[2, -1])
+    publiceringsvecka <- unlist(inlast_flik[3, -1])
     
-    return(retur_df)
-  } # slut funktion
+    data <- inlast_flik[-c(1:3), ]
+    
+    inlast_flik_long <- data %>%
+      pivot_longer(
+        cols = -1,
+        names_to = "col",
+        values_to = "varde"
+      ) %>%
+      mutate(
+        variabel           = .[[1]],
+        inst_kod    = rep(inst_kod,   times = nrow(data)),
+        publiceringsdatum  = as.Date(as.integer(rep(publiceringsdatum, times = nrow(data))), origin = "1899-12-30"),
+        publiceringsvecka  = rep(publiceringsvecka, times = nrow(data))
+      ) %>%
+      select(inst_kod, publiceringsdatum, publiceringsvecka, variabel, varde) %>% 
+      mutate(publiceringsdatum = publiceringsdatum %>% as.Date(origin = "1899-12-30"),
+             prognos_for_ar = fliknamn) %>% 
+      filter(!is.na(varde))
+    
+    return(inlast_flik_long)
+  }
   
-  
-  prognoser_df <- map(progn_flikar, ~ bearbeta_excelflik(excelfil = temp_fil, 
-                                                         excelflik = .x,
-                                                         bara_senaste = bara_senaste_prognos),) %>% 
+  # läs in alla flikar som inte är nyckel för prognosinstitut, koppla på nyckeln och ändra vissa 
+  # prognosinstituts namn till kortare versioner
+  prognoser_df <- imap(progn_list[!str_detect(tolower(names(progn_list)), "inst")], ~ las_in_flik(.x, .y)) %>% 
     list_rbind() %>% 
-    mutate(Prognosinstitut = Prognosinstitut %>% toupper())
+    mutate(inst_kod = inst_kod %>% toupper() %>% str_remove("¹")) %>% 
+    left_join(institutionnyckel %>% select(-Prognosinstitut_eng), by = "inst_kod") %>% 
+    relocate(Prognosinstitut, .after = "inst_kod") %>%
+    mutate(Prognosinstitut = case_when(inst_kod == "OECD" ~ "OECD",
+                                       inst_kod == "EU" ~ "EU (Kommissionen)",
+                                       inst_kod == "LO" ~ "LO",
+                                       inst_kod == "SEB" ~ "SEB",
+                                       inst_kod == "SKR" ~ "SKR",
+                                       inst_kod == "TFIA" ~ "Teknikföret./Industriarbetsg.",
+                                       TRUE ~ Prognosinstitut),
+           varde = varde %>% parse_number())
+    
+  # ta bara med varje prognosinstituts senaste prognos för aktuellt år om bara_senaste_prognos == TRUE
+  if (bara_senaste_prognos) {
+    prognoser_df <- prognoser_df %>%
+      group_by(inst_kod, Prognosinstitut, variabel, prognos_for_ar) %>%
+      filter(publiceringsdatum == max(publiceringsdatum, na.rm = TRUE)) %>%
+      ungroup()
+  }
   
-  prognoser_df2 <- prognoser_df %>% 
-    left_join(nyckel_df, by = "Prognosinstitut") %>% 
-    select(Prognosinstitut, Prognosinstitut_namn, Publiceringsdatum, Publiceringsvecka, prognos_ar, senaste_progn, 
-           variabel, varde) %>% 
-    mutate(varde = varde %>% as.numeric())
+  # ta bort år som är före det år som är nu om ta_bort_gamla_ar == TRUE
+  if (ta_bort_gamla_ar) {
+    prognoser_df <- prognoser_df %>%
+      filter(prognos_for_ar >= now() %>% year() %>% as.character())
+  }
+  
+  # om prognos_ar har skickats med, ta bara med dessa
+  if (all(prognos_ar != "*")) {
+    prognoser_df <- prognoser_df %>%
+      filter(prognos_for_ar %in% prognos_ar)
+    if (nrow(prognoser_df) == 0) stop("Valt/valda prognosår finns inte i datasetet")
+  }
+  
+  return(prognoser_df)
 
-  unlink(temp_fil)
-  return(prognoser_df2)
 } # slut funktion hamta_ek_prognoser_fran_prognosinstitut_ki
