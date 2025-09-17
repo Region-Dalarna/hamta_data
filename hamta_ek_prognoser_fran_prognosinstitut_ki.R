@@ -12,12 +12,15 @@ hamta_ek_prognoser_fran_prognosinstitut_ki <- function(
   # Man kan ange prognos_ar = "*" för att hämta alla prognosår, eller enskilda år som tex c("2024", "2025", "2026"), ett eller flera
   # bara_senaste_prognos = TRUE om man enbart vill ha varje instituts senaste prognos, vid FALSE så får man alla prognoser de gjort under åren
   
+  # Testade att hämta data men funktionen GET hittades inte. Den verkar finnas i paketet httr, så jag la till detta i p_load nedan. Jon 2025-09-17
+  
   if (!require("pacman")) install.packages("pacman")
   p_load(tidyverse,
          readxl,
          rvest,
          xml2,
-         openxlsx)
+         openxlsx,
+         httr)
   
   options(dplyr.summarise.inform = FALSE)
   url_progn <- "https://www.konj.se/publikationer/prognosjamforelse"       # url till Konjunkturinstitutets webbsida med ekonomiska prognoser
