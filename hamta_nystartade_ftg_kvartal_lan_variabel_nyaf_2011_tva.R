@@ -17,7 +17,7 @@ hamta_nystartade_kvartal_lan_variabel_tva <- function(
   #
   # url till tabellens API: https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Nystartade företag/nyaf_kvartal_lan_2011.px
   #
-  # Tillväxtanalys hade ändrat url, rättat
+  # Tillväxtanalys hade bland annat ändrat url, rättat
   # ====================================================================================================
   
   if (!require("pacman")) install.packages("pacman")
@@ -44,8 +44,8 @@ hamta_nystartade_kvartal_lan_variabel_tva <- function(
   
   # query-lista till pxweb-uttag
   varlista <- list(
-    "kvartal" = kvartal_vekt,
-    "län" = region_vekt,
+    "Tid" = kvartal_vekt,
+    "Län" = region_vekt,
     "variabel" = variabel_vekt)
   
   # Hämta data med varlista
