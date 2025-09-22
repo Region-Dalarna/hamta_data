@@ -17,6 +17,7 @@ hamta_nystartade_kvartal_lan_variabel_tva <- function(
   #
   # url till tabellens API: https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Nystartade företag/nyaf_kvartal_lan_2011.px
   #
+  # Tillväxtanalys hade ändrat url, rättat
   # ====================================================================================================
   
   if (!require("pacman")) install.packages("pacman")
@@ -28,7 +29,7 @@ hamta_nystartade_kvartal_lan_variabel_tva <- function(
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
   
   # Url till SCB:s databas
-  url_uttag <- "https://statistik.tillvaxtanalys.se:443:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Nystartade företag/nyaf_kvartal_lan_2011.px"
+  url_uttag <- "https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Nystartade företag/nystartade_foretag_kvartal_lan.px"
   px_meta <- pxweb_get(url_uttag)
   
   varlist_koder <- pxvarlist(px_meta)$koder
