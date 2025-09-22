@@ -15,7 +15,7 @@ options(dplyr.summarise.inform = FALSE)
 
 hamta_bef_deso_regso <- function(
     region_vekt = "20",                     # går att skicka läns och kommunkod för att ta alla deso/regso i ett län/en kommun
-    alder_vekt = "totalt",                  # Finns: "totalt", "0-4 år", "5-9 år", "10-14 år", "15-19 år", "20-24 år", "25-29 år", "30-34 år", "35-39 år", "40-44 år", "45-49 år", "50-54 år", "55-59 år", "60-64 år", "65-69 år", "70-74 år", "75-79 år", "80- år"
+    alder_klartext = "totalt",                  # Finns: "totalt", "0-4 år", "5-9 år", "10-14 år", "15-19 år", "20-24 år", "25-29 år", "30-34 år", "35-39 år", "40-44 år", "45-49 år", "50-54 år", "55-59 år", "60-64 år", "65-69 år", "70-74 år", "75-79 år", "80- år"
     region_indelning = "RegSO",             # Finns: "RegSO" eller "DeSO"
     kon_klartext = c("kvinnor", "män"),     # Finns: "män", "kvinnor", "totalt"
     lagg_ihop_versioner = TRUE,             # om det finns flera versioner av RegSO/DeSO, lägg ihop dem till en
@@ -37,20 +37,23 @@ hamta_bef_deso_regso <- function(
     
     # här hämtar vi alla RegSO/DeSO för de länskoder eller kommunkoder som skickats med
     region_lan <- alla_regionkoder[str_sub(alla_regionkoder, 1,2) %in% lanskoder & str_length(alla_regionkoder) > 7]
-    region_kommun <- alla_regionkoder[str_sub(alla_regionkoder, 1,4) %in% lanskoder & str_length(alla_regionkoder) > 7]
+    region_kommun <- alla_regionkoder[str_sub(alla_regionkoder, 1,4) %in% kommunkoder & str_length(alla_regionkoder) > 7]
   
     # vi lägger ihop vektorerna för färdiga RegSO/DeSO, samt RegSO/DeSO för de län och kommuner som skickats med samt tar bort dubletter
     alla_region <- c(fardiga_regionkoder, region_lan, region_kommun) %>% .[!duplicated(.)]
     
   } else alla_region <- alla_regionkoder                     # om användaren vill ha samtliga koder för RegSO eller DeSO
   
-  kon_vekt <- hamta_kod_med_klartext(url_bef, kon_klartext, skickad_fran_variabel = "kon")
+  kon_vekt <- if(is.na(kon_klartext)) "*" else hamta_kod_med_klartext(url_bef, kon_klartext, skickad_fran_variabel = "kon")
+  alder_vekt <- hamta_kod_med_klartext(url_bef, alder_klartext, skickad_fran_variabel = "alder")
   
   query_list <- list(Region = alla_region,
                      Alder = alder_vekt,
                      Kon = kon_vekt,
                      ContentsCode = cont_vekt,
                      Tid = tid_vekt)
+  
+  if (is.na(kon_klartext)) query_list <- query_list[names(query_list) != "Kon"]
   
   px_uttag <- pxweb_get(url = url_bef,
                         query = query_list)
