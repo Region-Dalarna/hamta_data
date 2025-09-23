@@ -72,7 +72,7 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
     #                 yrkeskod = "Yrke2012",
     #                 branschkod = "SNI2007",
     #                 `Anställda 16-64 år (dagbef)` = cont_var))) %>%
-    select(any_of(c("år", "regionkod", "region", "yrkeskod", "Yrke (SSYK 2012)", "branschkod", "näringsgren SNI 2007", "kön", "Anställda 16-64 år med arbetsplats i regionen (dagbef)")))
+    select(any_of(c("år", "regionkod", "region", "yrkeskod", "Yrke (SSYK 2012)", "branschkod", "näringsgren SNI 2007", "kön", "Antal")))
 
 
 
