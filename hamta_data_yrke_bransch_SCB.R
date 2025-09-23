@@ -21,6 +21,7 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
   # Uppdaterad senast 2024-01-12 (justering tid)
   # Justerad: Ändrade variabelnamn till näringslivet (SCB har bytt) 2024-03-07. Bytte sedan tillbaka när de ändrade tillbaka
   # Har ändrat `Anställda 16-64 år (dagbef)` till "Anställda 16-64 år med arbetsplats i regionen (dagbef)"
+  # Har ändrat Anställda 16-64 år med arbetsplats i regionen (dagbef)
   # ===========================================================================================================
   # Paket som behövs
   if (!require("pacman")) install.packages("pacman")
