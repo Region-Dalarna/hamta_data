@@ -1,11 +1,11 @@
 hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns såväl regioner som kommuner 
-                                        output_mapp = NA, # Här hamnar sparad data. Ändra till en sökväg för att data skall sparas
-                                        kon_klartext = c("män","kvinnor"), # Män och kvinnor eller var och en uppdelad (inte totalt).
-                                        yrke_klartext = "*", # Se nedan för alternativa val. "*" för alla
-                                        bransch_klartext = "*", # Se nedan för alternativa val. "*" för alla
-                                        returnera_data = TRUE, # Vill användaren returnera data som en dataframe
-                                        tid = "9999", # Sätts till "9999" om man enbart vill ha senaste år,"*" . Se nedan för ytterligare förklaring
-                                        filnamn = "yrke_bransch.xlsx"){ # Filnamn
+                                     output_mapp = NA, # Här hamnar sparad data. Ändra till en sökväg för att data skall sparas
+                                     kon_klartext = c("män","kvinnor"), # Män och kvinnor eller var och en uppdelad (inte totalt).
+                                     yrke_klartext = "*", # Se nedan för alternativa val. "*" för alla
+                                     bransch_klartext = "*", # Se nedan för alternativa val. "*" för alla
+                                     returnera_data = TRUE, # Vill användaren returnera data som en dataframe
+                                     tid = "9999", # Sätts till "9999" om man enbart vill ha senaste år,"*" . Se nedan för ytterligare förklaring
+                                     filnamn = "yrke_bransch.xlsx"){ # Filnamn
   
   
   # ===========================================================================================================  #
@@ -21,6 +21,11 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
   # Uppdaterad senast 2024-01-12 (justering tid)
   # Justerad: Ändrade variabelnamn till näringslivet (SCB har bytt) 2024-03-07. Bytte sedan tillbaka när de ändrade tillbaka
   # Har ändrat `Anställda 16-64 år (dagbef)` till "Anställda 16-64 år med arbetsplats i regionen (dagbef)"
+  # Har ändrat Anställda 16-64 år med arbetsplats i regionen (dagbef)
+  #
+  # OBS!!!!! SKRIPT SOM SANNOLIKT INTE BÖR ANVÄNDAS LÄNGRE. FINNS NYARE DÄR BÅDE RAMS OCH BAS SLÅS IHOP. OBS!!!!!
+  # Nytt skript https://github.com/Region-Dalarna/hamta_data/blob/main/hamta_yrke_rams_bas_region_yrke2012_sni2007_kon_tid_YREG56_YREG56N_YREG56BAS_scb.R
+  # Jon 2025-09-26
   # ===========================================================================================================
   # Paket som behövs
   if (!require("pacman")) install.packages("pacman")
@@ -35,12 +40,12 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
   url <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0208/AM0208D/YREG56N"
   px_meta <- pxweb_get(url)          # vi hämtar metadata till tabellen här och gör inga fler uttag nedan = färre API-anrop (och elegantare lösning)
   cont_kod <- "000003T3"
-    
+  
   # Gör om från klartext till kod som databasen förstår
   kon_vekt <- if (!all(is.na(kon_klartext))) hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") else NA
   yrke_vekt <- if (!all(is.na(yrke_klartext))) hamta_kod_med_klartext(px_meta, yrke_klartext, skickad_fran_variabel = "Yrke2012") else NA
   bransch_vekt <- if (!all(is.na(bransch_klartext))) hamta_kod_med_klartext(px_meta, bransch_klartext, skickad_fran_variabel = "SNI2007") else NA
-
+  
   # Om tid har satts till 9999, välj senaste år
   # if("9999" %in% tid) tid = max(hamta_giltiga_varden_fran_tabell(url, "tid"))
   
@@ -71,16 +76,16 @@ hamta_data_yrken_bransch <- function(region_vekt = "20", # Val av region. Finns 
     #                 yrkeskod = "Yrke2012",
     #                 branschkod = "SNI2007",
     #                 `Anställda 16-64 år (dagbef)` = cont_var))) %>%
-    select(any_of(c("år", "regionkod", "region", "yrkeskod", "Yrke (SSYK 2012)", "branschkod", "näringsgren SNI 2007", "kön", "Anställda 16-64 år med arbetsplats i regionen (dagbef)")))
-
-
-
+    select(any_of(c("år", "regionkod", "region", "yrkeskod", "Yrke (SSYK 2012)", "branschkod", "näringsgren SNI 2007", "kön", "Antal")))
+  
+  
+  
   # Om användaren vill spara data
   if (!is.na(output_mapp) & !is.na(filnamn)){
     write.xlsx(px_df,paste0(output_mapp,filnamn))
-    }
+  }
   
   # Om användaren vill returnera data som en DF.
-    if(returnera_data == TRUE) return(px_df)
+  if(returnera_data == TRUE) return(px_df)
   
 }

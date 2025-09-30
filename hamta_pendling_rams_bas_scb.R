@@ -99,14 +99,14 @@ hamta_data <- function(url_rams) {
       relocate(regionkod_arb, .before = arbetsställeregion)
     
     # ta med kommuner som är med i kommun_vekt
-    if (length(kommun_vekt)>0) {
+    if (length(kommun_vekt) > 0) {
       px_kommun_in <- px_in %>% 
         filter(regionkod_bo %in% kommun_vekt | regionkod_arb %in% kommun_vekt) %>% 
         rename(pendlare = {{pendlare_klartext}})
     }
     
     # aggregera på län och det finns län
-    if (length(lan_vekt)>0) { 
+    if (length(lan_vekt) > 0) { 
       px_lan_in <- px_in %>% 
         mutate(bolan_kod = str_sub(regionkod_bo,1,2),
                arblan_kod = str_sub(regionkod_arb,1,2)) %>% 
