@@ -129,7 +129,9 @@ hamta_befprognos_data <- function(
         #hamta_tid_vekt <- tid_vekt
 
         # if (all(fil_hamta_tid_vekt == "*")) fil_hamta_tid_vekt <- c((fil_prognosar %>% as.numeric()):2100)
-        if (all(cont_klartext != "*")) tabort_contvar <- contvar_vekt[contvar_vekt != cont_klartext] 
+        #if (all(cont_klartext != "*")) tabort_contvar <- contvar_vekt[contvar_vekt != cont_klartext] 
+        alla_contvar <- hamta_giltiga_varden_fran_tabell(url_prognos, "contentscode")
+        if (all(cont_klartext != "*")) tabort_contvar <- alla_contvar[alla_contvar != cont_vekt] 
 
         query_list <- list(Region = region_vekt,
                            Alder = alder_vekt,
