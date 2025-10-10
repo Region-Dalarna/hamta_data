@@ -20,6 +20,7 @@ hamta_konkurser_manad_lan_variabel_tva <- function(
   # Ny: https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Konkurser och offentliga ackord/12_konk_manad_lan_1996.px
   # Nygammal: https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Konkurser och offentliga ackord/konk_manad_lan_1996.px
   # Byte igen: https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Konkurser och offentliga ackord/konkurser_manad_lan.px
+  # Har dessutom ändrat vissa av namnen i varlista
   # ====================================================================================================
   
   if (!require("pacman")) install.packages("pacman")
@@ -65,8 +66,8 @@ hamta_konkurser_manad_lan_variabel_tva <- function(
   
   # query-lista till pxweb-uttag
   varlista <- list(
-    "månad" = tid_vekt,
-    "län" = region_vekt,
+    "Tid" = tid_vekt,
+    "Län" = region_vekt,
     "variabel" = variabel_vekt)
   
   # Hämta data med varlista
