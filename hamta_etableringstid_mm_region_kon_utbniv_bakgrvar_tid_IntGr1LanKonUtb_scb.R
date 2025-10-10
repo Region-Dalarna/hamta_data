@@ -35,64 +35,76 @@ hamta_etableringstid_mm_region_kon_utbniv_bakgrvar_tid_scb <- function(
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
 
   # Url till SCB:s databas
-  url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003X/IntGr1LanKonUtb"
-  px_meta <- pxweb_get(url_uttag)
-
-  varlist_koder <- pxvarlist(px_meta)$koder
-  varlist_bada <- pxvarlist(px_meta)
-
-  # Gör om från klartext till kod som databasen förstår
-  kon_vekt <- hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon")
-  utbniv_vekt <- hamta_kod_med_klartext(px_meta, utbniv_klartext, skickad_fran_variabel = "utbniv")
-  bakgrvar_vekt <- hamta_kod_med_klartext(px_meta, bakgrvar_klartext, skickad_fran_variabel = "bakgrvar")
-
-  cont_vekt <-  hamta_kod_med_klartext(px_meta, cont_klartext, "contentscode")
-  if (length(cont_vekt) > 1) wide_om_en_contvar <- FALSE
-
-  # Hantera tid-koder
-  giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
-  if (all(tid_koder != "*")) tid_koder <- tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
-
-  # query-lista till pxweb-uttag
-  varlista <- list(
-  "Region" = region_vekt,
-  "Kon" = kon_vekt,
-  "UtbNiv" = utbniv_vekt,
-  "BakgrVar" = bakgrvar_vekt,
-  "ContentsCode" = cont_vekt,
-  "Tid" = tid_koder)
-
-
-
-  px_uttag <- pxweb_get(url = url_uttag, query = varlista)
-
-  var_vektor <- c(regionkod = "Region")
-  var_vektor_klartext <- "region"
-
-  px_df <- as.data.frame(px_uttag)
-  if (!all(is.na(var_vektor))) {
-      # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
-      px_df <- px_df %>%
-            cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
-            select(any_of(var_vektor)))
-
-      # kolumnerna med koder läggs framför motsvarande kolumner med klartext
-      for (varflytt_index in 1:length(var_vektor)) {
-        px_df <- px_df %>%
-            relocate(all_of(names(var_vektor)[varflytt_index]), .before = all_of(var_vektor_klartext[varflytt_index]))
+  url_list <- c("https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003X/IntGr1LanKonUtb",
+                "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003X/IntGr1KomKonUtb")
+  
+  hamta_data_tabell <- function(url_uttag) {
+  
+    px_meta <- pxweb_get(url_uttag)
+  
+    varlist_koder <- pxvarlist(px_meta)$koder
+    varlist_bada <- pxvarlist(px_meta)
+    
+    giltiga_regioner <- hamta_giltiga_varden_fran_tabell(px_meta, "region")
+    hamta_region <- giltiga_regioner[giltiga_regioner %in% region_vekt]
+    
+    # Gör om från klartext till kod som databasen förstår
+    kon_vekt <- hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon")
+    utbniv_vekt <- hamta_kod_med_klartext(px_meta, utbniv_klartext, skickad_fran_variabel = "utbniv")
+    bakgrvar_vekt <- hamta_kod_med_klartext(px_meta, bakgrvar_klartext, skickad_fran_variabel = "bakgrvar")
+  
+    cont_vekt <-  hamta_kod_med_klartext(px_meta, cont_klartext, "contentscode")
+    if (length(cont_vekt) > 1) wide_om_en_contvar <- FALSE
+  
+    # Hantera tid-koder
+    giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
+    if (all(tid_koder != "*")) tid_koder <- tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
+  
+    if (length(hamta_region) > 0) {
+      # query-lista till pxweb-uttag
+      varlista <- list(
+      "Region" = region_vekt,
+      "Kon" = kon_vekt,
+      "UtbNiv" = utbniv_vekt,
+      "BakgrVar" = bakgrvar_vekt,
+      "ContentsCode" = cont_vekt,
+      "Tid" = tid_koder)
+    
+      px_uttag <- pxweb_get(url = url_uttag, query = varlista)
+    
+      var_vektor <- c(regionkod = "Region")
+      var_vektor_klartext <- "region"
+    
+      px_df <- as.data.frame(px_uttag)
+      if (!all(is.na(var_vektor))) {
+          # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
+          px_df <- px_df %>%
+                cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
+                select(any_of(var_vektor)))
+    
+          # kolumnerna med koder läggs framför motsvarande kolumner med klartext
+          for (varflytt_index in 1:length(var_vektor)) {
+            px_df <- px_df %>%
+                relocate(all_of(names(var_vektor)[varflytt_index]), .before = all_of(var_vektor_klartext[varflytt_index]))
+          }
       }
-  }
-
+      return(px_df)
+    } # slut if-sats där vi testar om det finns någon region att hämta i denna tabell
+  } # slut hamta_data_tabell-funktion
+  
+  retur_df <- map(url_list, ~hamta_data_tabell(.x)) %>% 
+    list_rbind()
+  
   # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
   # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
-  if (long_format & !wide_om_en_contvar) px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag)
+  if (long_format & !wide_om_en_contvar) retur_df <- retur_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag)
 
   # Om användaren vill spara data till en Excel-fil
   if (!is.na(output_mapp) & !is.na(excel_filnamn)){
-    write.xlsx(px_df, paste0(output_mapp, excel_filnamn))
+    write.xlsx(retur_df, paste0(output_mapp, excel_filnamn))
   }
 
   # Returnera data som en dataframe om användern valt det
-  if (returnera_df) return(px_df)
+  if (returnera_df) return(retur_df)
 
 }

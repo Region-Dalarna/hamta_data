@@ -93,10 +93,15 @@ hamta_bef_deso_regso <- function(
     kolumner <- names(px_df) %>% .[. != "Antal"]
     
     px_df <- px_df %>% 
-      mutate(regionkod = regionkod %>% str_remove("_.*")) %>% 
+      mutate(regionkod = regionkod %>% str_remove("_.*"),
+             kommun) %>% 
       group_by(across(any_of(kolumner))) %>% 
       summarise(Antal = sum(Antal, na.rm = TRUE), .groups = "drop")
   }
+  
+  px_df <- px_df %>% 
+    mutate(kommunkod = kommunkod %>% str_trim(),
+           kommun = kommun %>% str_trim())
   
   return(px_df)
   

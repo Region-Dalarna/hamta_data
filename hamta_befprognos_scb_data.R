@@ -127,7 +127,12 @@ hamta_befprognos_data <- function(
         alder_vekt <- alder_list %>% unlist()
         if (all(cont_klartext == "Födda")) alder_vekt <- "0"
         #hamta_tid_vekt <- tid_vekt
-        
+
+        # if (all(fil_hamta_tid_vekt == "*")) fil_hamta_tid_vekt <- c((fil_prognosar %>% as.numeric()):2100)
+        #if (all(cont_klartext != "*")) tabort_contvar <- contvar_vekt[contvar_vekt != cont_klartext] 
+        alla_contvar <- hamta_giltiga_varden_fran_tabell(url_prognos, "contentscode")
+        if (all(cont_klartext != "*")) tabort_contvar <- alla_contvar[alla_contvar != cont_vekt] 
+
         query_list <- list(Region = region_vekt,
                            Alder = alder_vekt,
                            Kon = kon_vekt,
@@ -142,7 +147,6 @@ hamta_befprognos_data <- function(
           cbind(regionkod = as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>% 
                   select(Region)) %>% rename(regionkod = Region) %>% relocate(regionkod, .before = region) %>% 
           mutate(prognos_ar = valt_ar %>% as.character())
-        
         
         # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
         # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
@@ -181,26 +185,16 @@ hamta_befprognos_data <- function(
                                 "Folkmängd" = "total_folkmangd", "Födda" = "fodda", "Döda" = "doda", "Inrikes inflyttning" = "inrikes_inflyttning", 
                                 "Inrikes utflyttning" = "inrikes_utflyttning", "Invandring" = "invandring", "Utvandring" = "utvandring")
           
-          
-          
           contvar_vekt <- c("Folkmängd", "Födda", "Döda", "Inrikes inflyttning", "Inrikes utflyttning", "Invandring", "Utvandring")
           if (all(cont_klartext == "*")) cont_klartext <- contvar_vekt
-          
-          # if (any(hamta_tid_vekt != "*")) {
-          #   fil_start_ar <- as.numeric(fil_prognosar)  - 1                # ta bort -1 igen?
-          #   fil_jmfr_ar <- fil_start_ar + jmfr_vekt
-          #   fil_hamta_tid_vekt <- if (length(fil_jmfr_ar) > 0) c(fil_jmfr_ar, andra_ar_vekt) else andra_ar_vekt
-          # } else fil_hamta_tid_vekt <- "*"
           
           progn_ar <- map_chr(filsokvagar_xlsx, ~ parse_number(.) %>% as.character()) 
           
           befskript_df <- map2(filsokvagar_xlsx, progn_ar, ~ readxl::read_xlsx(.x) %>% 
                                  mutate(prognos_ar = .y)) %>%
-            #dplyr::filter(ar %in% (as.numeric(progn_ar)+jmfr_vekt-1))) %>%    # ta bara ut jämförelseåret
-            #dplyr::filter(ar %in% hamta_tid_vekt)) %>%    # ta bara ut jämförelseåret
             list_rbind()
           
-          if (hamta_tid_vekt != "*") befskript_df <- befskript_df %>% 
+          if (all(hamta_tid_vekt != "*")) befskript_df <- befskript_df %>% 
             dplyr::filter(ar %in% hamta_tid_vekt)            # ta bara ut jämförelseåret
   
   # if (all(fil_hamta_tid_vekt == "*")) fil_hamta_tid_vekt <- c((fil_prognosar %>% as.numeric()):2100)
