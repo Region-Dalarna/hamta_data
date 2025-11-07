@@ -1,8 +1,8 @@
 hamta_pendling_kommun_bostad_arbete_ArRegPend2_scb <- function(
-    arbetsstallekommun_klartext = "*",	# NA = tas inte med i uttaget,  formatet ska vara "kommunkod" eller "Kommunkod Kommunnamn (bostad)"
+    bostadsregion_kod = "20",		        # "*" = alla kommuner, NA = tas inte med i uttaget,  formatet ska vara regionkod, kommunkod eller "Kommunkod Kommunnamn (arbetsställe)"
+    arbetsstalleregion_kod = "*",	      # "*" = alla kommuner, NA = tas inte med i uttaget,  formatet ska vara regionkod, kommunkod eller "Kommunkod Kommunnamn (bostad)"
     kon_klartext = NA,			            # "*" = alla, NA = tas inte med i uttaget,  Finns: "män", "kvinnor", "totalt"
-    bostadskommun_klartext = "dala",		# "*" = alla kommuner, "dala" = endast dalakommuner, NA = tas inte med i uttaget,  formatet ska vara "kommunkod" eller "Kommunkod Kommunnamn (arbetsställe)"
-    tid_koder = "*",			              # "*" = alla år, "9999" = senaste, finns: "2020", "2021", "2022", "2023"
+    tid_koder = "*",			              # "*" = alla år, "9999" = senaste
     cont_klartext = "*",
     long_format = TRUE,			            # TRUE = konvertera innehållsvariablerna i datasetet till long-format 
     wide_om_en_contvar = TRUE,			    # TRUE = om man vill behålla wide-format om det bara finns en innehållsvariabel, FALSE om man vill konvertera till long-format även om det bara finns en innehållsvariabel
@@ -34,6 +34,12 @@ hamta_pendling_kommun_bostad_arbete_ArRegPend2_scb <- function(
   # Url till SCB:s databas
   url_list <- c("https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0210/AM0210F/ArRegPend2")
   
+  regionnyckel <- hamtaregtab() %>% 
+    mutate(
+      bostadskommunkod = regionkod,
+      arbetsställekommunkod = regionkod
+    )
+  
   senaste_ar <- map(url_list, ~ hamta_giltiga_varden_fran_tabell(.x, "tid")) %>% unlist() %>% max()      # hämta senaste år som finns i alla medskickade tabeller
   hamta_tid <- if(any(tid_koder == "9999")) tid_koder %>% str_replace("9999", senaste_ar) else tid_koder                       # byt ut "9999" till senaste tillgängliga året i tabellerna
   hamta_tid <- hamta_tid %>% unique()              # ta bort eventuella dubletter
@@ -47,19 +53,28 @@ hamta_pendling_kommun_bostad_arbete_ArRegPend2_scb <- function(
     
     # Gör om från klartext till kod som databasen förstår
     kon_vekt <- if (!all(is.na(kon_klartext))) hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") else NA
-    arbetsstallekommun_vekt <- if (!all(is.na(arbetsstallekommun_klartext))) hamta_kod_med_klartext(px_meta, arbetsstallekommun_klartext, skickad_fran_variabel = "arbetsstallekommun") else NA
-    
-    # Om "dala", sätt bostadskommun_klartext till en lista med kommunkoder
-    if (!is.null(bostadskommun_klartext)) {
-      if (bostadskommun_klartext == "dala") {
-        bostadskommun_vekt <- c("2021","2023","2026","2029","2031",
-                                "2034","2039","2061","2062","2080",
-                                "2081","2082","2083","2084","2085")
-      } else if (bostadskommun_klartext == "*") {
+
+    # Hantera bostadsregion_kod till en lista med kommunkoder
+    if (!is.null(bostadsregion_kod)) {
+      if (nchar(bostadsregion_kod) == 2) {
+        bostadskommun_vekt <- hamtakommuner(bostadsregion_kod, tamedlan = F, tamedriket = F)
+      } else if (bostadsregion_kod == "*") {
         bostadskommun_vekt <- "*"  # alla
       } else {
         # om användaren angav specifika kommuner med namn:
-        bostadskommun_vekt <- hamta_kod_med_klartext(px_meta, bostadskommun_klartext, skickad_fran_variabel = "bostadskommun")
+        bostadskommun_vekt <- hamta_kod_med_klartext(px_meta, bostadsregion_kod, skickad_fran_variabel = "bostadskommun")
+      }
+    }  
+    
+    # Hantera arbetsstalleregion_kod till en lista med kommunkoder
+    if (!is.null(arbetsstalleregion_kod)) {
+      if (nchar(arbetsstalleregion_kod) == 2) {
+        arbetsstallekommun_vekt <- hamtakommuner(arbetsstalleregion_kod, tamedlan = F, tamedriket = F)
+      } else if (arbetsstalleregion_kod == "*") {
+        arbetsstallekommun_vekt <- "*"  # alla
+      } else {
+        # om användaren angav specifika kommuner med namn:
+        arbetsstallekommun_vekt <- hamta_kod_med_klartext(px_meta, arbetsstalleregion_kod, skickad_fran_variabel = "arbetsstallekommun")
       }
     }  
     
@@ -76,6 +91,7 @@ hamta_pendling_kommun_bostad_arbete_ArRegPend2_scb <- function(
         "Kon" = kon_vekt,
         "Arbetsstallekommun" = arbetsstallekommun_vekt,
         "Bostadskommun" = bostadskommun_vekt,
+        "ContentsCode" = cont_vekt,
         "Tid" = tid_vekt)
       
       if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
@@ -99,7 +115,22 @@ hamta_pendling_kommun_bostad_arbete_ArRegPend2_scb <- function(
     } # test om de valda tid-koderna finns i denna tabell
   } # slut hämta data-funktion 
   
-  px_alla <- map(url_list, ~ hamta_data(.x)) %>% list_rbind()
+  px_alla <- map(url_list, ~ hamta_data(.x)) %>% 
+    list_rbind() %>% 
+    mutate(bostadskommun = bostadskommun %>% str_remove(" \\(bostad\\)"),
+           arbetsställekommun = arbetsställekommun %>% str_remove(" \\(arbetsställe\\)")) %>%
+    rename("antal" = "sysselsatta")
+  
+  # Lägg till kommunkoder från hamtaregtab()
+  regiontab <- hamtaregtab() %>%
+    select(regionkod, region) %>%
+    distinct()
+  
+  px_alla <- px_alla %>%
+    left_join(regiontab, by = c("bostadskommun" = "region")) %>%
+    rename(bostadskommunkod = regionkod) %>%
+    left_join(regiontab, by = c("arbetsställekommun" = "region")) %>%
+    rename(arbetsställekommunkod = regionkod)
   
   # Om användaren vill spara data till en Excel-fil
   if (!is.na(output_mapp) & !is.na(excel_filnamn)){
