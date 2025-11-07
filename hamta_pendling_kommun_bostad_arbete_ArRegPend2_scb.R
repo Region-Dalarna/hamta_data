@@ -1,4 +1,4 @@
-function(
+hamta_pendling_kommun_bostad_arbete_ArRegPend2_scb <- function(
     arbetsstallekommun_klartext = "*",	# NA = tas inte med i uttaget,  formatet ska vara "kommunkod" eller "Kommunkod Kommunnamn (bostad)"
     kon_klartext = NA,			            # "*" = alla, NA = tas inte med i uttaget,  Finns: "män", "kvinnor", "totalt"
     bostadskommun_klartext = "dala",		# "*" = alla kommuner, "dala" = endast dalakommuner, NA = tas inte med i uttaget,  formatet ska vara "kommunkod" eller "Kommunkod Kommunnamn (arbetsställe)"
