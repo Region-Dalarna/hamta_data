@@ -1,6 +1,6 @@
 hamta_pendling_kommun_bostad_arbete_ArRegPend2_scb <- function(
-    bostadsregion_kod = "20",		        # "*" = alla kommuner, NA = tas inte med i uttaget,  formatet ska vara regionkod, kommunkod eller "Kommunkod Kommunnamn (arbetsställe)"
-    arbetsstalleregion_kod = "*",	      # "*" = alla kommuner, NA = tas inte med i uttaget,  formatet ska vara regionkod, kommunkod eller "Kommunkod Kommunnamn (bostad)"
+    bostadsregion_kod = "20",		        # "*" = alla kommuner, NA = tas inte med i uttaget,  formatet ska vara regionkod eller kommunkod
+    arbetsstalleregion_kod = "*",	      # "*" = alla kommuner, NA = tas inte med i uttaget,  formatet ska vara regionkod eller kommunkod
     kon_klartext = NA,			            # "*" = alla, NA = tas inte med i uttaget,  Finns: "män", "kvinnor", "totalt"
     tid_koder = "*",			              # "*" = alla år, "9999" = senaste
     cont_klartext = "*",
@@ -17,7 +17,7 @@ hamta_pendling_kommun_bostad_arbete_ArRegPend2_scb <- function(
   # Årligt register efter bostadskommun, arbetsställekommun, kön och år
   #
   # Skapad av: Joacim Gärds den 6 november 2025
-  # Senast uppdaterad: 6 november 2025
+  # Senast uppdaterad: 10 november 2025
   #
   # url till tabellens API: https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__AM__AM0210__AM0210F/ArRegPend2
   #
@@ -34,16 +34,23 @@ hamta_pendling_kommun_bostad_arbete_ArRegPend2_scb <- function(
   # Url till SCB:s databas
   url_list <- c("https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AM/AM0210/AM0210F/ArRegPend2")
   
-  regionnyckel <- hamtaregtab() %>% 
-    mutate(
-      bostadskommunkod = regionkod,
-      arbetsställekommunkod = regionkod
-    )
-  
   senaste_ar <- map(url_list, ~ hamta_giltiga_varden_fran_tabell(.x, "tid")) %>% unlist() %>% max()      # hämta senaste år som finns i alla medskickade tabeller
   hamta_tid <- if(any(tid_koder == "9999")) tid_koder %>% str_replace("9999", senaste_ar) else tid_koder                       # byt ut "9999" till senaste tillgängliga året i tabellerna
   hamta_tid <- hamta_tid %>% unique()              # ta bort eventuella dubletter
   
+  # Hantera bostadsregion_kod och arbetsstalleregion_kod till en lista med kommunkoder
+  bostadskommun_vekt <- bostadsregion_kod[nchar(bostadsregion_kod) == 4]
+  bostadslan_vekt <- bostadsregion_kod[nchar(bostadsregion_kod) == 2]
+  bostadslan_kommuner_vekt <- hamtakommuner(bostadslan_vekt, tamedlan = FALSE, tamedriket = FALSE) # TODO lägg till så att man kan skicka in flera länskoder
+  
+  arbetsstallekommun_vekt <- arbetsstalleregion_kod[nchar(arbetsstalleregion_kod) == 4]
+  arbetsstallelan_vekt <- arbetsstalleregion_kod[nchar(arbetsstalleregion_kod) == 2]
+  arbetsstallelan_kommuner_vekt <- hamtakommuner(arbetsstallelan_vekt, tamedlan = FALSE, tamedriket = FALSE) # TODO lägg till så att man kan skicka in flera länskoder
+  
+  hamta_bostadsregion_vekt <- if (any(bostadsregion_kod == "*")) "*" else c(bostadskommun_vekt, bostadslan_kommuner_vekt)
+  hamta_arbetsstalleregion_vekt <- if (any(arbetsstalleregion_kod == "*")) "*" else c(arbetsstallekommun_vekt, arbetsstallelan_kommuner_vekt)
+  
+  # Funktion för att hämta data
   hamta_data <- function(url_uttag) {
     
     px_meta <- pxweb_get(url_uttag)
@@ -53,30 +60,6 @@ hamta_pendling_kommun_bostad_arbete_ArRegPend2_scb <- function(
     
     # Gör om från klartext till kod som databasen förstår
     kon_vekt <- if (!all(is.na(kon_klartext))) hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") else NA
-
-    # Hantera bostadsregion_kod till en lista med kommunkoder
-    if (!is.null(bostadsregion_kod)) {
-      if (nchar(bostadsregion_kod) == 2) {
-        bostadskommun_vekt <- hamtakommuner(bostadsregion_kod, tamedlan = F, tamedriket = F)
-      } else if (bostadsregion_kod == "*") {
-        bostadskommun_vekt <- "*"  # alla
-      } else {
-        # om användaren angav specifika kommuner med namn:
-        bostadskommun_vekt <- hamta_kod_med_klartext(px_meta, bostadsregion_kod, skickad_fran_variabel = "bostadskommun")
-      }
-    }  
-    
-    # Hantera arbetsstalleregion_kod till en lista med kommunkoder
-    if (!is.null(arbetsstalleregion_kod)) {
-      if (nchar(arbetsstalleregion_kod) == 2) {
-        arbetsstallekommun_vekt <- hamtakommuner(arbetsstalleregion_kod, tamedlan = F, tamedriket = F)
-      } else if (arbetsstalleregion_kod == "*") {
-        arbetsstallekommun_vekt <- "*"  # alla
-      } else {
-        # om användaren angav specifika kommuner med namn:
-        arbetsstallekommun_vekt <- hamta_kod_med_klartext(px_meta, arbetsstalleregion_kod, skickad_fran_variabel = "arbetsstallekommun")
-      }
-    }  
     
     cont_vekt <-  hamta_kod_med_klartext(px_meta, cont_klartext, "contentscode")
     if (length(cont_vekt) > 1) wide_om_en_contvar <- FALSE
@@ -89,14 +72,14 @@ hamta_pendling_kommun_bostad_arbete_ArRegPend2_scb <- function(
       # query-lista till pxweb-uttag
       varlista <- list(
         "Kon" = kon_vekt,
-        "Arbetsstallekommun" = arbetsstallekommun_vekt,
-        "Bostadskommun" = bostadskommun_vekt,
+        "Bostadskommun" = hamta_bostadsregion_vekt,
+        "Arbetsstallekommun" = hamta_arbetsstalleregion_vekt,
         "ContentsCode" = cont_vekt,
         "Tid" = tid_vekt)
       
       if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
-      if (all(is.na(arbetsstallekommun_vekt))) varlista <- varlista[names(varlista) != "Arbetsstallekommun"]
-      if (all(is.na(bostadskommun_vekt))) varlista <- varlista[names(varlista) != "Bostadskommun"]
+      if (all(is.na(hamta_arbetsstalleregion_vekt))) varlista <- varlista[names(varlista) != "Arbetsstallekommun"]
+      if (all(is.na(hamta_bostadsregion_vekt))) varlista <- varlista[names(varlista) != "Bostadskommun"]
       
       # Hämta data med varlista
       px_uttag <- pxweb_get(url = url_uttag, query = varlista)
