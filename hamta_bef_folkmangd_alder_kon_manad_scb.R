@@ -7,7 +7,7 @@ hamta_bef_folkmangd_alder_kon_manad_scb <- function(
     long_format = TRUE,			# TRUE = konvertera innehållsvariablerna i datasetet till long-format 
     wide_om_en_contvar = TRUE,			# TRUE = om man vill behålla wide-format om det bara finns en innehållsvariabel, FALSE om man vill konvertera till long-format även om det bara finns en innehållsvariabel
     mapp_excelfil = NA,			# anges om man vill exportera en excelfil med uttaget, den mapp man vill spara excelfilen till
-    filnamn_excelfil = "bef.xlsx",			# filnamn för excelfil som exporteras om excel_filnamn och output_mapp anges
+    filnamn_excelfil = "bef.xlsx",			# filnamn för excelfil som exporteras om filnamn_excelfil och mapp_excelfil anges
     returnera_df = TRUE			# TRUE om man vill ha en dataframe i retur från funktionen
 ){
   
