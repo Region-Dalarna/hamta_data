@@ -23,6 +23,7 @@ hamta_bef_folkmangd_alder_kon_manad_scb <- function(
   #												https://api.scb.se/OV0104/v1/doris/sv/ssd/START/BE/BE0101/BE0101A/BefolkManadCKM
   #
   # På rad 102-104 har jag bytt ut output_mapp mot mapp_excelfil (som står i funktionsanropet) / Jon 2025-12-09 
+  # Även bytt ut excel_filnamn mot filnamn_excelfil (som står i funktionsanropet) på samma rader / Jon
   # ====================================================================================================
   
   if (!require("pacman")) install.packages("pacman")
@@ -100,8 +101,8 @@ hamta_bef_folkmangd_alder_kon_manad_scb <- function(
   px_alla <- map(url_list, ~ hamta_data(.x)) %>% list_rbind()
   print("Data från och med år 2025 är röjandegranskad med CKM-metoden vilket innebär visst brus på små tal.")
   # Om användaren vill spara data till en Excel-fil
-  if (!is.na(mapp_excelfil) & !is.na(excel_filnamn)){
-    write.xlsx(px_alla, paste0(mapp_excelfil, excel_filnamn))
+  if (!is.na(mapp_excelfil) & !is.na(filnamn_excelfil)){
+    write.xlsx(px_alla, paste0(mapp_excelfil, filnamn_excelfil))
   }
   
   # Returnera data som en dataframe om användern valt det
