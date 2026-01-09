@@ -44,7 +44,7 @@ hamta_bef_deso_regso <- function(
     
   } else alla_region <- alla_regionkoder                     # om användaren vill ha samtliga koder för RegSO eller DeSO
   
-  kon_vekt <- if(is.na(kon_klartext)) "*" else hamta_kod_med_klartext(url_bef, kon_klartext, skickad_fran_variabel = "kon")
+  kon_vekt <- if(any(is.na(kon_klartext))) "*" else hamta_kod_med_klartext(url_bef, kon_klartext, skickad_fran_variabel = "kon")
   alder_vekt <- hamta_kod_med_klartext(url_bef, alder_klartext, skickad_fran_variabel = "alder")
   
   query_list <- list(Region = alla_region,
@@ -53,7 +53,7 @@ hamta_bef_deso_regso <- function(
                      ContentsCode = cont_vekt,
                      Tid = tid_vekt)
   
-  if (is.na(kon_klartext)) query_list <- query_list[names(query_list) != "Kon"]
+  if (all(is.na(kon_klartext))) query_list <- query_list[names(query_list) != "Kon"]
   
   px_uttag <- pxweb_get(url = url_bef,
                         query = query_list)
@@ -70,7 +70,7 @@ hamta_bef_deso_regso <- function(
       mutate(omrade = str_extract(string = region,
                                   pattern = "(?<=\\().*(?=\\))"),
              kommunkod = regionkod %>% str_sub(1,4),
-             kommun = str_split(region, "\\(")[[1]][1]) %>% 
+             kommun = str_split(region, "\\(") %>% map_chr(1) %>% str_trim()) %>% 
       relocate(omrade, .after = region) %>% 
       relocate(kommunkod, .after = omrade) %>% 
       relocate(kommun, .after = kommunkod)
