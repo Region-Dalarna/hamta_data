@@ -2,14 +2,14 @@ hamta_socioek_index_regso_deso_region_tid_scb <- function(
 			region_vekt = "*",			   # Val av region. Länskoder = alla regso/deso i länet, kommunkoder = alla regso/deso i länet, enskilda koder kan skickas med
 			cont_klartext = "*",			 #  Finns: "Index", "Områdestyp", "Andelen med förgymnasial utbildning", "Andelen personer med låg ekonomisk standard (oavsett ålder)", "Andelen med ekonomiskt bistånd och/eller långtidsarbetslösa"
 			tid_koder = "*",			 # "*" = alla år eller månader, "9999" = senaste, finns: "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023"
-			region_indelning = "regso",
+			region_indelning = "regso",        # "regso", "deso" eller "alla
 			long_format = TRUE,			# TRUE = konvertera innehållsvariablerna i datasetet till long-format 
 			wide_om_en_contvar = TRUE,			# TRUE = om man vill behålla wide-format om det bara finns en innehållsvariabel, FALSE om man vill konvertera till long-format även om det bara finns en innehållsvariabel
 			output_mapp = NA,			# anges om man vill exportera en excelfil med uttaget, den mapp man vill spara excelfilen till
 			excel_filnamn = "socioek_index_regso_deso.xlsx",			# filnamn för excelfil som exporteras om excel_filnamn och output_mapp anges
 			returnera_df = TRUE			# TRUE om man vill ha en dataframe i retur från funktionen
 ){
-
+  
   # ====================================================================================================
   #
   # Funktion för att hämta data från SCB:s API med hjälp av pxweb-paketet
@@ -21,11 +21,11 @@ hamta_socioek_index_regso_deso_region_tid_scb <- function(
   # url till tabellens API: https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__AA__AA0003__AA0003F/IntGr5Socio/
   #
   # ====================================================================================================
-
+  
   if (!require("pacman")) install.packages("pacman")
   p_load(pxweb,
-    			tidyverse,
-    			writexl)
+         tidyverse,
+         writexl)
 
   # Behändiga funktioner som används i skriptet
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
@@ -66,9 +66,9 @@ hamta_socioek_index_regso_deso_region_tid_scb <- function(
     alla_region <- c(fardiga_regionkoder, region_lan, region_kommun) %>% .[!duplicated(.)]
     
   } else alla_region <- alla_regionkoder                     # om användaren vill ha samtliga koder för RegSO eller DeSO
-
+  
   cont_giltiga <- hamta_giltiga_varden_fran_tabell(px_meta, "contentscode")
-  cont_vekt <- if(cont_klartext == "*") cont_giltiga else hamta_kod_med_klartext(px_meta, cont_klartext, "contentscode")
+  cont_vekt <- if(any(cont_klartext == "*")) cont_giltiga else hamta_kod_med_klartext(px_meta, cont_klartext, "contentscode")
   if (length(cont_vekt) > 1) wide_om_en_contvar <- FALSE
 
   # Hantera tid-koder
