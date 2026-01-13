@@ -54,7 +54,9 @@ hamta_bef_folkmangd_alder_kon_manad_scb <- function(
     
     # Hantera tid-koder
     giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
-    tid_vekt <- if (all(tid_koder != "*")) tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique() else giltiga_ar
+    tid_vekt <- if (all(tid_koder != "*")) tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique() else tid_koder[tid_koder %in% giltiga_ar]
+    if(length(tid_vekt > 0)){
+      
     
     # query-lista till pxweb-uttag
     varlista <- list(
@@ -87,6 +89,9 @@ hamta_bef_folkmangd_alder_kon_manad_scb <- function(
       }
     }
     
+    px_df <- px_df %>% 
+      filter(!str_detect(ålder,"-|tot"))
+    
     if ("Folkmängden per månad" %in% names(px_df)) px_df <- px_df %>% rename(Antal = `Folkmängden per månad`)
     px_df <- px_df %>%  
       manader_bearbeta_scbtabeller()
@@ -96,6 +101,7 @@ hamta_bef_folkmangd_alder_kon_manad_scb <- function(
     if (long_format & !wide_om_en_contvar) px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag)
     
     return(px_df)
+    }
   } # slut hämta data-funktion 
   
   px_alla <- map(url_list, ~ hamta_data(.x)) %>% list_rbind()
