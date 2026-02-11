@@ -37,6 +37,12 @@ hamta_bef_forandringar_region_forandringar_kon_tid_scb <- function(
   url_list <- c("https://api.scb.se/OV0104/v1/doris/sv/ssd/START/BE/BE0101/BE0101G/ManadBefStatRegion",
 						"https://api.scb.se/OV0104/v1/doris/sv/ssd/START/BE/BE0101/BE0101G/MBefStatRegionCKM")
 
+  alla_ar <- map(url_list, ~ hamta_giltiga_varden_fran_tabell(.x, "tid")) %>% 
+    unlist()
+  
+  tid_vekt_alla <- if (all(tid_koder != "*")) tid_koder %>% as.character() %>% str_replace("9999", max(alla_ar)) %>% .[. %in% alla_ar] %>% unique() else alla_ar
+  
+  
   cont_klartext <- "*"
   
  hamta_data <- function(url_uttag) {
@@ -55,50 +61,52 @@ hamta_bef_forandringar_region_forandringar_kon_tid_scb <- function(
 
   # Hantera tid-koder
   giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
-  tid_vekt <- if (all(tid_koder != "*")) tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique() else giltiga_ar
+  tid_vekt <- tid_vekt_alla %>% .[. %in% giltiga_ar] %>% unique() 
 
-  # query-lista till pxweb-uttag
-  varlista <- list(
-  	"Region" = region_vekt,
-  	"Forandringar" = forandringar_vekt,
-  	"Kon" = kon_vekt,
-  	"ContentsCode" = cont_vekt,
-  	"Tid" = tid_vekt)
-
-  if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
-
-  # Hämta data med varlista
-  px_uttag <- pxweb_get(url = url_uttag, query = varlista)
-
-  var_vektor <- c(regionkod = "Region")
-  var_vektor_klartext <- "region"
-
-  # gör om pxweb-uttaget till en dataframe
-  px_df <- as.data.frame(px_uttag)
-  if (!all(is.na(var_vektor))) {
-      # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
-      px_df <- px_df %>%
-            cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
-            select(any_of(var_vektor)))
-
-      # kolumnerna med koder läggs framför motsvarande kolumner med klartext
-      for (varflytt_index in 1:length(var_vektor)) {
-        px_df <- px_df %>%
-            relocate(any_of(names(var_vektor)[varflytt_index]), .before = any_of(var_vektor_klartext[varflytt_index]))
-      }
-  }
-
-  # korrigera att värden för båda könen heter annorlunda i nya tabellen jämfört med den gamla
-  if (!all(is.na(kon_klartext))) {
-    px_df <- px_df %>% 
-      mutate(kön = if_else(str_detect(kön, "totalt"), "totalt", kön))
-  }
+  if (length(tid_vekt) > 0) {
+    # query-lista till pxweb-uttag
+    varlista <- list(
+    	"Region" = region_vekt,
+    	"Forandringar" = forandringar_vekt,
+    	"Kon" = kon_vekt,
+    	"ContentsCode" = cont_vekt,
+    	"Tid" = tid_vekt)
   
-  # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
-  # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
-  if (long_format & !wide_om_en_contvar) px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag)
-
-  return(px_df)
+    if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
+  
+    # Hämta data med varlista
+    px_uttag <- pxweb_get(url = url_uttag, query = varlista)
+  
+    var_vektor <- c(regionkod = "Region")
+    var_vektor_klartext <- "region"
+  
+    # gör om pxweb-uttaget till en dataframe
+    px_df <- as.data.frame(px_uttag)
+    if (!all(is.na(var_vektor))) {
+        # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
+        px_df <- px_df %>%
+              cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
+              select(any_of(var_vektor)))
+  
+        # kolumnerna med koder läggs framför motsvarande kolumner med klartext
+        for (varflytt_index in 1:length(var_vektor)) {
+          px_df <- px_df %>%
+              relocate(any_of(names(var_vektor)[varflytt_index]), .before = any_of(var_vektor_klartext[varflytt_index]))
+        }
+    }
+  
+    # korrigera att värden för båda könen heter annorlunda i nya tabellen jämfört med den gamla
+    if (!all(is.na(kon_klartext))) {
+      px_df <- px_df %>% 
+        mutate(kön = if_else(str_detect(kön, "totalt"), "totalt", kön))
+    }
+    
+    # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
+    # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
+    if (long_format & !wide_om_en_contvar) px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag)
+  
+    return(px_df)
+   } # slut test om det finns giltiga år som användaren valt i denna tabell
   } # slut hämta data-funktion 
 
   px_alla <- map(url_list, ~ hamta_data(.x)) %>% list_rbind()
