@@ -78,6 +78,10 @@ hamta_folkmangd_region_alder_kon_manad_scb_CKM <- function(
             relocate(any_of(names(var_vektor)[varflytt_index]), .before = any_of(var_vektor_klartext[varflytt_index]))
       }
   }
+  
+  if ("Folkmängden per månad" %in% names(px_df)) px_df <- px_df %>% rename(Antal = `Folkmängden per månad`)
+  px_df <- px_df %>%  
+    manader_bearbeta_scbtabeller()
 
   # Om användaren vill spara data till en Excel-fil
   if (!is.na(output_mapp) & !is.na(excel_filnamn)){
