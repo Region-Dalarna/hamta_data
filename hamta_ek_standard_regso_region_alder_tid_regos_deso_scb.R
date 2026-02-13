@@ -21,7 +21,9 @@ hamta_ek_standard_regso_region_alder_tid_scb <- function(
   # Senast uppdaterad: 18 september 2025
   #
   # url till tabellens API: https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__HE__HE0110__HE0110I/TabVX4InkDesoN2/
-  #
+  # 
+  # SCB har ändrat adress till tabell av oklar anledning. Ny adress: https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__HE__HE0110__HE0110I/Tab4InkDesoRegso/
+  # Har även ändrat api-adress nedan /Jon, 2026-02-13
   # ====================================================================================================
   
   if (!require("pacman")) install.packages("pacman")
@@ -33,7 +35,7 @@ hamta_ek_standard_regso_region_alder_tid_scb <- function(
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
   
   # Url till databas
-  url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/HE/HE0110/HE0110I/TabVX4InkDesoN2"
+  url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/HE/HE0110/HE0110I/Tab4InkDesoRegso"
   px_meta <- pxweb_get(url_uttag)
   
   varlist_koder <- pxvarlist(px_meta)$koder
