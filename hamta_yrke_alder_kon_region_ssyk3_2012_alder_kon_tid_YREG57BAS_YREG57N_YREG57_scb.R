@@ -1,6 +1,6 @@
 hamta_yrke_alder_kon_region_ssyk3_2012_alder_kon_tid_scb <- function(
 			region_vekt = "20",			   # Val av region. Finns: "00", "01", "03", "04", "05", "06", "07", "08", "09", "10", "12", "13", "14", "17", "18", "19", "20", "21", "22", "23", "24", "25", "99"
-			yrke2012_klartext = "*",			 #  NA = tas inte med i uttaget,  Finns: t.ex. "Officerare", "Specialistofficerare", "Soldater m.fl.", "Politiker och högre ämbetsmän", "Verkställande direktörer m.fl.", "Ekonomi- och finanschefer", "Personal- och HR-chefer", "Förvaltnings- och planeringschefer", "Informations-, kommunikations- och PR-chefer", "Försäljnings- och marknadschefer", "Tvättare, fönsterputsare och övriga rengöringsarbetare", "Bärplockare och plantörer m.fl.", "Grovarbetare inom bygg och anläggning", "Handpaketerare och andra fabriksarbetare", "Hamnarbetare och ramppersonal m.fl.", "Snabbmatspersonal, köks- och restaurangbiträden m.fl.", "Torg- och marknadsförsäljare", "Återvinningsarbetare", "Tidningsdistributörer, vaktmästare och övriga servicearbetare", "yrke okänt"
+			yrke2012_koder = "*",			 #  NA = tas inte med i uttaget,  Finns: t.ex. "711", "741", "712", "834", "311" m.fl SSYK3_2012-koder
 			alder_klartext = "*",			 #  NA = tas inte med i uttaget,  Finns: "16-24 år", "25-29 år", "30-34 år", "35-39 år", "40-44 år", "45-49 år", "50-54 år", "55-59 år", "60-64 år", "65-69 år"
 			kon_klartext = "*",			 #  NA = tas inte med i uttaget,  Finns: "män", "kvinnor"
 			cont_klartext = "*",			 #  Finns: "Antal"
@@ -47,7 +47,8 @@ hamta_yrke_alder_kon_region_ssyk3_2012_alder_kon_tid_scb <- function(
   varlist_bada <- pxvarlist(px_meta)
 
   # Gör om från klartext till kod som databasen förstår
-  yrke2012_vekt <- if (!all(is.na(yrke2012_klartext))) hamta_kod_med_klartext(px_meta, yrke2012_klartext, skickad_fran_variabel = "yrke2012") else NA
+  #yrke2012_vekt <- if (!all(is.na(yrke2012_klartext))) hamta_kod_med_klartext(px_meta, yrke2012_klartext, skickad_fran_variabel = "yrke2012") else NA
+  yrke2012_vekt <- yrke2012_koder
   alder_vekt <- if (!all(is.na(alder_klartext))) hamta_kod_med_klartext(px_meta, alder_klartext, skickad_fran_variabel = "alder") else NA
   kon_vekt <- if (!all(is.na(kon_klartext))) hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") else NA
 
