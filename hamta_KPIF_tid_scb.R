@@ -18,6 +18,7 @@ hamta_KPIF_tid_scb <- function(
   #
   # url till tabellens API: https://api.scb.se/OV0104/v1/doris/sv/ssd/START/PR/PR0101/PR0101G/KPIF
   #
+  # OBS! Uppdateras inte längre av SCB. Finns ett nytt skript hamta_KPIF_tid_SCB_nytt_basar.R som hämtar data från den nya tabellen där KPIF beräknas enligt det senare basåret 2020.
   # ====================================================================================================
 
   if (!require("pacman")) install.packages("pacman")
@@ -27,6 +28,8 @@ hamta_KPIF_tid_scb <- function(
 
   # Behändiga funktioner som används i skriptet
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
+  
+  print("OBS! Uppdateras inte längre av SCB. Använd istället hamta_KPIF_tid_SCB_nytt_basar.R")
 
   # Url till SCB:s databas
   url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/PR/PR0101/PR0101G/KPIF"
