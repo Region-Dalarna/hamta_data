@@ -133,9 +133,13 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
         as.data.frame(px_uttag) %>% 
         cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
                 select(Region)) %>% 
-        rename(regionkod = Region) %>% relocate(regionkod, .before = region) %>% 
-        mutate(ålder = ifelse(ålder == "totalt, samtliga åldrar", "totalt ålder", ålder))
-      })
+        rename(regionkod = Region) %>% relocate(regionkod, .before = region) 
+      })  
+        if ("ålder" %in% names(retur_df)) {
+          retur_df <- retur_df %>% 
+          mutate(ålder = ifelse(ålder == "totalt, samtliga åldrar", "totalt ålder", ålder))
+        }
+      
       
       # ta bort kolumner om vi valt bort civilstånd
       if (all(is.na(civilstand_klartext)) & ar_ckm) retur_df <- retur_df %>% select(-civilstånd)
