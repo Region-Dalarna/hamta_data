@@ -81,6 +81,8 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
           as.character() %>%                                       # säkerställ att alder_koder är character och inte numeric
           .[. %in% alder_giltiga_varden]
         } else alder_hamta <- alder_hamta[alder_hamta %in% alder_giltiga_varden]
+      } else {
+        alder_hamta <- NA
       }
       
       # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
