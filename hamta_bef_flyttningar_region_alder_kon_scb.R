@@ -53,22 +53,32 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
     hamta_data <- function(url_uttag) {
       
       px_meta <- pxweb_get(url_uttag)
+      ar_ckm <- str_detect(tolower(url_uttag), "ckm")
         
       cont_koder <- if (all(cont_klartext == "*")) cont_klartext else hamta_kod_med_klartext(px_meta, cont_klartext, skickad_fran_variabel = "contentscode")        #        hamta_kod_med_klartext(url_uttag, cont_klartext_vekt)                            # vi använder klartext i parametrar för innehållsvariabel, koder i övriga
       # vi tar bara med kvinnor eller män, alternativt NA om man väljer bort kön
-      kon_koder <- if (all(!is.na(kon_klartext))) hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") else  c("1", "2")
+      kon_koder <- if (all(!is.na(kon_klartext))) hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") else NA
+      kon_koder <- kon_koder[kon_koder %in% c("1", "2")]        # ta bara med koder för kvinnor och män, inte totalt som bara finns i CKM-tabellerna
       
-      if (!is.na(alder_koder)) {
+      if (!all(is.na(alder_koder))) {
         alder_giltiga_varden <- hamta_giltiga_varden_fran_tabell(px_meta, "alder") %>% 
           .[!str_detect(., "-")] %>% 
-          .[!(str_detect(tolower(.), "tot") & . != "TOT1")] %>% 
-          .[!(str_detect(tolower(.), "100") & . != "100+1")] %>% 
+          .[!(str_detect(tolower(.), "tot") & . != "TOT1") | tolower(.) == "tot"] %>% 
+          .[!(str_detect(tolower(.), "100") & . != "100+1") | . == "100+"] %>% 
           as.character()      # hämta giltiga värden för ålder och gör om till character
-        alder_koder <- alder_koder %>%                             # byt ut till gitliga koder om man skickat med 100 eller totalt 
-          str_replace("\\b100\\b", "100+1" ) %>% 
-          str_replace(regex("\\btotalt\\b", ignore_case = TRUE), "TOT1") %>% 
-          as.character() %>%         # säkerställ att alder_koder är character och inte numeric
+        # om det finns fler total ålder-grupper, behåller vi bara en
+        if (sum(str_count(tolower(alder_giltiga_varden), "tot")) > 1) {
+          tot_traffar <- alder_giltiga_varden[str_detect(tolower(alder_giltiga_varden), "tot")]
+          tot_tabort <- tot_traffar[2:length(tot_traffar)]
+          alder_giltiga_varden <- alder_giltiga_varden %>%
+            .[!. %in% tot_tabort]
+        }
+        alder_hamta <- if (all(alder_koder == "*")) alder_giltiga_varden else alder_koder
+        if (ar_ckm) {
+        alder_hamta <- alder_hamta %>%                             # byt ut till gitliga koder om man skickat med 100 eller totalt 
+          as.character() %>%                                       # säkerställ att alder_koder är character och inte numeric
           .[. %in% alder_giltiga_varden]
+        } else alder_hamta <- alder_hamta[alder_hamta %in% alder_giltiga_varden]
       }
       # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
       giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
@@ -79,7 +89,7 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
         varlista <- list(
           Region = region_vekt,
           Kon = kon_koder,
-          Alder = alder_koder,
+          Alder = alder_hamta,
           ContentsCode = cont_koder,
           Tid = tabell_tid
         )
@@ -95,7 +105,7 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
         retur_df <- as.data.frame(px_uttag) %>% 
           cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
                   select(Region)) %>% 
-          rename(regionkod = Region) %>% relocate(regionkod, .before = region)
+          rename(regionkod = Region) %>% relocate(regionkod, .before = region) 
         
         antal_cont <- sum(names(retur_df) %in% pxvardelist(url_uttag, "contentscode")$klartext)        # räkna antal contentsvariabler
         
@@ -106,6 +116,7 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
             konvertera_till_long_for_contentscode_variabler(url_uttag)
           
         } # slut if-sats som kontrollera om vi vill ha df i long-format
+        return(retur_df)
         
       } # slut if-sats för att kontrollera att det finns år att hämta ut i just denna tabell
     } # slut hamta_data-funktion
