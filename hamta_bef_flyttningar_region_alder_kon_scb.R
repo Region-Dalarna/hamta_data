@@ -81,7 +81,7 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
           Kon = kon_koder,
           Alder = alder_koder,
           ContentsCode = cont_koder,
-          Tid = tid_koder
+          Tid = tabell_tid
         )
         
         if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
