@@ -60,7 +60,9 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
       kon_koder <- if (all(!is.na(kon_klartext))) hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") else NA
       kon_koder <- kon_koder[kon_koder %in% c("1", "2")]        # ta bara med koder för kvinnor och män, inte totalt som bara finns i CKM-tabellerna
       
+      
       if (!all(is.na(alder_koder))) {
+        alder_koder <- alder_koder %>% as.character()
         alder_giltiga_varden <- hamta_giltiga_varden_fran_tabell(px_meta, "alder") %>% 
           .[!str_detect(., "-")] %>% 
           .[!(str_detect(tolower(.), "tot") & . != "TOT1") | tolower(.) == "tot"] %>% 
