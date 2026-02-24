@@ -83,6 +83,8 @@ hamta_fodda_moderns_alder_region_scb_CKM <- function(
     write.xlsx(px_df, paste0(output_mapp, excel_filnamn))
   }
 
+  # Av oklar anledning blir det dubbelräkning. Har lagt till en distinct här
+  px_df <- px_df %>% distinct()
   # Returnera data som en dataframe om användern valt det
   if (returnera_df) return(px_df)
 } # slut hämta data-funktion
