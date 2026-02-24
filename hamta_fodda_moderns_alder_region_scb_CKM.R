@@ -38,6 +38,7 @@ hamta_fodda_moderns_alder_region_scb_CKM <- function(
 
   # Gör om från klartext till kod som databasen förstår
   kon_vekt <- if (!all(is.na(kon_klartext))) hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") else NA
+  aldermoder_vekt <- hamta_kod_med_klartext(px_meta, aldermoder_klartext, skickad_fran_variabel = "aldermoder")
 
   cont_vekt <-  hamta_kod_med_klartext(px_meta, cont_klartext, "contentscode")
   if (length(cont_vekt) > 1) wide_om_en_contvar <- FALSE
