@@ -80,6 +80,7 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
           .[. %in% alder_giltiga_varden]
         } else alder_hamta <- alder_hamta[alder_hamta %in% alder_giltiga_varden]
       }
+      
       # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
       giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
       tabell_tid <- hamta_tid[hamta_tid %in% giltiga_ar]
