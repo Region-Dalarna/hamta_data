@@ -69,14 +69,16 @@ hamta_fodda_moderns_alder_region_scb <- function(
         }
           
         alder_hamta <- if (all(alder_moder == "*")) alder_giltiga_varden else alder_moder
-        if (ar_ckm) {
-          alder_hamta <- alder_hamta %>%                             # byt ut till gitliga koder om man skickat med 100 eller totalt 
-            as.character() %>%                                       # säkerställ att alder_moder är character och inte numeric
-            .[. %in% alder_giltiga_varden]
-        } else alder_hamta <- alder_hamta[alder_hamta %in% alder_giltiga_varden]
+        alder_hamta <- alder_hamta %>%                             # byt ut till gitliga koder om man skickat med 100 eller totalt 
+          str_replace(regex("^totalt$", ignore_case = TRUE), ifelse(ar_ckm, "TotSA", "tot")) %>% 
+          as.character() %>%                                       # säkerställ att alder_moder är character och inte numeric
+          .[. %in% alder_giltiga_varden]
       } else {
         alder_hamta <- if (ar_ckm) "TotSA" else NA
       }
+      
+      # om inget av medskickad alder_koder är giltigt så hämtas totalen
+      if (length(alder_hamta) == 0) alder_hamta <- if (ar_ckm) "TotSA" else NA
       
       kon_giltiga <- hamta_giltiga_varden_fran_tabell(px_meta, "kon") %>% .[. %in% c("1", "2")]
       kon_koder <- if (all(!is.na(kon_klartext))) {
