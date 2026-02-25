@@ -112,6 +112,11 @@ hamta_fodda_moderns_alder_region_scb <- function(
         
         if (all(is.na(alder_moder)) & ar_ckm) retur_df <- retur_df %>% select(-`moderns ålder`)
         
+        if ("moderns ålder" %in% names(retur_df) & ar_ckm) {
+          retur_df <- retur_df %>% 
+            mutate(`moderns ålder` = ifelse(`moderns ålder` == "totalt, samtliga åldrar", "totalt ålder", `moderns ålder`))
+        }
+        
         return(retur_df)
       } # slut if-sats om det finns giltiga år för just denna tabell
     } # slut hämta data funktion 
