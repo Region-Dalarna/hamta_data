@@ -102,8 +102,11 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
       
       cont_koder <- hamta_kod_med_klartext(url_uttag, cont_klartext, skickad_fran_variabel = "contentscode")        #        hamta_kod_med_klartext(url_uttag, cont_klartext_vekt)                            # vi använder klartext i parametrar för innehållsvariabel, koder i övriga
       
-      kon_koder <- if (all(!is.na(kon_klartext))) hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") else NA
-      kon_koder <- if (all(!is.na(kon_klartext))) kon_koder[kon_koder %in% c("1", "2")]        # ta bara med koder för kvinnor och män, inte totalt som bara finns i CKM-tabellerna
+      kon_giltiga <- hamta_giltiga_varden_fran_tabell(px_meta, "kon") %>% .[. %in% c("1", "2")]
+      kon_koder <- if (all(!is.na(kon_klartext))) {
+        # om * ta alla giltiga 
+        if (all(kon_klartext == "*")) kon_giltiga else hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") %>% .[. %in% kon_giltiga]
+      } else NA
       
       # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
       giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
