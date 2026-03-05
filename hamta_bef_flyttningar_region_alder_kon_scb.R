@@ -57,9 +57,11 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
         
       cont_koder <- if (all(cont_klartext == "*")) cont_klartext else hamta_kod_med_klartext(px_meta, cont_klartext, skickad_fran_variabel = "contentscode")        #        hamta_kod_med_klartext(url_uttag, cont_klartext_vekt)                            # vi använder klartext i parametrar för innehållsvariabel, koder i övriga
       # vi tar bara med kvinnor eller män, alternativt NA om man väljer bort kön
-      kon_koder <- if (all(!is.na(kon_klartext))) hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") else NA
-      kon_koder <- kon_koder[kon_koder %in% c("1", "2")]        # ta bara med koder för kvinnor och män, inte totalt som bara finns i CKM-tabellerna
-      
+      kon_giltiga <- hamta_giltiga_varden_fran_tabell(px_meta, "kon") %>% .[. %in% c("1", "2")]
+      kon_koder <- if (all(!is.na(kon_klartext))) {
+        # om * ta alla giltiga 
+        if (all(kon_klartext == "*")) kon_giltiga else hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") %>% .[. %in% kon_giltiga]
+      } else NA
       
       if (!all(is.na(alder_koder))) {
         alder_koder <- alder_koder %>% as.character()
@@ -75,7 +77,8 @@ hamta_bef_flyttningar_region_alder_kon_scb <- function(
           alder_giltiga_varden <- alder_giltiga_varden %>%
             .[!. %in% tot_tabort]
         }
-        alder_hamta <- if (all(alder_koder == "*")) alder_giltiga_varden else alder_koder
+        hundra_giltig <- alder_giltiga_varden[str_detect(alder_giltiga_varden, "100")][1]
+        alder_hamta <- if (all(alder_koder == "*")) alder_giltiga_varden else alder_koder %>% str_replace("100", hundra_giltig) %>% .[. %in% alder_giltiga_varden]
         if (ar_ckm) {
         alder_hamta <- alder_hamta %>%                             # byt ut till gitliga koder om man skickat med 100 eller totalt 
           as.character() %>%                                       # säkerställ att alder_koder är character och inte numeric

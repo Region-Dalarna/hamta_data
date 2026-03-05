@@ -82,7 +82,8 @@ hamta_bef_folkmangd_alder_kon_ar_scb <- function(
             alder_giltiga_varden <- alder_giltiga_varden %>%
               .[!. %in% tot_tabort]
           }
-          alder_hamta <- if (all(alder_koder == "*")) alder_giltiga_varden else alder_koder
+          hundra_giltig <- alder_giltiga_varden[str_detect(alder_giltiga_varden, "100")][1]
+          alder_hamta <- if (all(alder_koder == "*")) alder_giltiga_varden else alder_koder %>% str_replace("100", hundra_giltig) %>% str_replace("totalt", "TotSA") %>% .[. %in% alder_giltiga_varden]
           if (ar_ckm) {
             alder_hamta <- alder_hamta %>%                             # byt ut till gitliga koder om man skickat med 100 eller totalt 
               as.character() %>%                                       # säkerställ att alder_koder är character och inte numeric
