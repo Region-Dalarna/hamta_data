@@ -62,51 +62,53 @@ hamta_utbniva_riket_kon_alder_nationellbakgrund_utbildningsniva_utbinriktnsun200
   giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
   tid_vekt <- if (all(tid_koder != "*")) tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique() else giltiga_ar
 
-  # query-lista till pxweb-uttag
-  varlista <- c(
-    list(
-      "Kon" = kon_vekt,
-      "Alder" = alder_vekt,
-      "NationellBakgrund" = nationellbakgrund_vekt,
-      "UtbildningsNiva" = utbildningsniva_vekt,
-      "ContentsCode" = cont_vekt,
-      "Tid" = tid_vekt
-    ),
-    setNames(list(utbinriktning_vekt), utbinr_kol)
-  )
-
-  if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
-  if (all(is.na(alder_klartext))) varlista <- varlista[names(varlista) != "Alder"]
-  if (all(is.na(nationellbakgrund_klartext))) varlista <- varlista[names(varlista) != "NationellBakgrund"]
-  if (all(is.na(utbildningsniva_klartext))) varlista <- varlista[names(varlista) != "UtbildningsNiva"]
-  if (all(is.na(utbinriktning_klartext))) varlista <- varlista[names(varlista) != utbinr_kol]
-
-  # Hämta data med varlista
-  px_uttag <- pxweb_get(url = url_uttag, query = varlista)
-
-  var_vektor <- c(utbniva_kod = "UtbildningsNiva")
-  var_vektor_klartext <- "UtbildningsNiva"
-
-  # gör om pxweb-uttaget till en dataframe
-  px_df <- as.data.frame(px_uttag)
-  if (!all(is.na(var_vektor))) {
-      # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
-      px_df <- px_df %>%
-            cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
-            select(any_of(var_vektor)))
-
-      # kolumnerna med koder läggs framför motsvarande kolumner med klartext
-      for (varflytt_index in 1:length(var_vektor)) {
+  if (length(tid_vekt) > 0) {
+    # query-lista till pxweb-uttag
+    varlista <- c(
+      list(
+        "Kon" = kon_vekt,
+        "Alder" = alder_vekt,
+        "NationellBakgrund" = nationellbakgrund_vekt,
+        "UtbildningsNiva" = utbildningsniva_vekt,
+        "ContentsCode" = cont_vekt,
+        "Tid" = tid_vekt
+      ),
+      setNames(list(utbinriktning_vekt), utbinr_kol)
+    )
+  
+    if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
+    if (all(is.na(alder_klartext))) varlista <- varlista[names(varlista) != "Alder"]
+    if (all(is.na(nationellbakgrund_klartext))) varlista <- varlista[names(varlista) != "NationellBakgrund"]
+    if (all(is.na(utbildningsniva_klartext))) varlista <- varlista[names(varlista) != "UtbildningsNiva"]
+    if (all(is.na(utbinriktning_klartext))) varlista <- varlista[names(varlista) != utbinr_kol]
+  
+    # Hämta data med varlista
+    px_uttag <- pxweb_get(url = url_uttag, query = varlista)
+  
+    var_vektor <- c(utbniva_kod = "UtbildningsNiva")
+    var_vektor_klartext <- "UtbildningsNiva"
+  
+    # gör om pxweb-uttaget till en dataframe
+    px_df <- as.data.frame(px_uttag)
+    if (!all(is.na(var_vektor))) {
+        # om man vill ha med koder också för variabler utöver klartext så läggs de på här (om det finns värden i var_vektor)
         px_df <- px_df %>%
-            relocate(any_of(names(var_vektor)[varflytt_index]), .before = any_of(var_vektor_klartext[varflytt_index]))
-      }
-  }
-
-  # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
-  # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
-  if (long_format & !wide_om_en_contvar) px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag)
-
-  return(px_df)
+              cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
+              select(any_of(var_vektor)))
+  
+        # kolumnerna med koder läggs framför motsvarande kolumner med klartext
+        for (varflytt_index in 1:length(var_vektor)) {
+          px_df <- px_df %>%
+              relocate(any_of(names(var_vektor)[varflytt_index]), .before = any_of(var_vektor_klartext[varflytt_index]))
+        }
+    }
+  
+    # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
+    # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
+    if (long_format & !wide_om_en_contvar) px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag)
+  
+    return(px_df)
+   } # slut test om det finns något giltigt år i denna tabell av de användaren valt
   } # slut hämta data-funktion 
 
   px_alla <- map(url_list, ~ hamta_data(.x)) %>% list_rbind()
