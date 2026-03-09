@@ -32,6 +32,58 @@ hamta_integration_arbmarknad_riket_region_kon_utbniv_bakgrvar_tid_scb <- functio
   # Behändiga funktioner som används i skriptet
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
 
+  # definiera bakgrund-nyckel för att hantera två olika versioner
+  cont_nyckel <- list(
+    "Andel sysselsatta" = c(
+      "Andel sysselsatta",
+      "Andel förvärvsarbetande (ny definition från och med 2019)"
+    ),
+    "Andel företagare av de sysselsatta" = c(
+      "Andel företagare av de sysselsatta",
+      "Andel företagare av de förvärvsarbetande (ny definition från och med 2019)"
+    ),
+    "Andel inskrivna arbetslösa" = c(
+      "Andel inskrivna arbetslösa",
+      "Andel inskrivna arbetslösa, procent"
+    ),
+    "Andel öppet arbetslösa" = c(
+      "Andel öppet arbetslösa",
+      "Andel öppet arbetslösa, procent"
+    ),
+    "Andel sökande i program med aktivitetsstöd" = c(
+      "Andel sökande i program med aktivitetsstöd",
+      "Andel sökande i program med aktivitetsstöd, procent"
+    ),
+    "Andel långtidsarbetslösa" = c(
+      "Andel långtidsarbetslösa,",
+      "Andel långtidsarbetslösa, procent"
+    ),
+    "Andel fortfarande sysselsatta efter ett år" = c(
+      "Andel fortfarande sysselsatta efter ett år",
+      "Andel fortfarande förvärvsarbetande efter ett år (ny def. från och med 2019)"
+    ),
+    "Andel fortfarande företagare efter ett år" = c(
+      "Andel fortfarande företagare efter ett år",
+      "Andel fortfarande företagare efter ett år (ny definition från och med 2019)"
+    ),
+    "Andel i chefsposition" = c(
+      "Andel i chefsposition",
+      "Andel i chefsposition, procent"
+    ),
+    "Andel med eftergymn. utb. med arbete inom yrkesomr. 2-3 enligt SSYK" = c(
+      "Andel med eftergymn. utb. med arbete inom yrkesomr. 2-3 enligt SSYK",
+      "Andel med eftergymn. utb. med arbete inom yrkesomr. 2-3 enligt SSYK, procent"
+    ),
+    "Andel med eftergymn. utb. med arbete på kval.nivå 3-4 enligt SSYK" = c(
+      "Andel med eftergymn. utb. med arbete på kval.nivå 3-4 enligt SSYK",
+      "Andel med eftergymn. utb. med arbete på kval.nivå 3-4 enligt SSYK, procent"
+    )
+  )
+
+  cont_kolnamn_nyckel <- cont_nyckel %>%  
+    imap(~ set_names(rep(.y, length(.x)), .x) %>% keep(names(.) != .y)) %>% 
+    { setNames(unlist(., use.names = FALSE), unlist(map(., names))) } 
+  
   # Url till databas
   url_list <- c("https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003X/IntGr1RikKonUtb",
                 "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/AA/AA0003/AA0003B/IntGr1RikUtbBAS")
@@ -55,9 +107,16 @@ hamta_integration_arbmarknad_riket_region_kon_utbniv_bakgrvar_tid_scb <- functio
   utbniva_vekt <- hamta_kod_med_klartext(px_meta, utbniva_klartext, skickad_fran_variabel = "utbniv")
   bakgrund_vekt <- hamta_kod_med_klartext(px_meta, bakgrund_klartext, skickad_fran_variabel = "bakgrvar")
   
-  cont_giltiga <- hamta_giltiga_varden_fran_tabell(px_meta, "contentscode", klartext = TRUE)
-  cont_hamta <- if(any(cont_klartext == "*")) cont_giltiga else cont_klartext
-  cont_vekt <-  hamta_kod_med_klartext(px_meta, cont_hamta, "contentscode")
+  
+  # vi hittar rätt position i cont-nyckel 
+  cont_position <- which(sapply(cont_nyckel, function(x) cont_klartext %in% x))
+  sok_element <- cont_nyckel[[cont_position]]
+  
+  cont_vekt <- map(sok_element, ~ hamta_kod_med_klartext(px_meta, .x, "contentscode")) %>% keep(~ length(.x) > 0) %>% unlist()
+  
+  # cont_giltiga <- hamta_giltiga_varden_fran_tabell(px_meta, "contentscode", klartext = TRUE)
+  # cont_hamta <- if(any(cont_klartext == "*")) cont_giltiga else cont_klartext
+  # cont_vekt <-  hamta_kod_med_klartext(px_meta, cont_hamta, "contentscode")
   if (length(cont_vekt) > 1) wide_om_en_contvar <- FALSE
 
   # Hantera tid-koder
@@ -95,6 +154,12 @@ hamta_integration_arbmarknad_riket_region_kon_utbniv_bakgrvar_tid_scb <- functio
         }
     }
   
+    # px_df <- px_df %>% 
+    #   rename(any_of(cont_kolnamn_nyckel))
+    # 
+    px_df <- px_df %>% 
+      rename(any_of(setNames(names(cont_kolnamn_nyckel), unname(cont_kolnamn_nyckel))))
+      
     # man kan välja bort long-format, då låter vi kolumnerna vara wide om det finns fler innehållsvariabler, annars
     # pivoterar vi om till long-format, dock ej om det bara finns en innehållsvariabel
     if (long_format & !wide_om_en_contvar) px_df <- px_df %>% konvertera_till_long_for_contentscode_variabler(url_uttag)
