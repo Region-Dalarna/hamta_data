@@ -28,15 +28,10 @@ hamta_gymn_avg_genomstromning_4ar_prg_skolverket <- function(region_vekt = "20",
          readxl,
          httr)
   
-  # extrahera senaste år från en tabell på Skolverkets webbplats där länken inte är bunden till vilket år det är
-  GET("https://siris.skolverket.se/siris/sitevision_doc.getFile?p_id=552731", write_disk(tf_artalfil <- tempfile(fileext = ".xlsx")))
-  #excel_sheets(tf_artalfil)
-  artal_txt <- suppressMessages(read_excel(tf_artalfil, sheet = "Tabell 3 B Sid 2")) %>% 
-    dplyr::pull(1) %>%
-    .[!is.na(.)] %>% 
-    .[str_detect(., "Genomströmning")] %>% 
-    str_extract("\\d{4}")
-  
+  # ta fram senaste årtalet för att hämta aktuell data
+  artal_txt <- format(Sys.Date(), "%Y") %>% as.numeric()
+  artal_txt <- as.character(artal_txt - 5)
+
   # url:er till samtliga geografiska nivåer (riket, län och kommuner)
   url_lista <- c(url_riket = "https://siris.skolverket.se/siris/reports/export_api/runexport/?pFormat=xls&pExportID=402&pAr=2019&pLan=&pKommun=&pHmantyp=&pUttag=null&pToken=25CB9D24F0FA4D5DE06311BA650A8D29&pFlikar=1&pVerkform=21",
                  url_lan = "https://siris.skolverket.se/siris/reports/export_api/runexport/?pFormat=xls&pExportID=403&pAr=2019&pLan=&pKommun=&pHmantyp=&pUttag=null&pToken=25CB9D24F0FA4D5DE06311BA650A8D29&pFlikar=1&pVerkform=21",
@@ -97,8 +92,17 @@ hamta_gymn_avg_genomstromning_4ar_prg_skolverket <- function(region_vekt = "20",
         relocate(läsår, .before = 1)
     }
     
+    # ta bara med de regioner som användaren valt
     genomstr_df <- genomstr_df %>% 
       filter(regionkod %in% region_vekt)
+    
+    # om senaste läsår bara har "." som värden, backa ett år och hämta om
+    senaste_lasar <- max(genomstr_df$läsår)
+    if (all(genomstr_df$andel[genomstr_df$läsår == senaste_lasar] == ".", na.rm = TRUE)) {
+      nytt_artal <- as.character(as.integer(artal_txt) - 1)
+      ny_url <- str_replace(fil_url, "&pAr=\\d{4}", paste0("&pAr=", nytt_artal))
+      return(las_in_excelfil(ny_url))
+    }
     
     return(genomstr_df)
   } # slut läs in excelfil-funktion
