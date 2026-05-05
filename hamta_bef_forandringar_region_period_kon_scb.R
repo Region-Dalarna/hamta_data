@@ -48,46 +48,66 @@ hamta_bef_forandringar_region_alder_kon_scb <- function(
   if (returnera_df | skriv_excelfil) {                       # skriptet körs bara om användaren valt att returnera en dataframe och/eller excelfil
     
     # url till tabellen i SCB:s statistikdatabas
-    url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101G/BefforandrKvRLK"
-    cont_kod <- "000002Z9"
+    #url_uttag <- "https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101G/BefforandrKvRLK"
+    #cont_kod <- "000002Z9"
+    url_list <- c("https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101G/BefforandrKvRLK",
+                  "https://api.scb.se/OV0104/v1/doris/sv/ssd/START/BE/BE0101/BE0101G/BefforandrKvRLKCKM")
     
-    kon_koder <- if (!all(is.na(kon_klartext)) & !all(kon_klartext == "*")) hamta_kod_med_klartext(url_uttag, kon_klartext, skickad_fran_variabel = "kon") else "*"
-    period_koder <- if (!all(is.na(period_klartext)) & !all(period_klartext == "*")) hamta_kod_med_klartext(url_uttag, period_klartext, skickad_fran_variabel = "period") else  "*"
-    forandringar_koder <- if (all(forandringar_klartext == "*")) forandringar_klartext else hamta_kod_med_klartext(url_uttag, forandringar_klartext, skickad_fran_variabel = "forandringar")        
+    giltig_tid <- map(url_list, ~ hamta_giltiga_varden_fran_tabell(.x, "tid")) %>% unlist() %>% unique()      # hämta alla giltiga år som finns i alla medskickade tabeller
+    senaste_ar <- giltig_tid %>% max()      # hämta senaste år som finns i alla medskickade tabeller
+    hamta_tid <- if (all(tid_koder == "*")) hamta_tid <- giltig_tid else {
+      tid_koder <- tid_koder %>% str_replace("9999", senaste_ar)
+      hamta_tid <- tid_koder[tid_koder %in% giltig_tid]
+    } 
     
-    # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
-    giltiga_ar <- hamta_giltiga_varden_fran_tabell(url_uttag, "tid")
-    if (all(tid_koder != "*")) tid_koder <- tid_koder %>% as.character() %>% str_replace("9999", max(giltiga_ar)) %>% .[. %in% giltiga_ar] %>% unique()
+    # url till tabellen i SCB:s statistikdatabas
+    hamta_data <- function(url_uttag) {
     
-    # variabler som vi vill ha med i uttaget
-    varlista <- list(
-      Region = region_vekt,
-      Kon = kon_koder,
-      Period = period_koder,
-      Forandringar = forandringar_koder,
-      ContentsCode = cont_kod,
-      Tid = tid_koder
-    )
+      px_meta <- pxweb_get(url_uttag)
+      cont_kod <- hamta_giltiga_varden_fran_tabell(px_meta, "contentscode")
+      kon_koder <- if (!all(is.na(kon_klartext)) & !all(kon_klartext == "*")) hamta_kod_med_klartext(px_meta, kon_klartext, skickad_fran_variabel = "kon") else "*"
+      period_koder <- if (!all(is.na(period_klartext)) & !all(period_klartext == "*")) hamta_kod_med_klartext(px_meta, period_klartext, skickad_fran_variabel = "period") else  "*"
+      forandringar_koder <- if (all(forandringar_klartext == "*")) forandringar_klartext else hamta_kod_med_klartext(px_meta, forandringar_klartext, skickad_fran_variabel = "forandringar")        
+      
+      # hantering av tid (i detta fall år) och att kunna skicka med "9999" som senaste år
+      giltiga_ar <- hamta_giltiga_varden_fran_tabell(px_meta, "tid")
+      tabell_tid <- hamta_tid[hamta_tid %in% giltiga_ar]
+      
+      if (length(tabell_tid) > 0) {
+      # variabler som vi vill ha med i uttaget
+      varlista <- list(
+        Region = region_vekt,
+        Kon = kon_koder,
+        Period = period_koder,
+        Forandringar = forandringar_koder,
+        ContentsCode = cont_kod,
+        Tid = tid_koder
+      )
+      
+      if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
+      # =============================================== API-uttag ===============================================
+      
+      cont_var_klartext <- hamta_klartext_med_kod(url_uttag, cont_kod, "contentscode")
+      
+      px_uttag <- pxweb_get(url = url_uttag, query = varlista) 
+      
+      # Lägg API-uttaget i px_df, lägg på ytterligare ett uttag men med koder istället för klartext,
+      # välj ut bara regionkolumnen i det andra uttaget, döp om den till regionkod och lägg den först av kolumnerna
+      retur_df <- suppressWarnings(                             # för att slippa felmmedelande om att det finns NA-värden
+        as.data.frame(px_uttag) %>% 
+        cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
+                select(Region)) %>% 
+        rename(regionkod = Region) %>% relocate(regionkod, .before = region) %>% 
+          rename(personer = cont_var_klartext)
+      )
+      } # slut if-sats för att kontrollera att det finns år att hämta ut i just denna tabell
+    } # slut hamta_data-funktion
     
-    if (all(is.na(kon_klartext))) varlista <- varlista[names(varlista) != "Kon"]
-    # =============================================== API-uttag ===============================================
+    px_df <- map(url_list, ~hamta_data(url_uttag = .x)) %>% 
+      list_rbind()
     
-    cont_var_klartext <- hamta_klartext_med_kod(url_uttag, cont_kod, "contentscode")
-    
-    px_uttag <- pxweb_get(url = url_uttag, query = varlista) 
-    
-    # Lägg API-uttaget i px_df, lägg på ytterligare ett uttag men med koder istället för klartext,
-    # välj ut bara regionkolumnen i det andra uttaget, döp om den till regionkod och lägg den först av kolumnerna
-    retur_df <- suppressWarnings(                             # för att slippa felmmedelande om att det finns NA-värden
-      as.data.frame(px_uttag) %>% 
-      cbind(as.data.frame(px_uttag, column.name.type = "code", variable.value.type = "code") %>%
-              select(Region)) %>% 
-      rename(regionkod = Region) %>% relocate(regionkod, .before = region) %>% 
-        rename(personer = cont_var_klartext)
-    )
-    
-    if (returnera_df) return(retur_df)
-    if (skriv_excelfil) write_xlsx(retur_df, paste0(mapp_excelfil, filnamn_excelfil))
+    if (returnera_df) return(px_df)
+    if (skriv_excelfil) write_xlsx(px_df, paste0(mapp_excelfil, filnamn_excelfil))
   } else print("Varken 'returnera_df' eller mapp och filnamn för excelfil har valts så då körs inte skriptet då inget returneras. Välj någon av dessa eller båda och kör skriptet igen.") # slut if-sats där vi testar att användaren valt att spara en dataframe och/eller Excelfil
   
 } # slut funktion
