@@ -191,7 +191,8 @@ hamta_befprognos_data <- function(
           progn_ar <- map_chr(filsokvagar_xlsx, ~ parse_number(.) %>% as.character()) 
           
           befskript_df <- map2(filsokvagar_xlsx, progn_ar, ~ readxl::read_xlsx(.x) %>% 
-                                 mutate(prognos_ar = .y)) %>%
+                                 mutate(prognos_ar = .y %>% as.character(),
+                                        ar = ar %>% as.character())) %>%
             list_rbind()
           
           if (all(hamta_tid_vekt != "*")) befskript_df <- befskript_df %>% 
