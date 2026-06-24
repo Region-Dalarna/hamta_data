@@ -26,30 +26,75 @@ hamta_gymn_elever_kon_bakgrund_arskurs_prg_skolverket <- function(region_vekt = 
          readxl,
          httr)
   
-  # extrahera senaste år från en tabell på Skolverkets webbplats där länken inte är bunden till vilket år det är
-  GET("https://siris.skolverket.se/siris/sitevision_doc.getFile?p_id=552681", write_disk(tf_artalfil <- tempfile(fileext = ".xlsx")))
-  #excel_sheets(tf_artalfil)
-  artal_txt <- suppressMessages(read_excel(tf_artalfil, sheet = "5A")) %>% 
-    dplyr::pull(1) %>%
-    .[!is.na(.)] %>% 
-    .[str_detect(., "läsåret")] %>% 
-    str_extract("\\d{4}")              # för hela: "\\d{4}/\\d{2}"
   
-  giltiga_ar <- 2011:as.numeric(artal_txt) %>% as.character()
+  # funktion som används nedan för att hitta rätt senaste år
+  hitta_senaste_ar <- function(min_size_kb = 70, visa_meddelanden = FALSE) {
+    
+    start_ar <- as.integer(format(Sys.Date(), "%Y"))
+    
+    for (ar in start_ar:2011) {
+      
+      tf <- tempfile(fileext = ".xlsx")
+      
+      url <- paste0(
+        "https://siris.skolverket.se/siris/reports/export_api/runexport/?",
+        "pFormat=xls",
+        "&pExportID=458",
+        "&pAr=", ar,
+        "&pLan=&pKommun=&pHmantyp=&pUttag=&pSortering=&pToken=",
+        "&pVerkform=21",
+        "&pFlikar=1"
+      )
+      
+      res <- tryCatch({
+        GET(url, write_disk(tf, overwrite = TRUE))
+      }, error = function(e) {
+        message("Fel vid hämtning för år ", ar, ": ", e$message)
+        return(NULL)
+      })
+      
+      if (is.null(res)) {
+        next
+      }
+      
+      if (status_code(res) != 200) {
+        message("Statuskod ", status_code(res), " för år ", ar)
+        next
+      }
+      
+      size_kb <- file.size(tf) / 1024
+      
+      if (visa_meddelanden) cat("År:", ar, "- storlek:", round(size_kb, 1), "kB\n")
+      
+      if (!is.na(size_kb) && size_kb > min_size_kb) {
+        return(list(
+          ar = ar,
+          fil = tf,
+          storlek_kb = size_kb
+        ))
+      }
+    }
+    
+    stop("Hittade inget år med tillräcklig storlek (>= 70 kB)")
+  }
   
-  valda_ar <- valda_ar %>% str_replace("9999", artal_txt) %>% str_replace("\\*", giltiga_ar) %>% unique() %>% .[. %in% giltiga_ar]
+  senaste_ar <- hitta_senaste_ar()$ar
+  
+  giltiga_ar <- 2011:senaste_ar %>% as.character()
+  
+  valda_ar <- valda_ar %>% str_replace("9999", as.character(senaste_ar)) %>% str_replace("\\*", giltiga_ar) %>% unique() %>% .[. %in% giltiga_ar]
   
   if (length(valda_ar) > 0) {
-      # url:er till samtliga geografiska nivåer (riket, län och kommuner)
+ 
       url_lista <- c(
-                     url_riket = "https://siris.skolverket.se/siris/reports/export_api/runexport/?pFormat=xls&pExportID=445&pAr=2023&pLan=&pKommun=&pHmantyp=&pUttag=null&pToken=26E3C4BF90EC124BE06311BA650A5972&pFlikar=1&pVerkform=21",
-                     url_lan = "https://siris.skolverket.se/siris/reports/export_api/runexport/?pFormat=xls&pExportID=340&pAr=2023&pLan=&pKommun=&pHmantyp=&pUttag=null&pToken=26E3C4BF90EC124BE06311BA650A5972&pFlikar=1&pVerkform=21",
-                     url_kommun = "https://siris.skolverket.se/siris/reports/export_api/runexport/?pFormat=xls&pExportID=58&pAr=2023&pLan=&pKommun=&pHmantyp=&pUttag=null&pToken=26E3C4BF90EC124BE06311BA650A5972&pFlikar=1&pVerkform=21"
-                     )
+        url_riket = "https://siris.skolverket.se/siris/reports/export_api/runexport/?pFormat=xls&pExportID=458&pAr=2025&pLan=&pKommun=&pHmantyp=&pUttag=&pSortering=&pToken=&pVerkform=21&pFlikar=1",
+        url_lan = "https://siris.skolverket.se/siris/reports/export_api/runexport/?pFormat=xls&pExportID=460&pAr=2025&pLan=&pKommun=&pHmantyp=&pUttag=&pSortering=&pToken=&pVerkform=21&pFlikar=1",
+        url_kommun = "https://siris.skolverket.se/siris/reports/export_api/runexport/?pFormat=xls&pExportID=461&pAr=2025&pLan=&pKommun=&pHmantyp=&pUttag=&pSortering=&pToken=&pVerkform=21&pFlikar=1"
+      )
       
       # om vi fått ett annat år när vi extraherat senaste år ovan än vad som finns i url:erna ovan (år 2019) så används detta istället
     
-      url_lista <- map_chr(url_lista, ~ str_replace(.x, "&pAr=\\d{4}", paste0("&pAr=", artal_txt)))
+      url_lista <- map_chr(url_lista, ~ str_replace(.x, "&pAr=\\d{4}", paste0("&pAr=", senaste_ar)))
       
       df_list <- list()                   # vi sparar hämtad statistik till denna lista
       
@@ -62,19 +107,19 @@ hamta_gymn_elever_kon_bakgrund_arskurs_prg_skolverket <- function(region_vekt = 
         flikar <- excel_sheets(tf_excelfil) %>% .[!str_detect(., "beskrivning")]
         if (!all(gymnasieprogram == "*")) flikar <- flikar[flikar %in% gymnasieprogram]
         
-        dataset_df <- map(flikar, ~ read_excel(tf_excelfil, sheet = .x, skip = 8, col_types = "text") %>%
-                            pivot_longer(any_of(c(starts_with("Andel"), starts_with("Antal"))), values_to = "varde", names_to = "variabel") %>%
+        dataset_df <- map(flikar, ~ read_excel(tf_excelfil, sheet = .x, skip = 6, col_types = "text") %>%
+                            pivot_longer(matches("^\\d{4}"), values_to = "varde", names_to = "lasar") %>%
                             mutate(gymnasieprogram = .x) %>% 
                             filter(`Typ av huvudman` %in% huvudman,
                                    varde != ".")) %>%
           list_rbind() %>% 
           relocate(gymnasieprogram, .before = 1)
 
-        lasar_txt <- suppressMessages(read_excel(tf_excelfil, sheet = 1)) %>% 
-          dplyr::pull(1) %>%
-          .[!is.na(.)] %>% 
-          .[str_detect(., "läsår")] %>% 
-          str_extract("\\d{4}/\\d{2}")
+        # lasar_txt <- suppressMessages(read_excel(tf_excelfil, sheet = 1)) %>% 
+        #   dplyr::pull(1) %>%
+        #   .[!is.na(.)] %>% 
+        #   .[str_detect(., "läsår")] %>% 
+        #   str_extract("\\d{4}/\\d{2}")
         
         # om det är riket som hämtas
         if ("Riket" %in% names(dataset_df)) {
@@ -86,9 +131,9 @@ hamta_gymn_elever_kon_bakgrund_arskurs_prg_skolverket <- function(region_vekt = 
         }
         
         # om det är län som hämtas
-        if ("Läns-kod" %in% names(dataset_df) & !"Kommun-kod" %in% names(dataset_df)) {
+        if ("Länskod" %in% names(dataset_df) & !"Kommun-kod" %in% names(dataset_df)) {
           dataset_df <- dataset_df %>%
-            rename(regionkod = `Läns-kod`,
+            rename(regionkod = `Länskod`,
                    region = Län) %>% 
             relocate(region, .before = 1) %>% 
             relocate(regionkod, .before = 1) 
@@ -105,7 +150,7 @@ hamta_gymn_elever_kon_bakgrund_arskurs_prg_skolverket <- function(region_vekt = 
         }
         
         dataset_df <- dataset_df %>% 
-          mutate(lasar = lasar_txt) %>%
+          #mutate(lasar = lasar_txt) %>%
           rename(huvudman = `Typ av huvudman`) %>%
           relocate(lasar, .before = 1) %>%
           filter(regionkod %in% region_vekt)
@@ -114,20 +159,24 @@ hamta_gymn_elever_kon_bakgrund_arskurs_prg_skolverket <- function(region_vekt = 
       } # slut läs in excelfil-funktion
       
       # här görs själva jobbet med att extrahera information för de regioner och år vi har valt
-      alla_ar <- map(valda_ar, function(ar) {
-        
-        url_lista <- map_chr(url_lista, ~ str_replace(.x, "&pAr=\\d{4}", paste0("&pAr=", ar)))
+      # alla_ar <- map(valda_ar, function(ar) {
+      #   
+      #   url_lista <- map_chr(url_lista, ~ str_replace(.x, "&pAr=\\d{4}", paste0("&pAr=", ar)))
         
         if (length(region_vekt[region_vekt == "00"]) > 0) df_list[["riket"]] <- las_in_excelfil(url_lista[["url_riket"]])            
         if (length(region_vekt[nchar(region_vekt) == 2 & region_vekt != "00"]) > 0) df_list[["lan"]] <- las_in_excelfil(url_lista[["url_lan"]])
         if (length(region_vekt[nchar(region_vekt) == 4]) > 0) df_list[["kommun"]] <- las_in_excelfil(url_lista[["url_kommun"]])
         
-        retur_df <- bind_rows(df_list)
-        if (konvertera_andel_till_numerisk) retur_df <- suppressWarnings(retur_df %>% mutate(varde = parse_number(varde)))
+        retur_df <- bind_rows(df_list) %>% 
+          rename(variabel = Elever)
+        if (konvertera_andel_till_numerisk) retur_df <- suppressWarnings(retur_df %>% mutate(
+          varde = na_if(varde, ".."),
+          varde = parse_number(varde))
+          )
         return(retur_df)
         
-      }, .progress = TRUE) %>% 
-        list_rbind()
+      # }, .progress = TRUE) %>% 
+      #   list_rbind()
       
       return(alla_ar)
   
