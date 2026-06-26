@@ -6,6 +6,7 @@
 hamta_gymn_avg_genomstromning_4ar_prg_skolverket <- function(region_vekt = "20",                     # NA = riket, alla län och alla kommuner
                                                              gymnasieprogram = "*",                     # "*" = alla gymnasieprogram, annars anges programnamn, dessa finns: "Nationella program", "Högskoleförberedande program", "Yrkesprogram", "Introduktionsprogrammen", "Barn- och fritidsprogrammet", "Bygg- och anläggningsprogramme", "Ekonomiprogrammet", "El- och energiprogrammet", "Estetiska programmet", "Fordons- och transportprogramm", "Försäljnings- och serviceprogr", "Handels- och administrationspr", "Hantverksprogrammet", "Hotell- och turismprogrammet", "Humanistiska programmet", "Industritekniska programmet", "International Baccalaureate", "Introduktionsprogram, Individu", "Introduktionsprogram, Programi", "Introduktionsprogram, Språkint", "Introduktionsprogram, Yrkesint", "Naturbruksprogrammet", "Naturvetenskapsprogrammet", "Restaurang- och livsmedelsprog", "Riksrekryterande utbildningar", "Samhällsvetenskapsprogrammet", "Teknikprogrammet", "VVS- och fastighetsprogrammet", "Vård- och omsorgsprogrammet"
                                                              huvudman = "Samtliga",                     # finns: "Samtliga", "Kommunal" och "Enskild", det går att välja flera
+                                                             ta_bort_na = TRUE,                                 # TRUE = tar bort rader med NA i andel, annars behålls dessa
                                                              konvertera_andel_till_numerisk = TRUE      # TRUE = numerisk kolumn av andel, då försvinner prickar och liknande och blir NA. Vill man se vad som är prickar och hur många det är kan man sätta denna till FALSE
 ) {         
   
@@ -93,8 +94,10 @@ hamta_gymn_avg_genomstromning_4ar_prg_skolverket <- function(region_vekt = "20",
     }
     
     # ta bara med de regioner som användaren valt
-    genomstr_df <- genomstr_df %>% 
-      filter(regionkod %in% region_vekt)
+    if (!all(region_vekt == "*")) {
+      genomstr_df <- genomstr_df %>% 
+        filter(regionkod %in% region_vekt)
+    }
     
     # om senaste läsår bara har "." som värden, backa ett år och hämta om
     senaste_lasar <- max(genomstr_df$läsår)
@@ -107,14 +110,21 @@ hamta_gymn_avg_genomstromning_4ar_prg_skolverket <- function(region_vekt = "20",
     return(genomstr_df)
   } # slut läs in excelfil-funktion
   
-  if (length(region_vekt[region_vekt == "00"]) > 0) df_list[["riket"]] <- las_in_excelfil(url_lista[["url_riket"]])            
-  if (length(region_vekt[nchar(region_vekt) == 2 & region_vekt != "00"]) > 0) df_list[["lan"]] <- las_in_excelfil(url_lista[["url_lan"]])
-  if (length(region_vekt[nchar(region_vekt) == 4]) > 0) df_list[["kommun"]] <- las_in_excelfil(url_lista[["url_kommun"]])
+  if (length(region_vekt[region_vekt == "00"]) > 0 | any(region_vekt == "*")) df_list[["riket"]] <- las_in_excelfil(url_lista[["url_riket"]])            
+  if ((length(region_vekt[nchar(region_vekt) == 2 & region_vekt != "00"]) > 0) | any(region_vekt == "*")) df_list[["lan"]] <- las_in_excelfil(url_lista[["url_lan"]])
+  if (length(region_vekt[nchar(region_vekt) == 4]) > 0 | any(region_vekt == "*")) df_list[["kommun"]] <- las_in_excelfil(url_lista[["url_kommun"]])
   
   
   retur_df <- bind_rows(df_list)
-  if (konvertera_andel_till_numerisk) retur_df <- suppressWarnings(retur_df %>% mutate(andel = parse_number(andel)))
+  # konvertera till numerisk om det är valt
+  if (konvertera_andel_till_numerisk) retur_df <- suppressWarnings(retur_df %>% mutate(
+    andel = na_if(andel, ".."),
+    andel = parse_number(andel))
+  )
   
+  # ta bort NA-värden om det är valt
+  if (ta_bort_na) retur_df <- retur_df %>% 
+    filter(!is.na(andel))
   
   return(retur_df)
 }

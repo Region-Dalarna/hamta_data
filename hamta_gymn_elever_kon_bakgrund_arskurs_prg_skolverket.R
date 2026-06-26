@@ -4,6 +4,7 @@ hamta_gymn_elever_kon_bakgrund_arskurs_prg_skolverket <- function(region_vekt = 
                                                                   valda_ar = "9999",                          # "9999" senaste år, "*" = alla år 
                                                                   gymnasieprogram = "*",                     # "*" = alla gymnasieprogram, annars anges programnamn, dessa finns: "Nationella program", "Högskoleförberedande program", "Yrkesprogram", "Introduktionsprogrammen", "Barn- och fritidsprogrammet", "Bygg- och anläggningsprogramme", "Ekonomiprogrammet", "El- och energiprogrammet", "Estetiska programmet", "Fordons- och transportprogramm", "Försäljnings- och serviceprogr", "Handels- och administrationspr", "Hantverksprogrammet", "Hotell- och turismprogrammet", "Humanistiska programmet", "Industritekniska programmet", "International Baccalaureate", "Introduktionsprogram, Individu", "Introduktionsprogram, Programi", "Introduktionsprogram, Språkint", "Introduktionsprogram, Yrkesint", "Naturbruksprogrammet", "Naturvetenskapsprogrammet", "Restaurang- och livsmedelsprog", "Riksrekryterande utbildningar", "Samhällsvetenskapsprogrammet", "Teknikprogrammet", "VVS- och fastighetsprogrammet", "Vård- och omsorgsprogrammet"
                                                                   huvudman = "Samtliga",                     # finns: "Samtliga", "Kommunal" och "Enskild", det går att välja flera
+                                                                  ta_bort_na = TRUE,                         # TRUE = ta bort NA-värden i andel-kolumnen
                                                                   konvertera_andel_till_numerisk = TRUE      # TRUE = numerisk kolumn av andel, då försvinner prickar och liknande och blir NA. Vill man se vad som är prickar och hur många det är kan man sätta denna till FALSE
                                                                   ) {         
   
@@ -152,8 +153,12 @@ hamta_gymn_elever_kon_bakgrund_arskurs_prg_skolverket <- function(region_vekt = 
         dataset_df <- dataset_df %>% 
           #mutate(lasar = lasar_txt) %>%
           rename(huvudman = `Typ av huvudman`) %>%
-          relocate(lasar, .before = 1) %>%
+          relocate(lasar, .before = 1)
+        
+        if (!all(region_vekt == "*")) {
+          dataset_df <- dataset_df %>%
           filter(regionkod %in% region_vekt)
+        }
         
         return(dataset_df)
       } # slut läs in excelfil-funktion
@@ -169,16 +174,22 @@ hamta_gymn_elever_kon_bakgrund_arskurs_prg_skolverket <- function(region_vekt = 
         
         retur_df <- bind_rows(df_list) %>% 
           rename(variabel = Elever)
+        
         if (konvertera_andel_till_numerisk) retur_df <- suppressWarnings(retur_df %>% mutate(
           varde = na_if(varde, ".."),
           varde = parse_number(varde))
           )
+        
+        # ta bort NA-värden om det är valt
+        if (ta_bort_na) retur_df <- retur_df %>% 
+          filter(!is.na(varde))
+        
         return(retur_df)
         
       # }, .progress = TRUE) %>% 
       #   list_rbind()
       
-      return(alla_ar)
+      #return(alla_ar)
   
   } else { # slut if-sats för att testa om det finns giltiga år
     message(glue("Inga giltiga år medskickade till funktionen. Följande år finns i tabellen: {giltiga_ar %>% list_komma_och()}. Kontrollera valda år och försök igen.")) 
