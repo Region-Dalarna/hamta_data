@@ -17,7 +17,7 @@ hamta_utlandskt_agande_tid_agarland_lan_bransch_tva <- function(
   # Skapad av: frkjon den 11 juni 2026
   # Senast uppdaterad: 11 juni 2026
   #
-  # url till tabellens API: https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Utlandsägda företag/internationella_foretag_utlandsagda_arbetsstallen_land_region_bransch_2022_2023.px
+  # url till tabellens API: https://statistik.tillvaxtanalys.se:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Utlandsägda företag/internationella_foretag_utlandsagda_arbetsstallen_land_region_bransch_2022_2024.px
   #
   # ====================================================================================================
 
@@ -30,7 +30,7 @@ hamta_utlandskt_agande_tid_agarland_lan_bransch_tva <- function(
   source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R")
 
   # Url till databas
-  url_uttag <- "https://statistik.tillvaxtanalys.se:443:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Utlandsägda företag/internationella_foretag_utlandsagda_arbetsstallen_land_region_bransch_2022_2023.px"
+  url_uttag <- "https://statistik.tillvaxtanalys.se:443:443/PxWeb/api/v1/sv/Tillväxtanalys statistikdatabas/Utlandsägda företag/internationella_foretag_utlandsagda_arbetsstallen_land_region_bransch_2022_2024.px"
   px_meta <- pxweb_get(url_uttag)
 
   varlist_koder <- pxvarlist(px_meta)$koder
