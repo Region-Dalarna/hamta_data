@@ -93,18 +93,17 @@ hamta_befprognos_data <- function(
         filsokvagar <- c(filsokvagar_csv, filsokvagar_xlsx)
         
         # kontrollera vilka prognosår som finns bland profet-filerna i mappen
-        # prognos_ar <- map_int(filsokvagar, ~ read_xlsx(.x, sheet = "Info") %>% 
-        #                       pull() %>% 
-        #                       .[!is.na(.)] %>% 
-        #                       .[str_detect(., "prognosperiod")] %>% 
-        #                       parse_number(.))
-        
+
         existerande_ar <- map_int(filsokvagar, ~ parse_number(.))%>% unique()
         if ("9999" %in% prognos_ar) prognos_ar <- prognos_ar %>% str_replace("9999", as.character(max(existerande_ar))) %>% as.numeric()
         prognos_ar <- prognos_ar[prognos_ar %in% existerande_ar]
       }
       
-      start_ar <- prognos_ar  - 1                # ta bort -1 igen?
+      # Bugfix (confirmed genom test mot SCB:s API): "-1" gjorde att t.ex. tid_vekt = "+0" ("själva
+      # prognosåret", enligt parameterdokumentationen ovan) pekade på året FÖRE tabellens första
+      # giltiga år och kraschade ("Assertion on 'Tid' failed"), och "+1" gav tyst prognosårets EGET
+      # första år i stället för året efter. start_ar sätts nu till prognos_ar rakt av.
+      start_ar <- prognos_ar
       jmfr_ar <- start_ar + jmfr_vekt
       if (length(jmfr_ar) > 0)  hamta_tid_vekt <- c(jmfr_ar, andra_ar_vekt) else hamta_tid_vekt <- andra_ar_vekt
       
@@ -117,29 +116,23 @@ hamta_befprognos_data <- function(
       if (str_detect(url_prognos, "https://api.scb.se")) {  
         
         valt_ar <- hamta_giltiga_varden_fran_tabell(hamta_url, "tid") %>% min() %>% as.numeric() %>% unique()
-        
-        # pxvarlist(url_prognos)
-        # pxvardelist(url_prognos, "kon", skriv_vektlista_till_clipboard = TRUE)
-        
+
         if (all(cont_klartext == "*")) cont_klartext <- hamta_giltiga_varden_fran_tabell(url_prognos, "contentscode", klartext = TRUE)
         cont_vekt <- hamta_kod_med_klartext(url_prognos, cont_klartext, skickad_fran_variabel = "contentscode")
         kon_vekt <- hamta_kod_med_klartext(url_prognos, kon_klartext, skickad_fran_variabel = "kon")
         alder_vekt <- alder_list %>% unlist()
         if (all(cont_klartext == "Födda")) alder_vekt <- "0"
-        #hamta_tid_vekt <- tid_vekt
 
-        # if (all(fil_hamta_tid_vekt == "*")) fil_hamta_tid_vekt <- c((fil_prognosar %>% as.numeric()):2100)
-        #if (all(cont_klartext != "*")) tabort_contvar <- contvar_vekt[contvar_vekt != cont_klartext] 
-        alla_contvar <- hamta_giltiga_varden_fran_tabell(url_prognos, "contentscode")
-        if (all(cont_klartext != "*")) tabort_contvar <- alla_contvar[alla_contvar != cont_vekt] 
+        # (borttaget: alla_contvar/tabort_contvar beräknades här men användes aldrig i den här grenen -
+        # tabort_contvar används bara i Profet-filgrenarna nedan, där ContentsCode inte kan begränsas
+        # direkt i frågan mot SCB:s API på samma sätt.)
 
         query_list <- list(Region = region_vekt,
                            Alder = alder_vekt,
                            Kon = kon_vekt,
                            ContentsCode = cont_vekt,
                            Tid = hamta_tid_vekt %>% as.character())
-        #Tid = valt_ar %>% as.character())
-        
+
         px_uttag <- pxweb_get(url = url_prognos,
                               query = query_list)
         
@@ -255,7 +248,10 @@ hamta_befprognos_data <- function(
           las_in_profet_fil <- function(profetfil_sokvag, fil_prognosar) {
             
             if (any(hamta_tid_vekt != "*")) {
-              fil_start_ar <- as.numeric(fil_prognosar)  - 1                # ta bort -1 igen?
+              # Samma "-1"-bugg som i SCB-grenen ovan (samma kommentar fanns här: "ta bort -1 igen?") -
+              # rättad på samma sätt, i konsekvens med SCB-fixet. OBS: den här grenen (Profet-filer) är
+              # inte testad mot riktiga filer i samband med fixet, till skillnad från SCB-grenen.
+              fil_start_ar <- as.numeric(fil_prognosar)
               fil_jmfr_ar <- fil_start_ar + jmfr_vekt
               fil_hamta_tid_vekt <- if (length(fil_jmfr_ar) > 0) c(fil_jmfr_ar, andra_ar_vekt) else andra_ar_vekt
             } else fil_hamta_tid_vekt <- "*"
@@ -325,7 +321,9 @@ hamta_befprognos_data <- function(
     } # if-sats, else-delen som är om det är en sökväg till en profet-fil
   } # funktion att hämta data från url:er (scb-api:er eller profet-filer)
     
-    retur_df <- map_dfr(hamta_url, ~ hamta_data_fran_tabell(url_prognos = .x)) %>% 
+    # hamta_url är redan en enskild url/sökväg här (funktionen anropas en gång per element i
+    # url_prognos_vektor från map_dfr() längst ner) - ingen map_dfr behövs för att hämta den.
+    retur_df <- hamta_data_fran_tabell(url_prognos = hamta_url) %>%
       filter(regionkod %in% region_vekt)
     
     return(retur_df)
