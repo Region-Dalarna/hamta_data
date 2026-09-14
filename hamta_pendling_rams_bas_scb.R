@@ -61,7 +61,7 @@ hamta_pendling_rams_bas_scb <- function(region_vekt = "20",
   # det, och låt varje tabells egen filtrering (akt_tid_vekt <- ... %in% giltiga_ar) nedan naturligt
   # ge en tom (och därmed bortfiltrerad) träff för de tabeller som inte täcker just det året.
   if (any(tid_vekt == "9999")) {
-    senaste_ar_alla_tabeller <- max(as.numeric(unlist(purrr::map(tabell_id_vekt, ~ suppressMessages(pxweb2r::pxweb2_get_values(.x, "Tid"))$code))))
+    senaste_ar_alla_tabeller <- max(as.numeric(unlist(purrr::map(tabell_id_vekt, ~ pxweb2r::pxweb2_get_values(.x, "Tid", quiet = TRUE)$code))))
     tid_vekt <- unique(stringr::str_replace(tid_vekt, "9999", as.character(senaste_ar_alla_tabeller)))
   }
 
@@ -69,7 +69,7 @@ hamta_pendling_rams_bas_scb <- function(region_vekt = "20",
   # aggregerar upp till läns- respektive kommunnivå beroende på vad som efterfrågades i region_vekt
   hamta_en_pendlingstabell <- function(tabell_id) {
 
-    giltiga_ar <- suppressMessages(pxweb2r::pxweb2_get_values(tabell_id, "Tid"))$code
+    giltiga_ar <- pxweb2r::pxweb2_get_values(tabell_id, "Tid", quiet = TRUE)$code
     akt_tid_vekt <- if (all(tid_vekt == "*")) giltiga_ar else tid_vekt[tid_vekt %in% giltiga_ar]
     # TAB5850 (RAMS, ny tidsserie) och TAB1830 (BAS) delar åren 2020-2021 - dessa år tas bort ur
     # TAB5850 här för att inte räknas dubbelt (samma hantering som i originalskriptet).
@@ -85,7 +85,7 @@ hamta_pendling_rams_bas_scb <- function(region_vekt = "20",
     }
 
     hamta_riktning <- function(bostad_vekt, arbete_vekt) {
-      suppressMessages(pxweb2r::pxweb2_get_data(
+      pxweb2r::pxweb2_get_data(
         table = tabell_id,
         query = list(
           Bostadskommun = bostad_vekt,
@@ -94,8 +94,8 @@ hamta_pendling_rams_bas_scb <- function(region_vekt = "20",
           ContentsCode = "*",
           Tid = akt_tid_vekt
         ),
-        on_all_values_invalid = "null"
-      ))
+        on_all_values_invalid = "null",
+        quiet = TRUE)
     }
 
     stada_riktning <- function(px) {

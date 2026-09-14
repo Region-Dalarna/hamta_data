@@ -39,7 +39,7 @@ hamta_arbetskraftsdeltagande_region_utbildngrupp_kon_tid_scb <- function(
 
   scb_tabell_id <- "TAB6368"
 
-  giltiga_ar <- suppressMessages(pxweb2r::pxweb2_get_values(scb_tabell_id, "Tid"))$code
+  giltiga_ar <- suppressMessages(pxweb2r::pxweb2_get_values(scb_tabell_id, "Tid", quiet = TRUE))$code
   if (all(tid_koder != "*")) {
     tid_sokt <- stringr::str_replace(as.character(tid_koder), "9999", max(giltiga_ar))
     tid_vekt <- unique(tid_sokt[tid_sokt %in% giltiga_ar])
@@ -59,7 +59,7 @@ hamta_arbetskraftsdeltagande_region_utbildngrupp_kon_tid_scb <- function(
     Tid = tid_vekt
   ))
 
-  px_df <- suppressMessages(pxweb2r::pxweb2_get_data(table = scb_tabell_id, query = query_list)) |>
+  px_df <- suppressMessages(pxweb2r::pxweb2_get_data(table = scb_tabell_id, query = query_list, quiet = TRUE)) |>
     dplyr::rename(regionkod = region_kod) |>
     dplyr::rename(dplyr::any_of(c(utbildngruppkod = "utbildning_kod"))) |>
     dplyr::relocate(regionkod, .before = region) |>

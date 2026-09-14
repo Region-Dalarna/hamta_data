@@ -90,7 +90,7 @@ hamta_befprognos_data <- function(
 
       if (stringr::str_detect(hamta_url, "https://api.scb.se")) {
 
-        valt_ar <- min(as.numeric(suppressMessages(pxweb2r::pxweb2_get_values(scb_tabell_id, "Tid"))$code))
+        valt_ar <- min(as.numeric(pxweb2r::pxweb2_get_values(scb_tabell_id, "Tid", quiet = TRUE)$code))
         if ("9999" %in% prognos_ar) prognos_ar <- as.numeric(stringr::str_replace(prognos_ar[prognos_ar == "9999"], "9999", as.character(valt_ar)))
 
       } else {
@@ -128,9 +128,9 @@ hamta_befprognos_data <- function(
 
       if (stringr::str_detect(url_prognos, "https://api.scb.se")) {
 
-        valt_ar <- min(as.numeric(suppressMessages(pxweb2r::pxweb2_get_values(scb_tabell_id, "Tid"))$code))
+        valt_ar <- min(as.numeric(pxweb2r::pxweb2_get_values(scb_tabell_id, "Tid", quiet = TRUE)$code))
 
-        if (all(cont_klartext == "*")) cont_klartext <- suppressMessages(pxweb2r::pxweb2_get_values(scb_tabell_id, "ContentsCode"))$label
+        if (all(cont_klartext == "*")) cont_klartext <- pxweb2r::pxweb2_get_values(scb_tabell_id, "ContentsCode", quiet = TRUE)$label
 
         # Ålder = "0" om bara Födda efterfrågas (Födda finns bara registrerat på nyfödda, dvs. ålder 0 -
         # samma specialfall som i v1-versionen), annars den medskickade åldersvektorn rakt av, eller
@@ -146,10 +146,9 @@ hamta_befprognos_data <- function(
                            ContentsCode = cont_klartext,
                            Tid = as.character(hamta_tid_vekt)))
 
-        # suppressMessages() tystar bara pxweb2r:s ofarliga "include_aggregations = auto"-info (en
-        # riktig R message()), inte de cat()-baserade "ogiltiga värden borttagna"-notiserna som
-        # on_all_values_invalid = "null" kan ge upphov till.
-        px_df <- suppressMessages(pxweb2r::pxweb2_get_data(table = scb_tabell_id, query = query_list, on_all_values_invalid = "null")) |>
+        # quiet = TRUE tystar både pxweb2r:s "include_aggregations = auto"-info och de "ogiltiga värden
+        # borttagna"-notiser som on_all_values_invalid = "null" kan ge upphov till.
+        px_df <- pxweb2r::pxweb2_get_data(table = scb_tabell_id, query = query_list, on_all_values_invalid = "null", quiet = TRUE) |>
           dplyr::rename(regionkod = region_kod) |>
           dplyr::mutate(prognos_ar = as.character(valt_ar))
 
