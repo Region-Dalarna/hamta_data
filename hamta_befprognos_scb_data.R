@@ -180,8 +180,22 @@ hamta_befprognos_data <- function(
           
           contvar_vekt <- c("Folkmängd", "Födda", "Döda", "Inrikes inflyttning", "Inrikes utflyttning", "Invandring", "Utvandring")
           if (all(cont_klartext == "*")) cont_klartext <- contvar_vekt
-          
-          progn_ar <- map_chr(filsokvagar_xlsx, ~ parse_number(.) %>% as.character()) 
+
+          # Felhantering (för att slippa en kryptisk krasch längre ned, tex. att en efterfrågad kolumn
+          # helt saknas i den slutliga datan): de lokala Profet-filerna (Hallands skript-varianten) har
+          # bara de sju innehållsvariablerna i contvar_vekt ovan - saknar tex. helt uppdelning på
+          # inrikes/utrikes födda. Stoppa här med ett begripligt felmeddelande om något annat efterfrågas,
+          # i stället för att fortsätta med tom/felaktig data.
+          saknade_contvar <- setdiff(cont_klartext, contvar_vekt)
+          if (length(saknade_contvar) > 0) {
+            stop("hamta_befprognos_data(): cont_klartext innehåller variabler som ännu inte finns i de ",
+                 "lokala Profet-filerna (", hamta_url, "): ", paste(saknade_contvar, collapse = ", "),
+                 ". Tillgängliga variabler i filerna är: ", paste(contvar_vekt, collapse = ", "),
+                 ". Hämta i stället direkt från SCB:s API (skicka en https://-url i url_prognos_vektor) ",
+                 "om du behöver denna variabel.")
+          }
+
+          progn_ar <- map_chr(filsokvagar_xlsx, ~ parse_number(.) %>% as.character())
           
           befskript_df <- map2(filsokvagar_xlsx, progn_ar, ~ readxl::read_xlsx(.x) %>% 
                                  mutate(prognos_ar = .y %>% as.character(),
@@ -192,9 +206,12 @@ hamta_befprognos_data <- function(
             dplyr::filter(ar %in% hamta_tid_vekt)            # ta bara ut jämförelseåret
   
   # if (all(fil_hamta_tid_vekt == "*")) fil_hamta_tid_vekt <- c((fil_prognosar %>% as.numeric()):2100)
-  if (all(cont_klartext != "*")) tabort_contvar <- contvar_vekt[contvar_vekt != cont_klartext] 
-  
-  befskript_df <- befskript_df %>% 
+  # Bugfix (confirmed genom kodgranskning): "!=" mellan två olika långa vektorer recyclar
+  # element-för-element i stället för att jämföra mängder (fungerade "av misstag" hittills bara för att
+  # cont_klartext i praktiken alltid varit hela contvar_vekt) - rätt jämförelse är %in%.
+  if (all(cont_klartext != "*")) tabort_contvar <- contvar_vekt[!contvar_vekt %in% cont_klartext]
+
+  befskript_df <- befskript_df %>%
     rename(any_of(rename_befskript))
   
   befskript_df <- befskript_df %>% 
@@ -238,13 +255,33 @@ hamta_befprognos_data <- function(
           progn_ar <- map_chr(filsokvagar_csv, ~ parse_number(.) %>% as.character()) 
           
           # vektor för att döpa om kolumner i profetfilen så att de blir samma som i pxwebs befolkningsprognostabeller
-          rename_profet <- c("regionkod", "region", "ålder" = "age", "kön" = "kon", "år" = "year", 
-                             "Folkmängd" = "pop", "Födda" = "fodda", "Döda" = "doda", "Inrikes inflyttning" = "inrikes_inflyttade", 
+          # Bugfix (confirmed genom test): saknade "regionkod" = "lan_kod"/"kommun_kod" (jmfr. den
+          # identiska, korrekta rename_befskript-vektorn ovan för Hallandsskript-filerna) - den bara
+          # räknade med att en kolumn redan hette "regionkod", vilket den inte gör i de riktiga
+          # Profet-filerna (de heter "lan_kod" respektive "kommun_kod", vilket regionkod_len-raden
+          # nedan förutsätter). Kraschade med "object 'regionkod' not found" så fort mutate()-anropet
+          # några rader ned försökte använda kolumnen.
+          rename_profet <- c("regionkod" = "lan_kod", "regionkod" = "kommun_kod", "regionkod", "region", "ålder" = "age", "kön" = "kon", "år" = "year",
+                             "Folkmängd" = "pop", "Födda" = "fodda", "Döda" = "doda", "Inrikes inflyttning" = "inrikes_inflyttade",
                              "Inrikes utflyttning" = "inrikes_utflyttade", "Invandring" = "immigranter", "Utvandring" = "emigranter")
           
           contvar_vekt <- c("Folkmängd", "Födda", "Döda", "Inrikes inflyttning", "Inrikes utflyttning", "Invandring", "Utvandring")
           if (all(cont_klartext == "*")) cont_klartext <- contvar_vekt
-          
+
+          # Felhantering (för att slippa en kryptisk krasch längre ned, tex. att en efterfrågad kolumn
+          # helt saknas i den slutliga datan): de lokala Profet-filerna har bara de sju
+          # innehållsvariablerna i contvar_vekt ovan - saknar tex. helt uppdelning på inrikes/utrikes
+          # födda. Stoppa här med ett begripligt felmeddelande om något annat efterfrågas, i stället för
+          # att fortsätta med tom/felaktig data.
+          saknade_contvar <- setdiff(cont_klartext, contvar_vekt)
+          if (length(saknade_contvar) > 0) {
+            stop("hamta_befprognos_data(): cont_klartext innehåller variabler som ännu inte finns i de ",
+                 "lokala Profet-filerna (", hamta_url, "): ", paste(saknade_contvar, collapse = ", "),
+                 ". Tillgängliga variabler i filerna är: ", paste(contvar_vekt, collapse = ", "),
+                 ". Hämta i stället direkt från SCB:s API (skicka en https://-url i url_prognos_vektor) ",
+                 "om du behöver denna variabel.")
+          }
+
           las_in_profet_fil <- function(profetfil_sokvag, fil_prognosar) {
             
             if (any(hamta_tid_vekt != "*")) {
@@ -292,7 +329,10 @@ hamta_befprognos_data <- function(
               left_join(regionnyckel, by = "regionkod") %>% 
               relocate(region, .after = regionkod)
             
-            if (all(cont_klartext != "*")) tabort_contvar <- contvar_vekt[contvar_vekt != cont_klartext]                      # ta bort den innehållsvariabel som användaren vill ha ur vektorn, använd den för att ta bort variabler
+            # Bugfix (confirmed genom kodgranskning): "!=" mellan två olika långa vektorer recyclar
+            # element-för-element i stället för att jämföra mängder (fungerade "av misstag" hittills bara
+            # för att cont_klartext i praktiken alltid varit hela contvar_vekt) - rätt jämförelse är %in%.
+            if (all(cont_klartext != "*")) tabort_contvar <- contvar_vekt[!contvar_vekt %in% cont_klartext]                      # ta bort de innehållsvariabler som användaren inte valt ur vektorn, använd den för att ta bort variabler
             
             # ta bort variabler som användaren inte valt
             profet_df <- profet_df %>% 
