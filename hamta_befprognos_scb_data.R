@@ -295,12 +295,13 @@ hamta_befprognos_data <- function(
           }
 
           las_in_profet_fil <- function(profetfil_sokvag, fil_prognosar) {
-
+            
             if (any(hamta_tid_vekt != "*")) {
-              # Samma "-1"-bugg som i SCB-grenen ovan (samma kommentar fanns här: "ta bort -1 igen?") -
-              # rättad på samma sätt, i konsekvens med SCB-fixet. OBS: den här grenen (Profet-filer) är
-              # inte testad mot riktiga filer i samband med fixet, till skillnad från SCB-grenen.
-              fil_start_ar <- as.numeric(fil_prognosar)
+              # OBS: till skillnad från SCB-grenen ovan ska "-1" vara kvar här. fil_prognosar är prognosens
+              # publiceringsår (från filnamnet), ett år EFTER det första faktiska prognosåret - motsvarar
+              # alltså inte samma sak som SCB-API:ets prognos_ar, som redan är tabellens första datavärde.
+              # Bekräftat genom felsökning: utan "-1" hämtades t.ex. 2026-2036 i stället för avsedda 2025-2035.
+              fil_start_ar <- as.numeric(fil_prognosar) - 1
               fil_jmfr_ar <- fil_start_ar + jmfr_vekt
               fil_hamta_tid_vekt <- if (length(fil_jmfr_ar) > 0) c(fil_jmfr_ar, andra_ar_vekt) else andra_ar_vekt
             } else fil_hamta_tid_vekt <- "*"
