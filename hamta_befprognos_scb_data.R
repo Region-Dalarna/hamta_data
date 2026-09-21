@@ -255,8 +255,27 @@ hamta_befprognos_data <- function(
           if (!any(rdverktyg::hamtakommuner(lan = "20", FALSE, FALSE, FALSE) %in% region_vekt)) filsokvagar_csv <- filsokvagar_csv[!stringr::str_detect(filsokvagar_csv, "kommun")]      # ta bort kommunfiler ur sokvagsvektorn om ingen av Dalarnas kommuners kommunkoder är med
 
           # kontrollera vilka prognosår som finns bland profet-filerna i mappen som ska användas
-          progn_ar <- purrr::map_chr(filsokvagar_csv, ~ as.character(readr::parse_number(.)))
 
+          progn_ar <- map_chr(filsokvagar_csv, ~ parse_number(.) %>% as.character())
+          
+          # NYTT: begränsa till det/de prognosår som prognos_ar-parametern faktiskt efterfrågar
+          prognos_ar_vekt <- if ("9999" %in% prognos_ar) {
+            max(as.numeric(progn_ar))                       # "9999" = senaste tillgängliga prognosår
+          } else if (all(is.na(prognos_ar))) {
+            as.numeric(progn_ar)                             # NA = alla prognosår
+          } else {
+            as.numeric(prognos_ar)                            # specifikt/specifika år
+          }
+          
+          behall_fil <- progn_ar %in% as.character(prognos_ar_vekt)
+          if (!any(behall_fil)) {
+            stop(paste0("Inget prognosår i mappen matchar efterfrågat prognos_ar (", 
+                        paste(prognos_ar, collapse = ", "), 
+                        "). Tillgängliga prognosår i mappen: ", paste(unique(progn_ar), collapse = ", ")))
+          }
+          filsokvagar_csv <- filsokvagar_csv[behall_fil]
+          progn_ar <- progn_ar[behall_fil]
+          
           # vektor för att döpa om kolumner i profetfilen så att de blir samma som i pxwebs befolkningsprognostabeller
           rename_profet <- c("regionkod" = "lan_kod", "regionkod" = "kommun_kod", "regionkod", "region", "ålder" = "age", "kön" = "kon", "år" = "year",
                              "Folkmängd" = "pop", "Födda" = "fodda", "Döda" = "doda", "Inrikes inflyttning" = "inrikes_inflyttade",
