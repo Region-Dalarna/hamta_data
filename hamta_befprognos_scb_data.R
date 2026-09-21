@@ -208,7 +208,21 @@ hamta_befprognos_data <- function(
                                  prognos_ar = as.character(.y),
                                  ar = as.character(ar))))
 
-          if (all(hamta_tid_vekt != "*")) befskript_df <- dplyr::filter(befskript_df, ar %in% hamta_tid_vekt)            # ta bara ut jämförelseåret
+          # OBS: analog fix med las_in_profet_fil() (csv-grenen nedan) - den delade hamta_tid_vekt (beräknad
+          # högst upp, numera SCB-anpassad utan "-1") stämmer inte med Profet-filernas egen semantik
+          # (prognos_ar = publiceringsår, ett år EFTER det faktiska första prognosåret). Räkna ut varje rads
+          # eget jämförelseårs-set utifrån dess egen prognos_ar, i stället för att lita på hamta_tid_vekt rakt av.
+          if (all(hamta_tid_vekt != "*")) {
+            befskript_df <- befskript_df |>
+              dplyr::rowwise() |>
+              dplyr::filter({
+                fil_start_ar <- as.numeric(prognos_ar) - 1
+                fil_jmfr_ar <- fil_start_ar + jmfr_vekt
+                fil_hamta_tid_vekt <- if (length(fil_jmfr_ar) > 0) c(fil_jmfr_ar, andra_ar_vekt) else andra_ar_vekt
+                as.numeric(ar) %in% fil_hamta_tid_vekt
+              }) |>
+              dplyr::ungroup()
+          }            # ta bara ut jämförelseåret
 
           # Bugfix (confirmed genom kodgranskning): "!=" mellan två olika långa vektorer recyclar
           # element-för-element i stället för att jämföra mängder (fungerade "av misstag" hittills bara för att
