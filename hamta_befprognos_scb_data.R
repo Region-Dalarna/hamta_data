@@ -37,7 +37,11 @@ hamta_befprognos_data <- function(
   #
   # Skapat av: Peter Möller, Region Dalarna
   #            november 2023
-  # Senast uppdaterat:  september 2026
+  # Senast uppdaterat:  oktober 2026
+  #                     "+N" i tid_vekt betyder nu prognos_ar + N även för Profet-csv och Hallands xlsx,
+  #                     precis som i SCB-grenen (tidigare prognos_ar - 1 + N, vilket gav fel slutår i
+  #                     SkapaBefPrognosDiagram).
+  #                     (tidigare: september 2026)
   #                     Migrerad till pxweb2r/rdverktyg för SCB-grenen (bort med p_load(pxweb)/source()
   #                     mot func_API.R). SCB:s v1-tabell BE0401A/BefProgOsiktRegN motsvaras i v2 av
   #                     TAB698 (verifierad identisk variabelstruktur: Region/Kon/Alder/ContentsCode med
@@ -208,15 +212,13 @@ hamta_befprognos_data <- function(
                                  prognos_ar = as.character(.y),
                                  ar = as.character(ar))))
 
-          # OBS: analog fix med las_in_profet_fil() (csv-grenen nedan) - den delade hamta_tid_vekt (beräknad
-          # högst upp, numera SCB-anpassad utan "-1") stämmer inte med Profet-filernas egen semantik
-          # (prognos_ar = publiceringsår, ett år EFTER det faktiska första prognosåret). Räkna ut varje rads
-          # eget jämförelseårs-set utifrån dess egen prognos_ar, i stället för att lita på hamta_tid_vekt rakt av.
+          # Varje rad får sina jämförelseår utifrån sin egen prognos_ar (filerna kan ha olika prognosår).
+          # "+N" betyder prognos_ar + N i alla grenar (SCB, Profet-csv och Hallands xlsx), se tid_vekt överst.
           if (all(hamta_tid_vekt != "*")) {
             befskript_df <- befskript_df |>
               dplyr::rowwise() |>
               dplyr::filter({
-                fil_start_ar <- as.numeric(prognos_ar) - 1
+                fil_start_ar <- as.numeric(prognos_ar)
                 fil_jmfr_ar <- fil_start_ar + jmfr_vekt
                 fil_hamta_tid_vekt <- if (length(fil_jmfr_ar) > 0) c(fil_jmfr_ar, andra_ar_vekt) else andra_ar_vekt
                 as.numeric(ar) %in% fil_hamta_tid_vekt
@@ -311,11 +313,8 @@ hamta_befprognos_data <- function(
           las_in_profet_fil <- function(profetfil_sokvag, fil_prognosar) {
             
             if (any(hamta_tid_vekt != "*")) {
-              # OBS: till skillnad från SCB-grenen ovan ska "-1" vara kvar här. fil_prognosar är prognosens
-              # publiceringsår (från filnamnet), ett år EFTER det första faktiska prognosåret - motsvarar
-              # alltså inte samma sak som SCB-API:ets prognos_ar, som redan är tabellens första datavärde.
-              # Bekräftat genom felsökning: utan "-1" hämtades t.ex. 2026-2036 i stället för avsedda 2025-2035.
-              fil_start_ar <- as.numeric(fil_prognosar) - 1
+              # "+N" betyder prognos_ar + N i alla grenar (SCB, Profet-csv och Hallands xlsx), se tid_vekt överst.
+              fil_start_ar <- as.numeric(fil_prognosar)
               fil_jmfr_ar <- fil_start_ar + jmfr_vekt
               fil_hamta_tid_vekt <- if (length(fil_jmfr_ar) > 0) c(fil_jmfr_ar, andra_ar_vekt) else andra_ar_vekt
             } else fil_hamta_tid_vekt <- "*"
