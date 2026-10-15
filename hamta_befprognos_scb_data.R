@@ -41,6 +41,8 @@ hamta_befprognos_data <- function(
   #                     "+N" i tid_vekt betyder nu prognos_ar + N även för Profet-csv och Hallands xlsx,
   #                     precis som i SCB-grenen (tidigare prognos_ar - 1 + N, vilket gav fel slutår i
   #                     SkapaBefPrognosDiagram).
+  #                     Även: xlsx-grenen får kolumnen region (saknades, gjorde att SkapaBefPrognosDiagram
+  #                     kraschade), och map_chr()/parse_number() i csv-grenen anropas med namespace.
   #                     (tidigare: september 2026)
   #                     Migrerad till pxweb2r/rdverktyg för SCB-grenen (bort med p_load(pxweb)/source()
   #                     mot func_API.R). SCB:s v1-tabell BE0401A/BefProgOsiktRegN motsvaras i v2 av
@@ -242,7 +244,12 @@ hamta_befprognos_data <- function(
                                           kön == 2 ~ "kvinnor",
                                           TRUE ~ as.character(kön)),
                            ålder = ifelse(ålder > 99, "100+ år", paste0(ålder, " år")),
-                           år = as.character(år))
+                           år = as.character(år),
+                           # regionkod kan vara numerisk i xlsx-filen ("20", 180) - gör om till SCB:s textkoder ("20", "0180")
+                           regionkod = as.character(regionkod),
+                           regionkod = stringr::str_pad(regionkod, width = ifelse(nchar(regionkod) <= 2, 2, 4), pad = "0"))
+          # lägg till regionnamn, som i csv-grenen (diagramskripten grupperar på region)
+          befskript_df <- dplyr::relocate(dplyr::left_join(befskript_df, rdverktyg::hamtaregtab(), by = "regionkod"), region, .after = regionkod)
           data.table::setDT(befskript_df)
           befskript_df <- befskript_df[, lapply(.SD, sum, na.rm = TRUE), by = setdiff(names(befskript_df), names(befskript_df)[sapply(befskript_df, is.numeric)])]
 
@@ -272,7 +279,7 @@ hamta_befprognos_data <- function(
 
           # kontrollera vilka prognosår som finns bland profet-filerna i mappen som ska användas
 
-          progn_ar <- map_chr(filsokvagar_csv, ~ parse_number(.) %>% as.character())
+          progn_ar <- purrr::map_chr(filsokvagar_csv, ~ as.character(readr::parse_number(.)))
           
           # NYTT: begränsa till det/de prognosår som prognos_ar-parametern faktiskt efterfrågar
           prognos_ar_vekt <- if ("9999" %in% prognos_ar) {

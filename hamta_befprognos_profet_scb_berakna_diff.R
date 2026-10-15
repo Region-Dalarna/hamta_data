@@ -34,15 +34,16 @@ hamta_befprognos_diff_data <- function(region_vekt = "20",
   folkmangd_url <- c("TAB638", "TAB5557")
   
   senaste_ar_bef <- as.numeric(max(purrr::map(folkmangd_url, ~ pxweb2r::pxweb2_get_values(.x, "tid", quiet = TRUE)$code) |> unlist()))
-  # jämförelsetid går mot senaste prognosår så vi behöver justera jmfrtid
-  prognos_jmfr_ar <- if (anvand_senaste_befar) senaste_ar_bef + jmfrtid else paste0("+", jmfrtid)
+  # jmfrtid räknas från startåret (prognosår - 1, se startar/slutar nedan), medan "+N" i
+  # hamta_befprognos_data() betyder prognosår + N. Därför "+(jmfrtid - 1)" för att landa på startår + jmfrtid.
+  prognos_jmfr_ar <- if (anvand_senaste_befar) senaste_ar_bef + jmfrtid else paste0("+", jmfrtid - 1)
   
   # ========== Hämta befolkningsprognos för tabell(er) i vektor url_tabeller  ====================
   
   befprogn_df <- hamta_befprognos_data(region_vekt = region_vekt,
                                        url_prognos_vektor = tabeller_url,
                                        kon_klartext = c("kvinnor", "män"),
-                                       tid_vekt = prognos_jmfr_ar,                        # ny metod, funkar? gammal: paste0("+", jmfrtid), 
+                                       tid_vekt = prognos_jmfr_ar,
                                        cont_klartext = "Folkmängd",
                                        prognos_ar = prognos_ar           # prognos_ar funkar bara för profet-uttag (för uttag från SCB:s API styr url:en vilket år som hämtas men i Profet kan flera år hämtas med samma url om det finns data för flera år i mappen)
                                        ) 
