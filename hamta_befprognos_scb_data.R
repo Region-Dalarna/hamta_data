@@ -38,11 +38,15 @@ hamta_befprognos_data <- function(
   # Skapat av: Peter Möller, Region Dalarna
   #            november 2023
   # Senast uppdaterat:  oktober 2026
-  #                     "+N" i tid_vekt betyder nu prognos_ar + N även för Profet-csv och Hallands xlsx,
-  #                     precis som i SCB-grenen (tidigare prognos_ar - 1 + N, vilket gav fel slutår i
-  #                     SkapaBefPrognosDiagram).
-  #                     Även: xlsx-grenen får kolumnen region (saknades, gjorde att SkapaBefPrognosDiagram
-  #                     kraschade), och map_chr()/parse_number() i csv-grenen anropas med namespace.
+  #                     Bugfix (confirmed): xlsx-grenens region-join kraschade ("Column `region` doesn't
+  #                     exist") för Hallands-filer som redan har en egen region-kolumn, eftersom
+  #                     left_join() då gav en namnkrock (region.x/region.y) i stället för region. Joinen
+  #                     görs nu bara om region saknas i filen sedan tidigare.
+  #                     (tidigare, samma dag: "+N" i tid_vekt betyder nu prognos_ar + N även för
+  #                     Profet-csv och Hallands xlsx, precis som i SCB-grenen (tidigare prognos_ar - 1 + N,
+  #                     vilket gav fel slutår i SkapaBefPrognosDiagram). Även: xlsx-grenen får kolumnen
+  #                     region (saknades, gjorde att SkapaBefPrognosDiagram kraschade), och
+  #                     map_chr()/parse_number() i csv-grenen anropas med namespace.)
   #                     (tidigare: september 2026)
   #                     Migrerad till pxweb2r/rdverktyg för SCB-grenen (bort med p_load(pxweb)/source()
   #                     mot func_API.R). SCB:s v1-tabell BE0401A/BefProgOsiktRegN motsvaras i v2 av
@@ -248,8 +252,13 @@ hamta_befprognos_data <- function(
                            # regionkod kan vara numerisk i xlsx-filen ("20", 180) - gör om till SCB:s textkoder ("20", "0180")
                            regionkod = as.character(regionkod),
                            regionkod = stringr::str_pad(regionkod, width = ifelse(nchar(regionkod) <= 2, 2, 4), pad = "0"))
-          # lägg till regionnamn, som i csv-grenen (diagramskripten grupperar på region)
-          befskript_df <- dplyr::relocate(dplyr::left_join(befskript_df, rdverktyg::hamtaregtab(), by = "regionkod"), region, .after = regionkod)
+          # lägg till regionnamn, som i csv-grenen (diagramskripten grupperar på region) - men bara om
+          # filen inte redan har en egen region-kolumn, annars krockar namnen i left_join() (blir
+          # region.x/region.y i stället för region) och relocate() nedan kraschar.
+          if (!"region" %in% names(befskript_df)) {
+            befskript_df <- dplyr::left_join(befskript_df, rdverktyg::hamtaregtab(), by = "regionkod")
+          }
+          befskript_df <- dplyr::relocate(befskript_df, region, .after = regionkod)
           data.table::setDT(befskript_df)
           befskript_df <- befskript_df[, lapply(.SD, sum, na.rm = TRUE), by = setdiff(names(befskript_df), names(befskript_df)[sapply(befskript_df, is.numeric)])]
 
